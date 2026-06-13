@@ -1,0 +1,133 @@
+= My Document
+
+== Actors
+
+* User: The person creating the post.
+* System: The backend that processes the post and manages the workflow.
+* Merchant: The person or entity that may be associated with the post, depending on the category selected. Can respond to the post with offers or information.
+* Merchant Agent: An automated agent that interacts with the post on behalf of the merchant, providing responses or offers based on the content of the post.
+
+== Post Creation Process
+
+[plantuml]
+----
+@startuml
+* User clicks "Post" button
+* User selects Category
+* User writes content
+* User clicks "Submit"
+* System validates input
+* System saves post to database
+* System schedules agents to process post
+* System sends confirmation back to user
+* User can see post on the website
+* User can see how many merchants viewed the post
+* User can see how many merchants responded to the post
+@enduml
+----
+
+== Post Processing by Merchant
+
+[plantuml]
+----
+@startuml
+* Merchant receives notification of new post in category of interest
+* Merchant reviews post content
+if (Merchant decides to respond?) then (yes)
+  * Merchant writes response
+  * Merchant submits response
+  * System validates response
+  * System saves response to database
+  * System notifies user of response
+else (no)
+  * Merchant ignores post
+* System notifies user of response
+@enduml
+----
+
+== Merchant Registration Process
+
+[plantuml]
+----
+@startuml
+* Merchant visits registration page
+* Merchant fills out registration form
+* Merchant submits registration
+* System validates registration information
+* System creates merchant account
+* System sends confirmation email to merchant
+* Merchant can log in to the system
+@enduml
+----
+
+== User Interactions with Post
+
+- User can view post responses from merchants.
+- User can message merchants in post responses.
+- User can close the post when they have found a satisfactory response.
+- User can rate merchant responses.
+- User can close the post anytime.
+
+== User Authentication
+
+- Unregistered users receive a long-lived token that allows them to create posts and interact with the system without needing to log in. User can choose to register at any time, which will link their existing posts and interactions to their new account. Token expires after *1 year*. Lost token cannot be recovered - only registration can save the user's data.
+
+- Users are able to register with email and password or via OAuth providers (Google, Facebook, etc.). Registered users can log in to access their posts and interactions across devices.
+
+== Functional Requirements
+
+[cols="1,3,2", options="header"]
+|===
+|FR ID |Requirement |Related Process
+
+|FR-001 |User shall be able to click a "Post" button to initiate post creation |Post Creation
+|FR-002 |User shall be able to select a category for their post |Post Creation
+|FR-003 |User shall be able to write content for their post |Post Creation
+|FR-004 |User shall be able to submit their post |Post Creation
+|FR-005 |System shall validate post input before saving |Post Creation
+|FR-006 |System shall save validated posts to the database |Post Creation
+|FR-007 |System shall schedule agents to process new posts |Post Creation
+|FR-008 |System shall send confirmation to user after post submission |Post Creation
+|FR-009 |User shall be able to view their post on the website |Post Creation
+|FR-010 |User shall be able to see how many merchants viewed their post |Post Creation
+|FR-011 |User shall be able to see how many merchants responded to their post |Post Creation
+
+|FR-012 |Merchant shall receive notifications of new posts in categories of interest |Post Processing
+|FR-013 |Merchant shall be able to review post content |Post Processing
+|FR-014 |Merchant shall be able to write a response to a post |Post Processing
+|FR-015 |Merchant shall be able to submit their response |Post Processing
+|FR-016 |System shall validate merchant responses before saving |Post Processing
+|FR-017 |System shall save validated responses to the database |Post Processing
+|FR-018 |System shall notify user when a merchant responds to their post |Post Processing
+|FR-019 |Merchant shall be able to ignore posts |Post Processing
+
+|FR-020 |Merchant shall be able to visit a registration page |Merchant Registration
+|FR-021 |Merchant shall be able to fill out a registration form |Merchant Registration
+|FR-022 |Merchant shall be able to submit their registration |Merchant Registration
+|FR-023 |System shall validate merchant registration information |Merchant Registration
+|FR-024 |System shall create merchant accounts upon successful registration |Merchant Registration
+|FR-025 |System shall send confirmation email to merchant after registration |Merchant Registration
+|FR-026 |Merchant shall be able to log in to the system |Merchant Registration
+
+|FR-027 |User shall be able to view post responses from merchants |User Interactions
+|FR-028 |User shall be able to message merchants in post responses |User Interactions
+|FR-029 |User shall be able to close their post when satisfied with a response |User Interactions
+|FR-030 |User shall be able to rate merchant responses |User Interactions
+|FR-031 |User shall be able to close their post at any time |User Interactions
+
+|FR-032 |Unregistered users shall receive a long-lived token for system access |User Authentication
+|FR-033 |Unregistered user tokens shall expire after 1 year |User Authentication
+|FR-034 |Unregistered users shall be able to create posts without logging in |User Authentication
+|FR-035 |Unregistered users shall be able to register at any time |User Authentication
+|FR-036 |System shall link existing posts and interactions when user registers |User Authentication
+|FR-037 |Lost tokens cannot be recovered without registration |User Authentication
+|FR-038 |Users shall be able to register with email and password |User Authentication
+|FR-039 |Users shall be able to register via OAuth providers (Google, Facebook) |User Authentication
+|FR-040 |Registered users shall be able to log in to access their data |User Authentication
+|FR-041 |Registered users shall be able to access posts across devices |User Authentication
+
+|FR-042 |Merchant Agent shall interact with posts on behalf of merchants |Agent Processing
+|FR-043 |Merchant Agent shall provide automated responses based on post content |Agent Processing
+|FR-044 |Merchant Agent shall provide automated offers based on post content |Agent Processing
+|===
+
