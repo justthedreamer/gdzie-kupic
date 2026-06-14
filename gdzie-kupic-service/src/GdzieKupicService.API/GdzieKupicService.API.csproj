@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,8 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GdzieKupicService.Contracts\GdzieKupicService.Contracts.csproj" />
-    <ProjectReference Include="..\GdzieKupicService.BLL\GdzieKupicService.BLL.csproj" />
+    <ProjectReference Include="..\GdzieKupicService.API.Contracts\GdzieKupicService.API.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
