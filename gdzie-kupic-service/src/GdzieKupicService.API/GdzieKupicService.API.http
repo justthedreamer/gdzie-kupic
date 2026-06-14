@@ -1,6 +1,0 @@
-@GdzieKupicService.API_HostAddress = http://localhost:5128
-
-GET {{GdzieKupicService.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
