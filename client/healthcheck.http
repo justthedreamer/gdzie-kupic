@@ -1,0 +1,22 @@
+### gdzie-kupic-service — health
+GET http://localhost:5000/weatherforecast
+
+###
+
+### gdzie-kupic-location-service — health
+GET http://localhost:5001/weatherforecast
+
+###
+
+### MinIO — S3 liveness
+GET http://localhost:9000/minio/health/live
+
+###
+
+### MinIO — S3 readiness (bucket access)
+GET http://localhost:9000/minio/health/ready
+
+###
+
+### Seq — UI reachable
+GET http://localhost:5341
