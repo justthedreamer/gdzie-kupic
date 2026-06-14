@@ -174,3 +174,9 @@ docker compose up -d --no-deps gk-service
 ```powershell
 docker compose logs -f gk-service
 ```
+
+---
+
+## Observability
+
+For the full logging architecture, enrichment properties, and step-by-step verification guide see [observability.md](observability.md).
