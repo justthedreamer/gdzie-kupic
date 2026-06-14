@@ -59,7 +59,6 @@ Use this template **exactly** for every issue created.
 Where `<label>` is one of:
 - `Service` — core backend (`gdzie-kupic-service`)
 - `UI` — frontend (`gdzie-kupic-ui`)
-- `Location Service` — geocoding service (`gdzie-kupic-location-service`)
 - `Epic` — phase-level epic issue
 
 ### Body format

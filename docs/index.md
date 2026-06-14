@@ -21,4 +21,3 @@ Design and planning documentation for the **Gdzie Kupic** platform.
 |---|---|
 | [`gdzie-kupic-service`](https://github.com/justthedreamer/gdzie-kupic-service) | Core backend — modular monolith |
 | [`gdzie-kupic-ui`](https://github.com/justthedreamer/gdzie-kupic-ui) | PWA frontend (Vue.js + Vite) |
-| [`gdzie-kupic-location-service`](https://github.com/justthedreamer/gdzie-kupic-location-service) | Geocoding service — stateless Google Maps proxy |

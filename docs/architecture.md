@@ -9,7 +9,6 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 |---|---|
 | `gdzie-kupic-service` | Core backend — modular monolith |
 | `gdzie-kupic-ui` | PWA frontend |
-| `gdzie-kupic-location-service` | Geocoding service |
 
 ---
 
@@ -18,25 +17,16 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 - The core backend (`gdzie-kupic-service`) is a **modular monolith**: a single deployable unit with a `Gdzie.Kupic.Marketplace` assembly (Posts, Merchants, Matching, Catalogue, Admin subfolders) alongside dedicated modules for Auth, Chat, Notifications, Realtime, Location, Storage, and Hangfire
 - Each module owns its own data access layer and exposes no direct internal dependencies to other modules
 - This structure preserves the option to extract a module into an independent service if scaling demands it, without requiring a rewrite
-- `gdzie-kupic-location-service` is a standalone stateless service: it has no shared database, no transactional coupling with the core, and acts purely as a geocoding proxy over the Google Maps API
 - `gdzie-kupic-ui` is an independently deployed PWA
 
 ---
 
 ## 2. Service Responsibilities
 
-### `gdzie-kupic-location-service` — Geocoding Service
-
-- Accepts an address string and returns coordinates (latitude, longitude, display name)
-- Proxies requests to the Google Maps Geocoding API
-- Stateless — no database, no persistent state
-- Called only when a user saves a location (account setup, adding/editing a saved location); never called during post creation or merchant matching
-
 ### `gdzie-kupic-ui` — PWA Frontend
 
 - Buyer and merchant-facing Progressive Web App
 - Communicates exclusively with `gdzie-kupic-service` (REST + SignalR)
-- Calls `gdzie-kupic-location-service` indirectly via `gdzie-kupic-service` — the UI never calls the location service directly
 
 ### `gdzie-kupic-service` — Core Backend Modules
 
@@ -54,7 +44,7 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 | &nbsp;&nbsp;`/Admin` | User ban enforcement (delegates to `Auth`), taxonomy management (internal to `Catalogue` subfolder) |
 | `Gdzie.Kupic.Chat` | Message persistence, thread management, image attachment references; defines `IChatChannel` |
 | `Gdzie.Kupic.Notifications` | Push subscription management, deduplication, Web Push and email dispatch; defines `INotificationChannel` |
-| `Gdzie.Kupic.Location` | HTTP client wrapping `gdzie-kupic-location-service` — address → coordinates conversion; called only during location save |
+| `Gdzie.Kupic.Location` | Google Maps Geocoding API client — address → coordinates + display name conversion; called only during location save; never called at post creation or matching time |
 | `Gdzie.Kupic.Storage` | Public API for file storage — upload, retrieve, delete; abstracts the S3-compatible backend |
 | `Gdzie.Kupic.Hangfire` | Hangfire abstraction — exposes a public interface for enqueuing and scheduling jobs; other modules never reference Hangfire directly |
 
@@ -84,8 +74,7 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 ## 3. Inter-Service Communication
 
 - `gdzie-kupic-ui` → `gdzie-kupic-service`: REST over HTTPS for all data operations; SignalR WebSocket for real-time events (status panel, feed updates, chat)
-- `gdzie-kupic-service` → `gdzie-kupic-location-service`: synchronous HTTP REST call only during location save (account setup, adding/editing a saved location); never called during post creation or matching
-- `gdzie-kupic-service` → Google Maps Geocoding API: proxied through `gdzie-kupic-location-service`; never called directly from the core
+- `gdzie-kupic-service` → Google Maps Geocoding API: called directly from `Gdzie.Kupic.Location` during location save only; never called during post creation or matching
 - No message broker or event bus for MVP — all inter-module communication within `gdzie-kupic-service` is in-process
 
 **Post-MVP consideration:** `Gdzie.Kupic.Matching` is the primary candidate for extraction into an independent service if subscription scoring, relevance ranking, or multiple merchant locations are introduced. The module boundary already isolates it for this purpose.
@@ -100,7 +89,6 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 - **Background jobs**: Hangfire job store persisted to the same PostgreSQL instance
 - **Outbox table**: `Outbox` records are written in the same transaction as the triggering domain write; processed by `OutboxRelayJob` and never deleted — retained for audit
 - **File storage**: chat image attachments stored in an S3-compatible object store; application code uses the S3 API exclusively — storage backend is swappable via configuration
-- `gdzie-kupic-location-service` has no database of its own
 
 ---
 
@@ -111,7 +99,6 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 - Account status (active / banned) is checked on every authenticated request; result is short-lived cached (~1 minute) to limit database load
 - Banned accounts are rejected immediately regardless of token validity
 - Three roles: `Buyer`, `MerchantAccount`, `Admin` — enforced at the API layer; no anonymous access
-- `gdzie-kupic-location-service` is internal and not exposed to the public internet — no auth required between services for MVP
 
 ---
 
@@ -229,9 +216,8 @@ app.MapRealtimeHubs();
 - MVP targets a single server deployment — no container orchestration required
 - Each service is deployed as a Docker container; a `docker-compose.yml` (production variant) defines the full stack
 - `gdzie-kupic-ui` is built with `vite build`; the output static files are served from an Nginx container
-- Nginx acts as a reverse proxy: routes `/api` and SignalR (`/hubs`) traffic to `gdzie-kupic-service`, serves `gdzie-kupic-ui` static assets, and routes geocoding calls to `gdzie-kupic-location-service`
+- Nginx acts as a reverse proxy: routes `/api` and SignalR (`/hubs`) traffic to `gdzie-kupic-service`, serves `gdzie-kupic-ui` static assets
 - TLS termination at Nginx
-- `gdzie-kupic-location-service` is not exposed publicly — accessible only to `gdzie-kupic-service` on the internal Docker network
 
 ---
 
