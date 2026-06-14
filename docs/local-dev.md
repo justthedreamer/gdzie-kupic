@@ -175,6 +175,24 @@ docker compose up -d --no-deps gk-service
 docker compose logs -f gk-service
 ```
 
+### Run a service locally against Docker infrastructure
+
+You can start only the infrastructure containers and run a .NET service directly on the host:
+
+```powershell
+# Start only what you need
+docker compose up -d seq
+docker compose up -d postgres minio seq
+
+# Then run the service locally
+cd gdzie-kupic-service/src/GdzieKupicService.API
+dotnet run
+```
+
+The locally running app connects to Seq on `http://localhost:5341` — exactly where Docker exposes it.
+This works because `appsettings.json` defaults to `"Seq:Url": "http://localhost:5341"`, and the
+`Seq__Url=http://seq:80` override in `docker-compose.yaml` only applies inside containers.
+
 ---
 
 ## Observability
