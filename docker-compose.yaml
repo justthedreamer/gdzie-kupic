@@ -1,0 +1,145 @@
+services:
+
+  # ─── Database ───────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: gk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # ─── Object Storage ─────────────────────────────────────────────────────────
+
+  minio:
+    image: minio/minio:latest
+    container_name: gk-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console — http://localhost:9001
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # ─── Logging ────────────────────────────────────────────────────────────────
+
+  seq:
+    image: datalust/seq:latest
+    container_name: gk-seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_FIRSTRUN_ADMINPASSWORD}
+      SEQ_API_KEY: ${SEQ_API_KEY:-}
+    ports:
+      - "5341:80"     # Web UI + ingestion — http://localhost:5341
+    volumes:
+      - seq-data:/data
+    networks:
+      - backend
+
+  # ─── Application Services ───────────────────────────────────────────────────
+  # NOTE: these services require Dockerfiles that are added during service
+  #       scaffold tasks.  Run `docker compose up postgres minio seq` to start
+  #       only infrastructure while the application services are being built.
+
+  gdzie-kupic-service:
+    build:
+      context: ./gdzie-kupic-service
+      dockerfile: Dockerfile
+    container_name: gk-service
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Seq__Url: http://seq:80
+      Seq__ApiKey: ${SEQ_API_KEY:-}
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__ExpiryDays: ${JWT_EXPIRY_DAYS:-7}
+      Storage__Endpoint: http://minio:9000
+      Storage__AccessKey: ${MINIO_ROOT_USER}
+      Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Storage__BucketName: ${MINIO_BUCKET_NAME:-attachments}
+      LocationService__Url: http://gdzie-kupic-location-service:8080
+      AdminSeed__Email: ${ADMIN_EMAIL}
+      AdminSeed__Password: ${ADMIN_PASSWORD}
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - backend
+
+  gdzie-kupic-location-service:
+    build:
+      context: ./gdzie-kupic-location-service
+      dockerfile: Dockerfile
+    container_name: gk-location-service
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_HTTP_PORTS: 8080
+      Seq__Url: http://seq:80
+      Seq__ApiKey: ${SEQ_API_KEY:-}
+      GoogleMaps__ApiKey: ${GOOGLE_MAPS_API_KEY}
+    ports:
+      - "5001:8080"
+    depends_on:
+      seq:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - backend
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
+
+volumes:
+  postgres-data:
+  minio-data:
+  seq-data:
+
+# ─── Networks ─────────────────────────────────────────────────────────────────
+
+networks:
+  backend:
