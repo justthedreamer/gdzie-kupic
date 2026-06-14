@@ -15,7 +15,6 @@
 | `gk-minio` | `minio/minio:latest` | S3-compatible object storage for chat attachments |
 | `gk-seq` | `datalust/seq:latest` | Structured log aggregation and search |
 | `gk-service` | build `./gdzie-kupic-service` | Core backend (modular monolith) |
-| `gk-location-service` | build `./gdzie-kupic-location-service` | Geocoding proxy over Google Maps |
 
 ---
 
@@ -82,7 +81,6 @@ docker compose down -v
 | MinIO web console | `9001` | `http://localhost:9001` |
 | Seq | `5341` | `http://localhost:5341` |
 | gdzie-kupic-service | `5000` | `http://localhost:5000` |
-| gdzie-kupic-location-service | `5001` | `http://localhost:5001` |
 
 ---
 

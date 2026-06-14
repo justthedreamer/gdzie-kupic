@@ -10,7 +10,6 @@ A buyer describes what they need — product, location, radius, budget — and t
 |---|---|
 | [`gdzie-kupic-service/`](gdzie-kupic-service/) | Core backend — modular monolith (C# / ASP.NET Core) |
 | [`gdzie-kupic-ui/`](gdzie-kupic-ui/) | PWA frontend (Vue.js + Quasar) |
-| [`gdzie-kupic-location-service/`](gdzie-kupic-location-service/) | Geocoding service — stateless Google Maps proxy (C# / ASP.NET Core) |
 
 ## Documentation
 

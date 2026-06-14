@@ -29,6 +29,15 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 ---
 
+## `gdzie-kupic-location-service`
+
+### Phase 1 — Location Service Scaffold
+
+- Scaffold ASP.NET Core project, Dockerfile, `/health` endpoint — **M**
+- Geocoding endpoint: accept address string, proxy to Google Maps API, return coordinates + display name — **M**
+
+---
+
 ## `gdzie-kupic-service`
 
 ### Phase 1 — Service Scaffold & Infrastructure
@@ -44,14 +53,14 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 - User model + registration (Buyer + MerchantAccount) + login + JWT issuance + refresh token rotation — **L**
 - Password reset via email: one-time link, token invalidation on use — **M**
-- Account status enforcement per-request (~1 min cache); banned account rejection; concurrent refresh token theft detection (revoke all tokens on collision); admin startup seeder (`AdminSeed:Email` / `AdminSeed:Password`) — **M**
+  - Account status enforcement per-request (~1 min cache); banned account rejection; concurrent refresh token theft detection (revoke all tokens on collision); admin startup seeder (`AdminSeed:Email` / `AdminSeed:Password`) — **M**
 
 ---
 
 ### Phase 3 — Catalogue, Locations & Merchant Onboarding
 
 - Category and tag management: admin CRUD, soft-disable, read endpoints; dev taxonomy seeder; `IMemoryCache` with invalidation on admin write — **M**
-- Buyer saved locations: add (browser geolocation + manual address via Google Maps API), list, delete — **M**
+- Buyer saved locations: add (browser geolocation + manual address via location service), list, delete — **M**
 - Merchant onboarding: create `Merchant` + `MerchantBranch` + `MerchantAccount` in one transaction + branch location setup — **L**
 - Category/tag subscription management: add, remove, list — **M**
 

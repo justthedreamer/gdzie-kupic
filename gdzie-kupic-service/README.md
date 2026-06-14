@@ -8,7 +8,6 @@ Core backend for the **Gdzie Kupic** reverse marketplace platform — a modular 
 |---|---|
 | `gdzie-kupic-service` ← *you are here* | Core backend — modular monolith |
 | [`gdzie-kupic-ui`](https://github.com/justthedreamer/gdzie-kupic-ui) | PWA frontend (Vue.js + Vite) |
-| [`gdzie-kupic-location-service`](https://github.com/justthedreamer/gdzie-kupic-location-service) | Geocoding service — stateless Google Maps proxy |
 
 ## Documentation
 

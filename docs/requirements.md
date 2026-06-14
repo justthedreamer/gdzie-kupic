@@ -23,7 +23,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 
 - **FR-LOC-1** — A buyer must add at least one saved location before creating a post
 - **FR-LOC-2** — A buyer can manage any number of named saved locations (e.g. "Home", "Office") at any time
-- **FR-LOC-3** — Location input — two methods: (a) "Find me" uses the browser Geolocation API — coordinates arrive directly from the frontend, no geocoding required; (b) manual address entry — geocoded once via `gdzie-kupic-location-service`, result stored as coordinates + display name
+- **FR-LOC-3** — Location input — two methods: (a) "Find me" uses the browser Geolocation API — coordinates arrive directly from the frontend, no geocoding required; (b) manual address entry — geocoded once via the Google Maps Geocoding API (`Gdzie.Kupic.Location` module), result stored as coordinates + display name
 - **FR-LOC-4** — Geocoding happens only when a location is saved; never at post creation time or during matching
 - **FR-LOC-5** — Coordinates are stored as `GEOGRAPHY(Point, 4326)`
 - **FR-LOC-6** — Merchant sets their branch location during onboarding using the same two input methods as buyers
@@ -161,7 +161,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 - **NFR-SEC-1** — Passwords stored as bcrypt hashes; plaintext passwords never persisted or logged
 - **NFR-SEC-2** — Refresh token values are stored as hashes; raw token values are never persisted
 - **NFR-SEC-3** — Banned accounts are rejected on every request regardless of token validity or expiry
-- **NFR-SEC-4** — `gdzie-kupic-location-service` is internal — not exposed to the public internet; no auth required between services for MVP
+- **NFR-SEC-4** — Google Maps API key is stored in configuration only (`GoogleMaps:ApiKey`); never committed to source control, never exposed to clients
 - **NFR-SEC-5** — All public endpoints require a valid JWT; no anonymous access
 - **NFR-SEC-6** — Post content is private — posts are visible only to their owner and merchants matched to that post; no public browsing
 

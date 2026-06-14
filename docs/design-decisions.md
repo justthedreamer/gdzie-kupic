@@ -11,7 +11,7 @@ Serves as the basis for the formal FR/NFR technical specification.
 - Buyer must add at least one saved location during account creation — required before posting
 - Buyer can manage any number of saved locations at any time (e.g. "Home", "Office")
 - Location input: "Find me" uses browser Geolocation API — coordinates arrive from the frontend directly, no geocoding needed
-- Manual address entry: address string is geocoded via `gdzie-kupic-location-service` once and stored as coordinates with a display name
+- Manual address entry: address string is geocoded via the Google Maps Geocoding API (`Gdzie.Kupic.Location`) once and stored as coordinates with a display name
 - Post creation: buyer selects from their saved locations — pure DB write, no external calls at post creation time
 - Buyer sets a search radius on their post — only the buyer defines how far to search
 
