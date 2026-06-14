@@ -63,9 +63,6 @@ services:
       - backend
 
   # ─── Application Services ───────────────────────────────────────────────────
-  # NOTE: these services require Dockerfiles that are added during service
-  #       scaffold tasks.  Run `docker compose up postgres minio seq` to start
-  #       only infrastructure while the application services are being built.
 
   gdzie-kupic-service:
     build:
