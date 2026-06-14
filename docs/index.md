@@ -12,7 +12,8 @@ Design and planning documentation for the **Gdzie Kupic** platform.
 | [data-model.md](data-model.md) | Database schema — all tables, columns, constraints, and indexes |
 | [requirements.md](requirements.md) | Functional and non-functional requirements derived from design decisions |
 | [planning.md](planning.md) | Implementation plan — phases, GitHub epics, and tickets with size estimates |
-| [local-dev.md](local-dev.md) | Local development setup — Docker Compose, ports, env vars, common tasks *(TBD)* |
+| [local-dev.md](local-dev.md) | Local development setup — Docker Compose, ports, env vars, common tasks |
+| [observability.md](observability.md) | Logging architecture, Serilog setup, Seq, enrichment properties, verification guide |
 
 ## Repositories
 

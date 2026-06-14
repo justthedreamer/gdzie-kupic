@@ -4,15 +4,19 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GdzieKupicService.Contracts\GdzieKupicService.Contracts.csproj" />
-    <ProjectReference Include="..\GdzieKupicService.BLL\GdzieKupicService.BLL.csproj" />
+    <ProjectReference Include="..\GdzieKupicService.API.Contracts\GdzieKupicService.API.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

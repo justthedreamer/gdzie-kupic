@@ -1,0 +1,12 @@
+**/.vs
+**/.git
+**/.idea
+**/bin
+**/obj
+**/*.user
+**/*.suo
+**/node_modules
+**/TestResults
+**/publish
+Dockerfile
+.dockerignore

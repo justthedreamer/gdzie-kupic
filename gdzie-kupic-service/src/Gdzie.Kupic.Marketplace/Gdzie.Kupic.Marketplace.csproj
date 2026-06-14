@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Admin\" />
+    <Folder Include="Catalogue\" />
+    <Folder Include="Matching\" />
+    <Folder Include="Merchants\" />
+    <Folder Include="Posts\" />
+  </ItemGroup>
+
+</Project>
