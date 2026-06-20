@@ -1,9 +1,9 @@
 using System.Diagnostics;
+using Gdzie.Kupic.Storage;
 using Serilog;
 using Serilog.Context;
 using Serilog.Formatting.Compact;
 
-// Bootstrap logger — captures fatal errors before full configuration is loaded
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
@@ -36,8 +36,11 @@ try
 
     builder.Services.AddOpenApi();
     builder.Services.AddControllers();
+    builder.Services.AddStorage(builder.Configuration);
 
     var app = builder.Build();
+
+    await app.UseStorage();
 
     if (app.Environment.IsDevelopment())
         app.MapOpenApi();

@@ -129,10 +129,21 @@ Or use any PostgreSQL client pointed at `localhost:5432`.
 
 ### Run EF Core migrations
 
-```bash
-cd gdzie-kupic-service/src
-dotnet ef database update --project GdzieKupicService.Infrastructure --startup-project GdzieKupicService.API
+All commands are run from `gdzie-kupic-service/src`.
+
+**Create a new migration** (after changing entities):
+
+```powershell
+dotnet ef migrations add <MigrationName> --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.Service.API\
 ```
+
+**Apply migrations to the database:**
+
+```powershell
+dotnet ef database update --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.Service.API\
+```
+
+> The startup project needs to be running (or at least buildable with a valid connection string) for `database update`. Make sure the `gk-postgres` container is up first.
 
 ### Run the stack without blocking the terminal
 

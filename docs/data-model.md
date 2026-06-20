@@ -111,7 +111,7 @@ All tables live in a single PostgreSQL database used by `gdzie-kupic-service`.
 |---|---|---|
 | `Id` | `uuid` | PK |
 | `BuyerId` | `uuid` | FK → Users |
-| `LocationId` | `uuid` | FK → SavedLocations |
+| `Coordinates` | `geography(Point, 4326)` | Copied from buyer's selected saved location at post creation time; not a FK |
 | `RadiusKm` | `decimal` | Buyer-defined search radius |
 | `CategoryId` | `uuid` | FK → Categories |
 | `TagId` | `uuid` | FK → Tags |
@@ -224,6 +224,7 @@ All tables live in a single PostgreSQL database used by `gdzie-kupic-service`.
 | `MerchantAccounts` | `UserId` | Unique B-tree | Account lookup by user identity |
 | `MerchantAccounts` | `MerchantId` | B-tree | Accounts lookup by merchant |
 | `SavedLocations` | `Coordinates` | GIST | Optional — future buyer proximity features |
+| `Posts` | `Coordinates` | GIST | Spatial queries (if needed for future buyer proximity features) |
 | `Posts` | `Status, ExpiresAt` | B-tree | Expiry job scan |
 | `Posts` | `BuyerId` | B-tree | Buyer post history |
 | `PostNotifications` | `(PostId, MerchantId)` | Unique B-tree | Deduplication |

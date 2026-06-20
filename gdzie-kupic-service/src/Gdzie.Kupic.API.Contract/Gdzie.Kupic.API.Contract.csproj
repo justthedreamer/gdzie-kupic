@@ -4,8 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>GdzieKupicService.Contracts</RootNamespace>
-        <LangVersion>13</LangVersion>
+        <RootNamespace>Gdzie.Kupic.Service.API.Contract</RootNamespace>
     </PropertyGroup>
 
 </Project>
