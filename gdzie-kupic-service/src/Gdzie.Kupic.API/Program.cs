@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Storage;
 using Serilog;
 using Serilog.Context;
@@ -36,11 +37,12 @@ try
 
     builder.Services.AddOpenApi();
     builder.Services.AddControllers();
-    builder.Services.AddStorage(builder.Configuration);
+    builder.Services.InstallStorageModule(builder.Configuration);
+    builder.Services.InstallLocationModule(builder.Configuration);
 
     var app = builder.Build();
 
-    await app.UseStorage();
+    await app.UseStorageModule();
 
     if (app.Environment.IsDevelopment())
         app.MapOpenApi();
