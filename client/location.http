@@ -1,0 +1,19 @@
+﻿GET http://localhost:5211/api/location
+Content-Type: application/json
+
+{
+  "latitude": "50.0614",
+  "longitude": "19.9366"
+}
+
+###
+
+GET http://localhost:5211/api/location
+Content-Type: application/json
+
+{
+  "latitude": "XD",
+  "longitude": "XDD"
+}
+
+###

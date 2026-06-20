@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>Gdzie.Kupic.Service.API</RootNamespace>
+        <UserSecretsId>ecbd957d-ea3c-4c87-a362-4ca199574c5a</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,6 +22,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Gdzie.Kupic.API.Contract\Gdzie.Kupic.API.Contract.csproj" />
+        <ProjectReference Include="..\Gdzie.Kupic.Location\Gdzie.Kupic.Location.csproj" />
         <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
     </ItemGroup>
 

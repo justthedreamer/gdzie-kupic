@@ -1,4 +1,4 @@
-﻿namespace GdzieKupicService.API.Controllers;
+﻿namespace Gdzie.Kupic.Service.API.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
 
