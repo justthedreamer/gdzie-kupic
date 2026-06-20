@@ -31,26 +31,30 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 ## `gdzie-kupic-service`
 
-### Phase 1 — Service Scaffold & Infrastructure
+### Phase 1.1 — Service Scaffold & Infrastructure
 
 - Solution scaffold: all `Gdzie.Kupic.*` projects, project references, NuGet baseline — **M**
-- Docker Compose stack: PostgreSQL + PostGIS, MinIO, Seq, all application services with health checks — **L**
+- Docker Compose stack: PostgreSQL + PostGIS, MinIO, Seq, all application services with health checks — **M**
 - EF Core baseline: DbContext, PostGIS extension, Serilog + Seq structured logging pipeline, initial schema migration — **M**
-- `Gdzie.Kupic.Hangfire` module: job store, worker, public enqueue/schedule interface — **M**
+- Location module: reverse geocoding endpoint via Google Geocoding API (`GET api/location`) — **M**
 
 ---
 
-### Phase 2 — Authentication
+### Phase 2.1 — Authentication
 
 - User model + registration (Buyer + MerchantAccount) + login + JWT issuance + refresh token rotation — **L**
-- Password reset via email: one-time link, token invalidation on use — **M**
-- Account status enforcement per-request (~1 min cache); banned account rejection; concurrent refresh token theft detection (revoke all tokens on collision); admin startup seeder (`AdminSeed:Email` / `AdminSeed:Password`) — **M**
+- User mock for testing: hardcoded long-lived access token; credentials committed to docs — **M**
+- Account status enforcement per-request (~1 min cache); banned account rejection; concurrent refresh token theft detection (revoke all tokens on collision) — **M**
+- Administrator mock: hardcoded long-lived access token; credentials committed to docs — **M**
+- CORS: service accepts requests only from the frontend domain — **M**
+- Location controller requires authentication — **M**
 
 ---
 
-### Phase 3 — Catalogue, Locations & Merchant Onboarding
+### Phase 3.1 — Catalogue, Locations & Merchant Onboarding
 
-- Category and tag management: admin CRUD, soft-disable, read endpoints; dev taxonomy seeder; `IMemoryCache` with invalidation on admin write — **M**
+- Define and provision catalogue: predefined categories and tags seeded in code with stable IDs, always present in the database — **M**
+- Category and tag management: admin CRUD, soft-disable, read endpoints; `IMemoryCache` with invalidation on admin write — **M**
 - Buyer saved locations: add (browser geolocation + manual address via Google Maps API), list, delete — **M**
 - Merchant onboarding: create `Merchant` + `MerchantBranch` + `MerchantAccount` in one transaction + branch location setup — **L**
 - Category/tag subscription management: add, remove, list — **M**
@@ -107,23 +111,28 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 ## `gdzie-kupic-ui`
 
-### Phase 1 — UI Scaffold
+### Phase 1.2 — Frontend Scaffold
 
-- Vue.js + Vite PWA scaffold: project setup, Vue Router, Pinia, Axios — **M**
-
----
-
-### Phase 2 — Authentication
-
-- Auth views: login, register (buyer + merchant), password reset; auth state (Pinia); protected routes — **L**
+- Frontend repository scaffold: Vue, Quasar, Vite, base folder structure; HTTP client for backend service — **M**
+- Location component: read location via browser Geolocation API, call `GET api/location`, display result to the user — **M**
+- Base styling: color palette, base utility components — **L**
 
 ---
 
-### Phase 3 — Catalogue, Locations & Merchant Onboarding
+### Phase 2.2 — Authentication
 
+- Redirect to sign-in page when the user is not authenticated — **M**
+- Display buttons to log in as Admin or User on the test instance — **M**
+- Display buttons to switch account or log out — **M**
+- Access token stored and attached to every outgoing request — **M**
+
+---
+
+### Phase 3.2 — Catalogue, Locations & Merchant Onboarding
+
+- CRUD component(s) for category management (admin) — **M**
 - Buyer saved location management: add via browser geolocation + manual address input, list, delete — **M**
 - Merchant onboarding flow: branch location setup + category/tag subscription setup — **L**
-- Admin taxonomy management UI: category + tag create, rename, soft-disable — **M**
 
 ---
 
