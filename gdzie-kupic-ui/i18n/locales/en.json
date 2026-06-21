@@ -1,0 +1,35 @@
+{
+  "home": {
+    "hero_title": "Find a product locally – without searching",
+    "tagline": "Describe what you want to buy and nearby stores will reply with offers.",
+    "cta": "Create a request",
+    "how_it_works": "How it works?",
+    "step_1": "Describe the product you want to buy and choose a location",
+    "step_2": "Nearby stores and sellers receive a notification",
+    "step_3": "Receive offers without searching – in one place"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Register",
+    "logout": "Log out",
+    "email": "E-mail",
+    "password": "Password",
+    "forgot_password": "Forgot your password?"
+  },
+  "request": {
+    "new": "New request",
+    "title": "Title",
+    "description": "Description",
+    "location": "Location",
+    "radius_km": "Radius (km)",
+    "budget": "Budget",
+    "category": "Category",
+    "urgency": "Urgency",
+    "submit": "Publish request"
+  },
+  "errors": {
+    "not_found": "Page not found",
+    "server_error": "Server error",
+    "unauthorized": "You need to be logged in"
+  }
+}

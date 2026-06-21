@@ -1,0 +1,35 @@
+{
+  "home": {
+    "hero_title": "Znajdź produkt lokalnie – bez szukania",
+    "tagline": "Opisz czego szukasz, a pobliskie sklepy odpiszą do Ciebie z ofertami.",
+    "cta": "Utwórz zapytanie",
+    "how_it_works": "Jak to działa?",
+    "step_1": "Opisz produkt, który chcesz kupić i wybierz lokalizację",
+    "step_2": "Pobliskie sklepy i sprzedawcy otrzymują powiadomienie",
+    "step_3": "Odbierasz oferty bez szukania – w jednym miejscu"
+  },
+  "auth": {
+    "login": "Zaloguj się",
+    "register": "Zarejestruj się",
+    "logout": "Wyloguj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "forgot_password": "Nie pamiętasz hasła?"
+  },
+  "request": {
+    "new": "Nowe zapytanie",
+    "title": "Tytuł",
+    "description": "Opis",
+    "location": "Lokalizacja",
+    "radius_km": "Zasięg (km)",
+    "budget": "Budżet",
+    "category": "Kategoria",
+    "urgency": "Pilność",
+    "submit": "Opublikuj zapytanie"
+  },
+  "errors": {
+    "not_found": "Strona nie została znaleziona",
+    "server_error": "Błąd serwera",
+    "unauthorized": "Musisz być zalogowany"
+  }
+}
