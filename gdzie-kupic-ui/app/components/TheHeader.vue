@@ -10,9 +10,7 @@ const navLinks = [
 <template>
   <header class="border-b bg-white">
     <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
-      <NuxtLink :to="localePath('/')" class="text-xl font-bold tracking-tight">
-        Gdzie Kupić
-      </NuxtLink>
+      <AppLogo />
 
       <div class="hidden md:flex items-center gap-6">
         <NuxtLink

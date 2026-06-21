@@ -67,7 +67,7 @@ export default defineNuxtConfig({
   // ─── Runtime config (env vars) ────────────────────────────────────────────
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:3000',
+      apiBase: 'http://localhost:5211',
     },
   },
 })
