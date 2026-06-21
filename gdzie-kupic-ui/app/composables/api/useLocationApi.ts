@@ -16,6 +16,6 @@ export const useLocationApi = () => {
 
   return {
     getLocation: (coords: LocationRequest): Promise<LocationResponse> =>
-      api.get<LocationResponse>('/api/location', { body: coords }),
+      api.get<LocationResponse>('/api/location', { params: coords }),
   }
 }
