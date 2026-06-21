@@ -10,12 +10,10 @@ const navLinks = [
 <template>
   <header class="border-b bg-white">
     <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
-      <!-- Logo -->
       <NuxtLink :to="localePath('/')" class="text-xl font-bold tracking-tight">
         Gdzie Kupić
       </NuxtLink>
 
-      <!-- Centre links -->
       <div class="hidden md:flex items-center gap-6">
         <NuxtLink
           v-for="link in navLinks"
@@ -28,7 +26,6 @@ const navLinks = [
         </NuxtLink>
       </div>
 
-      <!-- Auth actions -->
       <div class="flex items-center gap-3">
         <template v-if="authStore.isAuthenticated">
           <span class="text-sm text-gray-600 hidden sm:inline">

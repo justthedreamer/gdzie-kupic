@@ -6,7 +6,6 @@ useSeoMeta({
   description: t('home.tagline'),
 })
 
-// Dummy data — replace with a real API call via useApi()
 const recentRequests = [
   {
     id: '1',
@@ -42,6 +41,7 @@ const recentRequests = [
 </script>
 
 <template>
+  <div>
   <!-- Hero -->
   <AppHero
     :title="$t('home.hero_title')"
@@ -85,4 +85,5 @@ const recentRequests = [
       </div>
     </div>
   </section>
+  </div>
 </template>

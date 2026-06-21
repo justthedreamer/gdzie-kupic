@@ -1,8 +1,4 @@
-/**
- * Composable wrapping $fetch with the configured API base URL.
- * Usage: const api = useApi()
- *        const data = await api.get<MyType>('/endpoint')
- */
+// Low-level HTTP wrapper — see docs in FRAMEWORK.md § Data fetching
 export const useApi = () => {
   const config = useRuntimeConfig()
   const baseURL = config.public.apiBase as string
