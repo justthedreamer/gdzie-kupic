@@ -1,17 +1,9 @@
 <script setup lang="ts">
+import type { RequestCardProps } from '~/components/RequestCard.vue'
+
 useSeoMeta({ title: 'Zapytania | Gdzie Kupić' })
 
-// TODO: replace with useApi() fetch
-const requests: {
-  id: string
-  title: string
-  category: string
-  city: string
-  radiusKm: number
-  notifiedCount: number
-  offersCount: number
-  postedAt: Date
-}[] = []
+const requests: RequestCardProps[] = []
 </script>
 
 <template>

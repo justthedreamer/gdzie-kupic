@@ -1,2 +1,18 @@
-@import "tailwindcss";
-@import "@nuxt/ui";
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+/* Custom brand palette — see docs/theming.md */
+@theme static {
+  --color-brand-50:  oklch(0.97 0.02 267);
+  --color-brand-100: oklch(0.93 0.05 267);
+  --color-brand-200: oklch(0.86 0.09 267);
+  --color-brand-300: oklch(0.76 0.14 267);
+  --color-brand-400: oklch(0.64 0.19 267);
+  --color-brand-500: oklch(0.54 0.23 267);
+  --color-brand-600: oklch(0.46 0.22 267);
+  --color-brand-700: oklch(0.39 0.18 267);
+  --color-brand-800: oklch(0.31 0.14 267);
+  --color-brand-900: oklch(0.24 0.10 267);
+  --color-brand-950: oklch(0.16 0.06 267);
+}
+
