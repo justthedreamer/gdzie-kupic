@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Storage;
+using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
 using Serilog.Formatting.Compact;
@@ -19,13 +20,12 @@ try
         var seqUrl      = ctx.Configuration["Seq:Url"];
         var seqApiKey   = ctx.Configuration["Seq:ApiKey"];
 
-        cfg.ReadFrom.Configuration(ctx.Configuration)   // reads Serilog:MinimumLevel from appsettings
+        cfg.ReadFrom.Configuration(ctx.Configuration)
            .Enrich.FromLogContext()
            .Enrich.WithMachineName()
            .Enrich.WithEnvironmentName()
            .Enrich.WithProperty("ServiceName", serviceName);
 
-        // Human-readable console in Development, compact JSON everywhere else
         if (ctx.HostingEnvironment.IsDevelopment())
             cfg.WriteTo.Console();
         else
@@ -35,7 +35,18 @@ try
             cfg.WriteTo.Seq(seqUrl, apiKey: string.IsNullOrEmpty(seqApiKey) ? null : seqApiKey);
     });
 
-    builder.Services.AddOpenApi();
+    builder.Services.AddOpenApi(options => {
+        options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_1;
+    });
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("Frontend", policy => policy
+            .WithOrigins(builder.Configuration["Cors:AllowedOrigin"] ?? "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+    });
+
     builder.Services.AddControllers();
     builder.Services.InstallStorageModule(builder.Configuration);
     builder.Services.InstallLocationModule(builder.Configuration);
@@ -45,7 +56,10 @@ try
     await app.UseStorageModule();
 
     if (app.Environment.IsDevelopment())
+    {
         app.MapOpenApi();
+        app.MapScalarApiReference();
+    }
 
     // Enrich every log entry within a request with TraceId and CorrelationId
     app.Use(async (context, next) =>
@@ -63,10 +77,12 @@ try
     // Single structured log line per request: method, path, status, elapsed
     app.UseSerilogRequestLogging();
 
+    app.UseCors("Frontend");
+
     app.MapControllers();
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "GdzieKupicService" }));
 
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {

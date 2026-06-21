@@ -5,11 +5,16 @@ using Gdzie.Kupic.Service.API;
 using Gdzie.Kupic.Service.API.Contract.Location;
 using Microsoft.AspNetCore.Mvc;
 
+[ApiController]
 [Route("api/location")]
 public class LocationController(ILocationService locationService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<GetLocation.Response>> GetLocation([FromBody] GetLocation.Request request)
+    [ProducesResponseType<GetLocation.Response>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<GetLocation.Response>> GetLocation([FromQuery] GetLocation.Request request)
     {
         var (location, validationError, internalError) =
             await locationService.GetLocationAsync(request.Longitude, request.Latitude);
@@ -22,7 +27,7 @@ public class LocationController(ILocationService locationService) : ControllerBa
                 detail: validationError);
         }
 
-        if (locationService is null)
+        if (location  is null)
         {
             return this.Problem(
                 statusCode: 404,
