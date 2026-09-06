@@ -134,13 +134,13 @@ All commands are run from `gdzie-kupic-service/src`.
 **Create a new migration** (after changing entities):
 
 ```powershell
-dotnet ef migrations add <MigrationName> --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.Service.API\
+dotnet ef migrations add <MigrationName> --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.API\
 ```
 
 **Apply migrations to the database:**
 
 ```powershell
-dotnet ef database update --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.Service.API\
+dotnet ef database update --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.API\
 ```
 
 > The startup project needs to be running (or at least buildable with a valid connection string) for `database update`. Make sure the `gk-postgres` container is up first.
