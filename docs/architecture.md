@@ -35,7 +35,7 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 | `Gdzie.Kupic.API` | Application entry point — HTTP controllers, middleware, DI composition root |
 | `Gdzie.Kupic.API.Contracts` | Public API definitions — request/response DTOs, shared across API and test projects |
 | `Gdzie.Kupic.Realtime` | SignalR hubs and hub registration infrastructure; implements all module push interfaces (`IPostFeedChannel`, `IChatChannel`, `INotificationChannel`) using `IHubContext<T>`; the only module with a SignalR dependency |
-| `Gdzie.Kupic.Auth` | Registration, login, JWT issuance, refresh token rotation, password reset, account status enforcement |
+| `Gdzie.Kupic.Auth` | Registration, login (password + Google OAuth), JWT issuance, refresh token rotation, password reset, account status enforcement |
 | `Gdzie.Kupic.Marketplace` | Single assembly containing all core domain logic, organised into subfolders with internal boundaries: |
 | &nbsp;&nbsp;`/Posts` | Post creation, lifecycle management (`Active → Fulfilled / Closed / Expired`), expiry scheduling, urgency handling, outbox entry creation; defines `IPostFeedChannel` |
 | &nbsp;&nbsp;`/Merchants` | `Merchants` (business entity), `MerchantAccounts` (User↔Merchant link), `MerchantBranches` (physical locations with coordinates and contact details), category/tag subscriptions, response state machine |
@@ -98,7 +98,7 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 - Refresh tokens are rotated on every use; previous token is invalidated immediately
 - Account status (active / banned) is checked on every authenticated request; result is short-lived cached (~1 minute) to limit database load
 - Banned accounts are rejected immediately regardless of token validity
-- Three roles: `Buyer`, `MerchantAccount`, `Admin` — enforced at the API layer; no anonymous access
+- Three roles: `Buyer`, `Merchant`, `Admin` — enforced at the API layer; no anonymous access
 
 ---
 

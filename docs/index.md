@@ -8,6 +8,7 @@ Design and planning documentation for the **Gdzie Kupic** platform.
 |---|---|
 | [specification.md](specification.md) | Project vision, problem statement, solution overview, roadmap |
 | [design-decisions.md](design-decisions.md) | Record of all system design decisions made during the architecture phase |
+| [adr/](adr/README.md) | Architecture Decision Records — detailed rationale behind significant decisions |
 | [architecture.md](architecture.md) | Authoritative architecture reference — service boundaries, modules, communication patterns, infrastructure |
 | [data-model.md](data-model.md) | Database schema — all tables, columns, constraints, and indexes |
 | [requirements.md](requirements.md) | Functional and non-functional requirements derived from design decisions |

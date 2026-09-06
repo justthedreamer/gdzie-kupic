@@ -92,7 +92,7 @@ Serves as the basis for the formal FR/NFR technical specification.
 
 ## 6. Authentication & Authorization
 
-- Three account types: `Buyer`, `MerchantAccount`, `Admin` - each with distinct permissions; no guest/anonymous access
+- Three account types: `Buyer`, `Merchant`, `Admin` - each with distinct permissions; no guest/anonymous access
 - All content is private - posts are visible only to their owner and matched merchants; no public browsing
 - JWT-based authentication: access token (lifetime configurable, default 7 days) + refresh token
 - Refresh tokens are rotated on every use - old tokens are invalidated immediately
@@ -101,6 +101,11 @@ Serves as the basis for the formal FR/NFR technical specification.
 - Buyer and Merchant self-register with separate account types; same registration flow, different role
 - Admin accounts are provisioned directly - no self-registration path
 - Merchant registration is open and free; no verification required for MVP
+- OAuth login (Google, MVP scope) is supported alongside password login; an account may have a password, a linked Google login, or both - `PasswordHash` is nullable for OAuth-only accounts
+- OAuth is implemented with standalone ASP.NET Core authentication handlers (e.g. `Microsoft.AspNetCore.Authentication.Google`) used only for the redirect/callback exchange - not ASP.NET Core Identity; the platform's own `Users`/`RefreshTokens` model and JWT issuance are unchanged and used for both login methods
+- Role (`Buyer` or `Merchant`) for a new OAuth account is decided by which entry point started the flow (separate buttons per role), carried through the OAuth `state` parameter - never asked after the callback
+- On OAuth callback, if the returned email matches an existing account, the Google login is linked to that account automatically (Google is treated as a trusted email verifier); otherwise a new account is created with the role selected before redirect
+- Admin accounts cannot be created or linked via OAuth
 
 ---
 

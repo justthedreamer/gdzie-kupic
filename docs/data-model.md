@@ -12,11 +12,22 @@ All tables live in a single PostgreSQL database used by `gdzie-kupic-service`.
 |---|---|---|
 | `Id` | `uuid` | PK |
 | `Email` | `text` | Unique, not null |
-| `PasswordHash` | `text` | Bcrypt |
-| `Role` | `text` | `Buyer`, `MerchantAccount`, `Admin` |
+| `PasswordHash` | `text` | Bcrypt; nullable - OAuth-only accounts have no password |
+| `Role` | `text` | `Buyer`, `Merchant`, `Admin` |
 | `Status` | `text` | `Active`, `Banned` |
 | `CreatedAt` | `timestamptz` | |
 | `BannedAt` | `timestamptz` | Nullable |
+
+### `ExternalLogins`
+| Column | Type | Notes |
+|---|---|---|
+| `Id` | `uuid` | PK |
+| `UserId` | `uuid` | FK → Users |
+| `Provider` | `text` | `Google` for MVP |
+| `ProviderKey` | `text` | Provider's stable subject/user id |
+| `CreatedAt` | `timestamptz` | |
+
+Unique constraint on (`Provider`, `ProviderKey`) - one external identity links to exactly one account.
 
 ### `RefreshTokens`
 | Column | Type | Notes |

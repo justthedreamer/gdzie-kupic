@@ -15,7 +15,9 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 - **FR-AUTH-4** — Account status (`Active` / `Banned`) is checked on every authenticated request; a banned account's access token is rejected regardless of expiry
 - **FR-AUTH-5** — Password reset is via a one-time email link; on use, the link is invalidated and the user sets a new password
 - **FR-AUTH-6** — No anonymous or guest access; all endpoints require authentication
-- **FR-AUTH-7** — Three roles: `Buyer`, `MerchantAccount`, `Admin`; permissions are enforced at the API layer
+- **FR-AUTH-7** — Three roles: `Buyer`, `Merchant`, `Admin`; permissions are enforced at the API layer
+- **FR-AUTH-8** — Buyers and MerchantAccounts may additionally register/log in via Google OAuth; role is determined by the entry point that started the flow, not asked after the callback
+- **FR-AUTH-9** — An account may have a password, a linked Google login, or both; if a Google login's email matches an existing account, it is linked automatically
 
 ---
 
@@ -113,7 +115,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 ### FR-ADMIN — Admin
 
 - **FR-ADMIN-1** — Admin manages the category and tag taxonomy (create, rename, soft-disable)
-- **FR-ADMIN-2** — Admin can ban any user account (buyer or MerchantAccount); ban takes effect immediately
+- **FR-ADMIN-2** — Admin can ban any user account (buyer or merchant); ban takes effect immediately
 - **FR-ADMIN-3** — **Buyer ban effects**: all active posts are immediately expired; all chat threads involving the buyer are locked; merchants see a notice in each affected thread
 - **FR-ADMIN-4** — **Merchant ban effects**: merchant cannot submit new responses; existing responses remain visible to buyers; all chat threads with that merchant are locked; buyers see a notice in each affected thread; merchant's push subscriptions are removed
 - **FR-ADMIN-5** — Admin account is created by a startup seeder; credentials (`AdminSeed:Email`, `AdminSeed:Password`) are read from configuration; seeder runs only if no admin account exists yet; idempotent — safe to run on every startup

@@ -18,7 +18,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 | Phase | Name | Deliverable |
 |---|---|---|
 | P1 | Infrastructure & Scaffolding | All repos compile; full Docker Compose stack starts; health endpoints respond |
-| P2 | Authentication | Register and log in as Buyer, MerchantAccount, or Admin; JWT + refresh token flow working end-to-end |
+| P2 | Authentication | Register and log in as Buyer, Merchant, or Admin; JWT + refresh token flow working end-to-end |
 | P3 | Catalogue, Locations & Merchant Onboarding | Admin can manage taxonomy; buyer has saved locations; merchant is fully onboarded with location + subscriptions |
 | P4 | Post Lifecycle & Matching | Buyer can create a post; matched merchants are queued for notification; status panel shows dispatch state |
 | P5 | Merchant Response & Chat | Merchant can respond to a post; chat thread opens; full core loop works without real-time |
@@ -42,7 +42,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 ### Phase 2.1 — Authentication
 
-- User model + registration (Buyer + MerchantAccount) + login + JWT issuance + refresh token rotation — **L**
+- User model + registration (Buyer + Merchant) + login + JWT issuance + refresh token rotation — **L**
 - User mock for testing: hardcoded long-lived access token; credentials committed to docs — **M**
 - Account status enforcement per-request (~1 min cache); banned account rejection; concurrent refresh token theft detection (revoke all tokens on collision) — **M**
 - Administrator mock: hardcoded long-lived access token; credentials committed to docs — **M**
