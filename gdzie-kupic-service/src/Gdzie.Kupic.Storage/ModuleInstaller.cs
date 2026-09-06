@@ -20,6 +20,7 @@ public static class ModuleInstaller
 
         services.Configure<AdminSeedSettings>(configuration.GetSection("Seeding:Admin"));
         services.AddScoped<StorageSeeder>();
+        services.AddScoped<IAuthStorage, AuthStorage>();
     }
 
     public static async Task UseStorageModule(this IHost host, CancellationToken ct = default)
