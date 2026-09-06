@@ -73,18 +73,18 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_HTTP_PORTS: 8080
-      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       Seq__Url: http://seq:80
       Seq__ApiKey: ${SEQ_API_KEY:-}
       Jwt__Secret: ${JWT_SECRET}
-      Jwt__ExpiryDays: ${JWT_EXPIRY_DAYS:-7}
+      Jwt__AccessTokenLifetimeDays: ${JWT_EXPIRY_DAYS:-7}
       Storage__Endpoint: http://minio:9000
       Storage__AccessKey: ${MINIO_ROOT_USER}
       Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
       Storage__BucketName: ${MINIO_BUCKET_NAME:-attachments}
       GoogleMaps__ApiKey: ${GOOGLE_MAPS_API_KEY}
-      AdminSeed__Email: ${ADMIN_EMAIL}
-      AdminSeed__Password: ${ADMIN_PASSWORD}
+      Seeding__Admin__Email: ${ADMIN_EMAIL}
+      Seeding__Admin__Password: ${ADMIN_PASSWORD}
     ports:
       - "5000:8080"
     depends_on:
@@ -95,7 +95,7 @@ services:
       seq:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
