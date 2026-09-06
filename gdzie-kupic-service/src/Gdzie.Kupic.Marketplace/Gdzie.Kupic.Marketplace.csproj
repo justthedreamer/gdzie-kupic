@@ -7,12 +7,4 @@
     <LangVersion>13</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Admin\" />
-    <Folder Include="Catalogue\" />
-    <Folder Include="Matching\" />
-    <Folder Include="Merchants\" />
-    <Folder Include="Posts\" />
-  </ItemGroup>
-
 </Project>
