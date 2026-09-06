@@ -7,4 +7,23 @@
     <LangVersion>13</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gdzie.Kupic.Tests.Unit"/>
+    <InternalsVisibleTo Include="Gdzie.Kupic.Tests.Integration"/>
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
+  </ItemGroup>
+
 </Project>
