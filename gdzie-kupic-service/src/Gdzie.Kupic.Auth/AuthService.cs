@@ -13,6 +13,7 @@ public class AuthService(
     IOptions<RefreshTokenSettings> refreshTokenOptions) : IAuthService
 {
     private const int MinimumPasswordLength = 8;
+    private const string GoogleProvider = "Google";
 
     private readonly RefreshTokenSettings _refreshTokenSettings = refreshTokenOptions.Value;
 
@@ -113,5 +114,32 @@ public class AuthService(
             createdAt: DateTimeOffset.UtcNow));
 
         return (accessToken, refreshToken, expiresAt);
+    }
+
+    public async Task<GoogleSignInResult> GoogleSignInAsync(string providerKey, string email, Role role)
+    {
+        var user = await authStorage.FindUserByExternalLoginAsync(GoogleProvider, providerKey);
+
+        if (user is null)
+        {
+            user = await authStorage.FindUserByEmailAsync(email);
+
+            if (user is null)
+            {
+                user = new User(Guid.NewGuid(), email, passwordHash: null, role, DateTimeOffset.UtcNow);
+                await authStorage.AddUserAsync(user);
+            }
+
+            await authStorage.AddExternalLoginAsync(new ExternalLogin(
+                Guid.NewGuid(),
+                user.Id,
+                GoogleProvider,
+                providerKey,
+                DateTimeOffset.UtcNow));
+        }
+
+        var (accessToken, refreshToken, expiresAt) = await IssueTokensAsync(user);
+
+        return new GoogleSignInResult(accessToken, refreshToken, expiresAt);
     }
 }

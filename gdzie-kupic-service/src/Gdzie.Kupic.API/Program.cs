@@ -4,6 +4,8 @@ using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Domain;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Storage;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -93,6 +95,9 @@ try
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");
 
+    var googleAuthSettings = builder.Configuration.GetSection(GoogleAuthSettings.SectionName).Get<GoogleAuthSettings>()
+        ?? throw new InvalidOperationException($"Missing '{GoogleAuthSettings.SectionName}' configuration section.");
+
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -107,6 +112,19 @@ try
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
             };
+        })
+        // Temporary cookie used only to carry the ClaimsPrincipal from the Google handler
+        // (which intercepts the callback at CallbackPath) to our own /auth/google/callback
+        // action - it is signed out immediately after the tokens are issued.
+        .AddCookie(GoogleAuthConstants.ExternalCookieScheme, options =>
+        {
+            options.Cookie.Name = "GdzieKupic.External";
+        })
+        .AddGoogle(options =>
+        {
+            options.SignInScheme = GoogleAuthConstants.ExternalCookieScheme;
+            options.ClientId = googleAuthSettings.ClientId;
+            options.ClientSecret = googleAuthSettings.ClientSecret;
         });
 
     builder.Services.AddAuthorization();
