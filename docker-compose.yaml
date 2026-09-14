@@ -78,6 +78,7 @@ services:
       Seq__ApiKey: ${SEQ_API_KEY:-}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__AccessTokenLifetimeDays: ${JWT_EXPIRY_DAYS:-7}
+      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       Storage__Endpoint: http://minio:9000
       Storage__AccessKey: ${MINIO_ROOT_USER}
       Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
