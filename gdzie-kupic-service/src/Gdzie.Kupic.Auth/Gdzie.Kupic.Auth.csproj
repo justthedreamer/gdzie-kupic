@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Gdzie.Kupic.Tests.Unit"/>
-    <InternalsVisibleTo Include="Gdzie.Kupic.Tests.Integration"/>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
   </ItemGroup>
 
