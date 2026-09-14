@@ -114,6 +114,22 @@ Copy to `.env` and fill in real values before starting the stack.
 Open [http://localhost:5341](http://localhost:5341) in your browser.
 All .NET services ship structured logs via Serilog to this instance.
 
+### Access the API documentation (Swagger UI)
+
+Each .NET service exposes an OpenAPI document and an interactive Swagger UI when running in the
+`Development` environment (the default for `docker compose up`):
+
+- UI: `http://localhost:5000/swagger` (or the equivalent port for other services, see
+  [Service Ports](#service-ports))
+- Raw OpenAPI document: `http://localhost:5000/swagger/v1/swagger.json`
+
+Use the "Authorize" button to paste a JWT access token (obtained from `/auth/sign-in` or
+`/auth/sign-up`) so requests to protected endpoints are authenticated, then use "Try it out" on
+any endpoint to send a real request directly from the browser — no separate REST client needed.
+
+When running a service locally with `dotnet run` instead of Docker, the same paths are available
+on whatever port `dotnet run` prints (see [launchSettings.json](../gdzie-kupic-service/src/Gdzie.Kupic.API/Properties/launchSettings.json), e.g. `http://localhost:5211/swagger`).
+
 ### Access MinIO console
 
 Open [http://localhost:9001](http://localhost:9001) and log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`.
@@ -134,13 +150,13 @@ All commands are run from `gdzie-kupic-service/src`.
 **Create a new migration** (after changing entities):
 
 ```powershell
-dotnet ef migrations add <MigrationName> --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.Service.API\
+dotnet ef migrations add <MigrationName> --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.API\
 ```
 
 **Apply migrations to the database:**
 
 ```powershell
-dotnet ef database update --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.Service.API\
+dotnet ef database update --project .\Gdzie.Kupic.Storage\ --startup-project .\Gdzie.Kupic.API\
 ```
 
 > The startup project needs to be running (or at least buildable with a valid connection string) for `database update`. Make sure the `gk-postgres` container is up first.

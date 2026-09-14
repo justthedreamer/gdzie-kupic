@@ -8,13 +8,22 @@ Status legend: `Open` (not discussed yet) · `Discussing` · `Decided` · `Draft
 
 ---
 
-## Epic — [Epic] Phase 2: Authentication
+## Epic — [Epic] Phase 2: Authentication — [#21](https://github.com/justthedreamer/gdzie-kupic/issues/21)
 
 **Deliverable:** Register and log in as Buyer, Merchant, or Admin; JWT + refresh token flow working end-to-end (per [planning.md](../docs/planning.md)).
 
-**Sub-issues:** _(filled in once drafted/approved)_
+**Sub-issues:**
 
-- [ ] #TBD ...
+- [ ] #22 [Service]: User Registration, Login & JWT/Refresh Token Issuance
+- [ ] #23 [Service]: Google OAuth Login & Registration
+- [ ] #24 [Service]: Account Status Enforcement & Refresh Token Theft Detection
+- [ ] #25 [Service]: Mock Login Tokens for Test Buyer, Merchant & Admin Accounts
+- [ ] #26 [Service]: CORS Configuration Verification & Multi-Origin Support
+- [ ] #27 [Service]: Location Controller Requires Authentication
+- [ ] #28 [UI]: Redirect to Sign-In (Verification)
+- [ ] #29 [UI]: Dev/Test Account Switcher
+- [ ] #30 [UI]: Access Token Attached to Every Request
+- [ ] #31 [UI]: Google OAuth Buttons & Role Toggle on Registration
 
 ---
 
@@ -22,13 +31,13 @@ Status legend: `Open` (not discussed yet) · `Discussing` · `Decided` · `Draft
 
 | # | Task (from planning.md) | Size | FR-* | Status |
 |---|---|---|---|---|
-| 1 | User model + registration (Buyer + Merchant) + login + JWT issuance + refresh token rotation | L | FR-AUTH-1, FR-AUTH-2, FR-AUTH-3, FR-AUTH-3a, FR-AUTH-7, NFR-SEC-1, NFR-SEC-2 | Ready — see [below](#drafted-service-user-registration-login--jwtrefresh-token-issuance) |
-| 2 | User mock for testing: hardcoded long-lived access token (merged with task 4) | M | — | Ready — see [below](#drafted-service-mock-login-tokens-for-test-buyer-merchant--admin-accounts) |
-| 3 | Account status enforcement per-request (~1 min cache); banned rejection; refresh token theft detection | M | FR-AUTH-4, FR-AUTH-3a, NFR-SEC-3 | Ready — see [below](#drafted-service-account-status-enforcement--refresh-token-theft-detection) |
+| 1 | User model + registration (Buyer + Merchant) + login + JWT issuance + refresh token rotation | L | FR-AUTH-1, FR-AUTH-2, FR-AUTH-3, FR-AUTH-3a, FR-AUTH-7, NFR-SEC-1, NFR-SEC-2 | [#22](https://github.com/justthedreamer/gdzie-kupic/issues/22) |
+| 2 | User mock for testing: hardcoded long-lived access token (merged with task 4) | M | — | [#25](https://github.com/justthedreamer/gdzie-kupic/issues/25) |
+| 3 | Account status enforcement per-request (~1 min cache); banned rejection; refresh token theft detection | M | FR-AUTH-4, FR-AUTH-3a, NFR-SEC-3 | [#24](https://github.com/justthedreamer/gdzie-kupic/issues/24) |
 | 4 | ~~Administrator mock~~ — merged into task 2 | — | — | Merged into #2 |
-| 5 | CORS: service accepts requests only from the frontend domain (already implemented Phase 1 — this ticket verifies/hardens it) | M | — | Ready — see [below](#drafted-service-cors-configuration-verification--multi-origin-support) |
-| 6 | Location controller requires authentication | M | FR-AUTH-6, NFR-SEC-5 | Ready — see [below](#drafted-service-location-controller-requires-authentication) |
-| 7 | Google OAuth login/registration (callback handling, account auto-link by email, role from `state` param, `ExternalLogins` table) | M | FR-AUTH-8, FR-AUTH-9 | Ready — see [below](#drafted-service-google-oauth-login--registration) |
+| 5 | CORS: service accepts requests only from the frontend domain (already implemented Phase 1 — this ticket verifies/hardens it) | M | — | [#26](https://github.com/justthedreamer/gdzie-kupic/issues/26) |
+| 6 | Location controller requires authentication | M | FR-AUTH-6, NFR-SEC-5 | [#27](https://github.com/justthedreamer/gdzie-kupic/issues/27) |
+| 7 | Google OAuth login/registration (callback handling, account auto-link by email, role from `state` param, `ExternalLogins` table) | M | FR-AUTH-8, FR-AUTH-9 | [#23](https://github.com/justthedreamer/gdzie-kupic/issues/23) |
 
 _(Task 1 and Task 7 kept as two separate draft tickets — closely related but distinct scope. Revisit merging them if it makes review easier.)_
 
@@ -38,11 +47,11 @@ _(Task 1 and Task 7 kept as two separate draft tickets — closely related but d
 
 | # | Task (from planning.md) | Size | Status |
 |---|---|---|---|
-| 1 | Redirect to sign-in page when the user is not authenticated | M | Ready — see [below](#drafted-ui-redirect-to-sign-in-verification) |
-| 2 | Display buttons to log in as Admin or User on the test instance (merged with task 3) | M | Ready — see [below](#drafted-ui-devtest-account-switcher) |
+| 1 | Redirect to sign-in page when the user is not authenticated | M | [#28](https://github.com/justthedreamer/gdzie-kupic/issues/28) |
+| 2 | Display buttons to log in as Admin or User on the test instance (merged with task 3) | M | [#29](https://github.com/justthedreamer/gdzie-kupic/issues/29) |
 | 3 | ~~Display buttons to switch account or log out~~ — merged into task 2 | — | Merged into #2 |
-| 4 | Access token stored and attached to every outgoing request | M | Ready — see [below](#drafted-ui-access-token-attached-to-every-request) |
-| 5 | Google OAuth login/register buttons (separate for Buyer and Merchant entry points) | M | Ready — see [below](#drafted-ui-google-oauth-buttons--role-toggle-on-registration) |
+| 4 | Access token stored and attached to every outgoing request | M | [#30](https://github.com/justthedreamer/gdzie-kupic/issues/30) |
+| 5 | Google OAuth login/register buttons (separate for Buyer and Merchant entry points) | M | [#31](https://github.com/justthedreamer/gdzie-kupic/issues/31) |
 
 ---
 
@@ -52,6 +61,7 @@ _(Task 1 and Task 7 kept as two separate draft tickets — closely related but d
 - **Service task 1 decisions:** role travels as **payload data, not routing**, for both registration and login (symmetric with the OAuth `state` param already carrying role). Registration: single endpoint, `{email, password, role}`, role restricted to `Buyer`/`Merchant` (never `Admin`). Login: single endpoint, `{email, password}`, role returned in the response — consistent with the already-existing UI `login.vue`/`register.vue`. Phase 2 merchant registration creates only the `Users` account, no `Merchants`/`MerchantAccounts`/`MerchantBranches` (that's Phase 3 onboarding); password minimum 8 characters, no further complexity rules; JWT signed with symmetric HMAC-SHA256 using a configured secret.
 - **Role value:** the `Merchant` role (formerly drafted as `MerchantAccount`) was renamed to avoid confusion with the unrelated `MerchantAccounts` table (Phase 3, merchant-staff link table). All docs updated accordingly.
 - **UI drafting complete:** all 5 UI sub-issues are `Ready`. UI Task #2/#3 merged into one "Dev/Test Account Switcher" ticket. The role-selection toggle needed on `register.vue` (now that registration is a single endpoint with `role` in the payload) was folded into the OAuth ticket (UI #5) rather than a separate ticket, since that ticket already touches `register.vue`/`login.vue`.
+- **GitHub issues created:** epic [#21](https://github.com/justthedreamer/gdzie-kupic/issues/21) + all 10 sub-issues ([#22](https://github.com/justthedreamer/gdzie-kupic/issues/22)–[#31](https://github.com/justthedreamer/gdzie-kupic/issues/31)) are live on GitHub. This planning file stays in the repo as the historical record of how the phase was drafted.
 
 ---
 
@@ -89,7 +99,7 @@ Role travels as payload data, not routing, for both registration and login — s
 **Size:** M
 
 **Brief Description**
-Buyers and MerchantAccounts can register/log in via Google OAuth in addition to password, with automatic account linking by email.
+Buyers and Merchants can register/log in via Google OAuth in addition to password, with automatic account linking by email.
 
 **User Story**
 As a buyer or merchant, I want to sign up or log in with my Google account so that I don't need to create a separate password.

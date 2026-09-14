@@ -13,8 +13,10 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.4" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.9" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
         <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="NUnit" Version="4.6.1" />
@@ -31,7 +33,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Gdzie.Kupic.Auth\Gdzie.Kupic.Auth.csproj" />
+      <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
       <ProjectReference Include="..\Gdzie.Kupic.Location\Gdzie.Kupic.Location.csproj" />
+      <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
     </ItemGroup>
 
 </Project>
