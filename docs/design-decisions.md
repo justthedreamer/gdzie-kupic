@@ -198,6 +198,7 @@ Serves as the basis for the formal FR/NFR technical specification.
 - Local dev credentials are defined in `appsettings.Local.json` (gitignored); production credentials are injected via environment variables
 - Admin manages the category and tag taxonomy (create, rename, soft-disable) — see section 8 for tag disable behaviour
 - Admin can ban any user account (buyer or merchant); banned accounts lose all platform access immediately
+- A fixed test Buyer and test Merchant account are seeded the same way (idempotent, `Users` rows only), each with a known email/password. All three seeded accounts (Admin, Buyer, Merchant) additionally have a static, pre-generated JWT access token with an effectively non-expiring lifetime, committed to [local-dev.md](../local-dev.md), signed with a fixed default `JWT_SECRET`. This exists only because this project never runs in a production environment with real user data — see [local-dev.md](../local-dev.md#mock-accounts--pre-generated-tokens) and issue #25.
 
 **Ban effects — Buyer banned:**
 - All active posts are immediately expired
