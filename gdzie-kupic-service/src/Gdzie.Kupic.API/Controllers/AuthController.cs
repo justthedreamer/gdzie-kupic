@@ -32,6 +32,13 @@ public class AuthController(
                 statusCode: (int)HttpStatusCode.BadRequest);
         }
 
+        if (result.AccountBannedError is not null)
+        {
+            return Problem(
+                detail: "This account has been banned.",
+                statusCode: (int)HttpStatusCode.Forbidden);
+        }
+
         return Ok(new SignIn.Response(result.AccessToken, result.RefreshToken, result.ExpiresAt));
     }
 
@@ -87,6 +94,13 @@ public class AuthController(
                 statusCode: (int)HttpStatusCode.Unauthorized);
         }
 
+        if (result.AccountBannedError is not null)
+        {
+            return Problem(
+                detail: "This account has been banned.",
+                statusCode: (int)HttpStatusCode.Forbidden);
+        }
+
         return Ok(new Refresh.Response(result.AccessToken, result.RefreshToken, result.ExpiresAt));
     }
 
@@ -140,6 +154,12 @@ public class AuthController(
         }
 
         var result = await authService.GoogleSignInAsync(providerKey, email, role);
+
+        if (result.AccountBannedError is not null)
+        {
+            var bannedCallbackUrl = googleAuthOptions.Value.FrontendCallbackUrl + "#error=account_banned";
+            return Redirect(bannedCallbackUrl);
+        }
 
         var callbackUrl = googleAuthOptions.Value.FrontendCallbackUrl
             + $"#access_token={Uri.EscapeDataString(result.AccessToken)}"
