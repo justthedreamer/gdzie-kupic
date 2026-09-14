@@ -33,4 +33,16 @@ internal sealed class AuthStorage(AppDbContext db) : IAuthStorage
         db.Entry(refreshToken).Property(t => t.RevokedAt).CurrentValue = revokedAt;
         await db.SaveChangesAsync(ct);
     }
+
+    public Task<User?> FindUserByExternalLoginAsync(string provider, string providerKey, CancellationToken ct = default) =>
+        db.ExternalLogins
+            .Where(e => e.Provider == provider && e.ProviderKey == providerKey)
+            .Select(e => e.User)
+            .SingleOrDefaultAsync(ct);
+
+    public async Task AddExternalLoginAsync(ExternalLogin externalLogin, CancellationToken ct = default)
+    {
+        db.ExternalLogins.Add(externalLogin);
+        await db.SaveChangesAsync(ct);
+    }
 }

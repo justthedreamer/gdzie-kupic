@@ -1,17 +1,25 @@
 ﻿using System.Net;
+using System.Security.Claims;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Domain.Services;
 using Gdzie.Kupic.Service.API.Contract.Auth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Gdzie.Kupic.Service.API.Controllers;
 
 [ApiController]
 [Route("auth")]
-public class AuthController(IDomainMapper domainMapper, IAuthService authService) : ControllerBase
+public class AuthController(
+    IDomainMapper domainMapper,
+    IAuthService authService,
+    IOptions<GoogleAuthSettings> googleAuthOptions) : ControllerBase
 {
+    private const string RoleAuthPropertyKey = "role";
     [HttpPost("sign-in")]
     public async Task<IActionResult> SingIn([FromBody] SignIn.Request request)
     {
@@ -80,5 +88,64 @@ public class AuthController(IDomainMapper domainMapper, IAuthService authService
         }
 
         return Ok(new Refresh.Response(result.AccessToken, result.RefreshToken, result.ExpiresAt));
+    }
+
+    [HttpGet("google/login")]
+    public IActionResult GoogleLogin([FromQuery] string role)
+    {
+        var (mappedRole, invalidRoleError) = domainMapper.MapRole(role);
+
+        if (invalidRoleError is not null || mappedRole is Role.Admin)
+        {
+            return Problem(
+                detail: "Role must be either 'Buyer' or 'Merchant'.",
+                statusCode: (int)HttpStatusCode.BadRequest);
+        }
+
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = Url.Action(nameof(GoogleCallback)),
+        };
+        properties.Items[RoleAuthPropertyKey] = mappedRole.ToString();
+
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet("google/callback")]
+    public async Task<IActionResult> GoogleCallback()
+    {
+        var authenticateResult = await HttpContext.AuthenticateAsync(GoogleAuthConstants.ExternalCookieScheme);
+
+        if (!authenticateResult.Succeeded
+            || authenticateResult.Principal is null
+            || authenticateResult.Properties is null
+            || !authenticateResult.Properties.Items.TryGetValue(RoleAuthPropertyKey, out var roleValue)
+            || !Enum.TryParse<Role>(roleValue, out var role))
+        {
+            return Problem(
+                detail: "Google sign-in failed.",
+                statusCode: (int)HttpStatusCode.BadRequest);
+        }
+
+        await HttpContext.SignOutAsync(GoogleAuthConstants.ExternalCookieScheme);
+
+        var providerKey = authenticateResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = authenticateResult.Principal.FindFirstValue(ClaimTypes.Email);
+
+        if (providerKey is null || email is null)
+        {
+            return Problem(
+                detail: "Google account did not provide the required profile information.",
+                statusCode: (int)HttpStatusCode.BadRequest);
+        }
+
+        var result = await authService.GoogleSignInAsync(providerKey, email, role);
+
+        var callbackUrl = googleAuthOptions.Value.FrontendCallbackUrl
+            + $"#access_token={Uri.EscapeDataString(result.AccessToken)}"
+            + $"&refresh_token={Uri.EscapeDataString(result.RefreshToken)}"
+            + $"&expires_at={Uri.EscapeDataString(result.ExpiresAt.ToString("O"))}";
+
+        return Redirect(callbackUrl);
     }
 }
