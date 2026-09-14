@@ -10,6 +10,7 @@ public class AuthService(
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator jwtTokenGenerator,
     IRefreshTokenGenerator refreshTokenGenerator,
+    IAccountStatusCache accountStatusCache,
     IOptions<RefreshTokenSettings> refreshTokenOptions) : IAuthService
 {
     private const int MinimumPasswordLength = 8;
@@ -28,6 +29,16 @@ public class AuthService(
                 RefreshToken: string.Empty,
                 ExpiresAt: default,
                 InvalidCredentialsError: "Invalid email or password.");
+        }
+
+        if (await accountStatusCache.IsBannedAsync(user.Id))
+        {
+            return new SignInResult(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                ExpiresAt: default,
+                InvalidCredentialsError: null,
+                AccountBannedError: "This account has been banned.");
         }
 
         var (accessToken, refreshToken, expiresAt) = await IssueTokensAsync(user);
@@ -80,15 +91,45 @@ public class AuthService(
 
         var existingToken = await authStorage.FindRefreshTokenByHashAsync(tokenHash);
 
-        if (existingToken is null
-            || existingToken.RevokedAt is not null
-            || existingToken.ExpiresAt <= DateTimeOffset.UtcNow)
+        if (existingToken is null)
         {
             return new RefreshResult(
                 AccessToken: string.Empty,
                 RefreshToken: string.Empty,
                 ExpiresAt: default,
                 InvalidRefreshTokenError: "Invalid or expired refresh token.");
+        }
+
+        if (existingToken.RevokedAt is not null)
+        {
+            // Reuse of a token that was already rotated is a theft signal: the token has leaked,
+            // so every currently valid refresh token for this user is revoked, forcing a fresh login.
+            await authStorage.RevokeAllRefreshTokensForUserAsync(existingToken.UserId, DateTimeOffset.UtcNow);
+
+            return new RefreshResult(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                ExpiresAt: default,
+                InvalidRefreshTokenError: "Invalid or expired refresh token.");
+        }
+
+        if (existingToken.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            return new RefreshResult(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                ExpiresAt: default,
+                InvalidRefreshTokenError: "Invalid or expired refresh token.");
+        }
+
+        if (await accountStatusCache.IsBannedAsync(existingToken.UserId))
+        {
+            return new RefreshResult(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                ExpiresAt: default,
+                InvalidRefreshTokenError: null,
+                AccountBannedError: "This account has been banned.");
         }
 
         await authStorage.RevokeRefreshTokenAsync(existingToken, DateTimeOffset.UtcNow);
@@ -136,6 +177,15 @@ public class AuthService(
                 GoogleProvider,
                 providerKey,
                 DateTimeOffset.UtcNow));
+        }
+
+        if (await accountStatusCache.IsBannedAsync(user.Id))
+        {
+            return new GoogleSignInResult(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                ExpiresAt: default,
+                AccountBannedError: "This account has been banned.");
         }
 
         var (accessToken, refreshToken, expiresAt) = await IssueTokensAsync(user);

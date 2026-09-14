@@ -6,7 +6,8 @@ public record SignInResult(
     string AccessToken,
     string RefreshToken,
     DateTime ExpiresAt,
-    string? InvalidCredentialsError);
+    string? InvalidCredentialsError,
+    string? AccountBannedError = null);
 
 public record SignUpResult(
     string AccessToken,
@@ -19,12 +20,14 @@ public record RefreshResult(
     string AccessToken,
     string RefreshToken,
     DateTime ExpiresAt,
-    string? InvalidRefreshTokenError);
+    string? InvalidRefreshTokenError,
+    string? AccountBannedError = null);
 
 public record GoogleSignInResult(
     string AccessToken,
     string RefreshToken,
-    DateTime ExpiresAt);
+    DateTime ExpiresAt,
+    string? AccountBannedError = null);
 
 public interface IAuthService
 {

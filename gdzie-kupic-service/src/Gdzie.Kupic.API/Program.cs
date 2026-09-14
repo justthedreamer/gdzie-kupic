@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Domain;
@@ -111,6 +113,29 @@ try
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+            };
+
+            // Account status (Active/Banned) is checked on every authenticated request - a banned
+            // account's access token must be rejected regardless of the token's remaining expiry.
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    var userIdClaim = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                    if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        context.Fail("Invalid token subject.");
+                        return;
+                    }
+
+                    var accountStatusCache = context.HttpContext.RequestServices.GetRequiredService<IAccountStatusCache>();
+
+                    if (await accountStatusCache.IsBannedAsync(userId))
+                    {
+                        context.Fail("This account has been banned.");
+                    }
+                },
             };
         })
         // Temporary cookie used only to carry the ClaimsPrincipal from the Google handler

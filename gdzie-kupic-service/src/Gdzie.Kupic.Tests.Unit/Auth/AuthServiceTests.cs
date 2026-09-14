@@ -2,8 +2,10 @@
 
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Domain.Model;
+using Gdzie.Kupic.Domain.Model.Common;
 using Gdzie.Kupic.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Shouldly;
 
@@ -197,6 +199,73 @@ public class AuthServiceTests
         externalLogins.Count.ShouldBe(1);
     }
 
+    [Test]
+    public async Task SignInAsync_ReturnsAccountBannedError_WhenAccountIsBanned()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+        await sut.BanUserByEmailAsync("buyer@example.com");
+
+        var result = await sut.Service.SignInAsync("buyer@example.com", "password123");
+
+        result.InvalidCredentialsError.ShouldBeNull();
+        result.AccountBannedError.ShouldNotBeNull();
+        result.AccessToken.ShouldBeNullOrEmpty();
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_ReturnsAccountBannedError_WhenAccountIsBanned()
+    {
+        // The account is created and banned up-front, so GoogleSignInAsync's own account-status
+        // check is the first (and only) query for this user - avoiding a stale cached "not banned"
+        // result from an earlier call for the same user within the cache's TTL window.
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+        await sut.BanUserByEmailAsync("buyer@example.com");
+
+        var result = await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer);
+
+        result.AccountBannedError.ShouldNotBeNull();
+        result.AccessToken.ShouldBeNullOrEmpty();
+    }
+
+    [Test]
+    public async Task RefreshAsync_ReturnsAccountBannedError_WhenAccountIsBanned()
+    {
+        var sut = new Fixture();
+        var signUp = await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+        await sut.BanUserByEmailAsync("buyer@example.com");
+
+        var result = await sut.Service.RefreshAsync(signUp.RefreshToken);
+
+        result.InvalidRefreshTokenError.ShouldBeNull();
+        result.AccountBannedError.ShouldNotBeNull();
+        result.AccessToken.ShouldBeNullOrEmpty();
+    }
+
+    [Test]
+    public async Task RefreshAsync_RevokesAllValidRefreshTokens_WhenAnAlreadyRotatedTokenIsReused()
+    {
+        var sut = new Fixture();
+        var signUp = await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+        var firstRefresh = await sut.Service.RefreshAsync(signUp.RefreshToken);
+
+        // Reusing the original token, which was already rotated away by the refresh above, is a theft signal.
+        var theftAttempt = await sut.Service.RefreshAsync(signUp.RefreshToken);
+
+        theftAttempt.InvalidRefreshTokenError.ShouldNotBeNull();
+
+        var user = await sut.Db.Users.SingleAsync(u => u.Email == "buyer@example.com");
+        var remainingValidTokens = await sut.Db.RefreshTokens
+            .Where(t => t.UserId == user.Id && t.RevokedAt == null)
+            .ToListAsync();
+        remainingValidTokens.ShouldBeEmpty();
+
+        // The token issued by the legitimate rotation must also have been revoked by the cascade.
+        var secondRefreshAttempt = await sut.Service.RefreshAsync(firstRefresh.RefreshToken);
+        secondRefreshAttempt.InvalidRefreshTokenError.ShouldNotBeNull();
+    }
+
     private class Fixture
     {
         public readonly AppDbContext Db;
@@ -219,12 +288,22 @@ public class AuthServiceTests
             };
             var refreshTokenSettings = new RefreshTokenSettings { LifetimeDays = 30 };
 
+            var authStorage = new AuthStorage(Db);
+
             Service = new AuthService(
-                new AuthStorage(Db),
+                authStorage,
                 new PasswordHasher(),
                 new JwtTokenGenerator(Options.Create(jwtSettings)),
                 new RefreshTokenGenerator(),
+                new AccountStatusCache(authStorage, new MemoryCache(new MemoryCacheOptions())),
                 Options.Create(refreshTokenSettings));
+        }
+
+        public async Task BanUserByEmailAsync(string email)
+        {
+            var user = await Db.Users.SingleAsync(u => u.Email == email);
+            Db.Entry(user).Reference(u => u.BanDetails).CurrentValue = new BanDetails(DateTimeOffset.UtcNow);
+            await Db.SaveChangesAsync();
         }
     }
 }
