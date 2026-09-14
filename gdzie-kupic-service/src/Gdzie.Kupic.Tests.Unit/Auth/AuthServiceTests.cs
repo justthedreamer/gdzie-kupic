@@ -142,6 +142,61 @@ public class AuthServiceTests
         result.InvalidRefreshTokenError.ShouldNotBeNull();
     }
 
+    [Test]
+    public async Task GoogleSignInAsync_CreatesNewUserAndLinksExternalLogin_WhenNoAccountExists()
+    {
+        var sut = new Fixture();
+
+        var result = await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer);
+
+        result.AccessToken.ShouldNotBeNullOrEmpty();
+        result.RefreshToken.ShouldNotBeNullOrEmpty();
+
+        var user = await sut.Db.Users.SingleAsync(u => u.Email == "buyer@example.com");
+        user.Role.ShouldBe(Role.Buyer);
+        user.PasswordHash.ShouldBeNull();
+
+        var externalLogin = await sut.Db.ExternalLogins.SingleAsync(e => e.UserId == user.Id);
+        externalLogin.Provider.ShouldBe("Google");
+        externalLogin.ProviderKey.ShouldBe("google-subject-1");
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_LinksToExistingAccount_WhenEmailMatchesExistingUser()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+
+        var result = await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer);
+
+        result.AccessToken.ShouldNotBeNullOrEmpty();
+
+        var usersWithEmail = await sut.Db.Users.Where(u => u.Email == "buyer@example.com").ToListAsync();
+        usersWithEmail.Count.ShouldBe(1);
+        usersWithEmail[0].PasswordHash.ShouldNotBeNull();
+
+        var externalLogin = await sut.Db.ExternalLogins.SingleAsync(e => e.ProviderKey == "google-subject-1");
+        externalLogin.UserId.ShouldBe(usersWithEmail[0].Id);
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_ReturnsSameAccount_OnRepeatedGoogleLogin()
+    {
+        var sut = new Fixture();
+        var firstSignIn = await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer);
+
+        var secondSignIn = await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer);
+
+        secondSignIn.AccessToken.ShouldNotBeNullOrEmpty();
+        secondSignIn.RefreshToken.ShouldNotBe(firstSignIn.RefreshToken);
+
+        var users = await sut.Db.Users.Where(u => u.Email == "buyer@example.com").ToListAsync();
+        users.Count.ShouldBe(1);
+
+        var externalLogins = await sut.Db.ExternalLogins.Where(e => e.ProviderKey == "google-subject-1").ToListAsync();
+        externalLogins.Count.ShouldBe(1);
+    }
+
     private class Fixture
     {
         public readonly AppDbContext Db;
