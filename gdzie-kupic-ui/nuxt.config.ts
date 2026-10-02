@@ -14,11 +14,6 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
   ],
 
-  // ─── UI colours ───────────────────────────────────────────────────────────
-  // Uncomment to change the primary colour away from the default green (emerald).
-  // `primary` can be any Tailwind palette name or a custom name defined via @theme
-  // in main.css.  `neutral` controls grays (cards, borders, text).
-
   // ─── PWA ──────────────────────────────────────────────────────────────────
   pwa: {
     registerType: 'autoUpdate',
