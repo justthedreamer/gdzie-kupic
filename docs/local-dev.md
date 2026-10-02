@@ -100,6 +100,7 @@ Copy to `.env` and fill in real values before starting the stack.
 | `SEQ_API_KEY` | *(empty)* | Seq ingestion API key; leave empty to accept all |
 | `JWT_SECRET` | *(required)* | Token signing secret, â‰¥ 32 characters |
 | `JWT_EXPIRY_DAYS` | `7` | Access token lifetime |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | Comma-separated list of origins allowed to call the API from a browser (e.g. `http://localhost:3000,https://gdzie-kupic.example.com`) |
 | `ADMIN_EMAIL` | `admin@gdziekupic.local` | Seeded admin account email |
 | `ADMIN_PASSWORD` | *(required)* | Seeded admin account password |
 | `GOOGLE_MAPS_API_KEY` | *(required)* | Google Maps Geocoding API key |
