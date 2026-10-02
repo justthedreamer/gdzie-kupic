@@ -33,11 +33,11 @@ async function submit() {
       <UCard>
         <UForm :state="form" class="space-y-4" @submit="submit">
           <UFormField :label="$t('auth.email')" name="email">
-            <UInput v-model="form.email" type="email" autocomplete="email" />
+            <UInput v-model="form.email" type="email" autocomplete="email" class="w-full" />
           </UFormField>
 
           <UFormField :label="$t('auth.password')" name="password">
-            <UInput v-model="form.password" type="password" autocomplete="current-password" />
+            <UInput v-model="form.password" type="password" autocomplete="current-password" class="w-full" />
           </UFormField>
 
           <UAlert v-if="error" color="error" variant="soft" :description="error" />
