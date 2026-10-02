@@ -51,27 +51,27 @@ const recentRequests = [
   />
 
   <!-- How it works -->
-  <section id="how-it-works" class="py-16 bg-white">
+  <section id="how-it-works" class="py-16 bg-default">
     <div class="container mx-auto px-4 max-w-4xl">
-      <h2 class="text-2xl font-bold text-center mb-10">
+      <h2 class="text-2xl font-bold text-center mb-10 text-highlighted">
         {{ $t('home.how_it_works') }}
       </h2>
       <div class="grid md:grid-cols-3 gap-8 text-center">
         <div v-for="(step, i) in [$t('home.step_1'), $t('home.step_2'), $t('home.step_3')]" :key="i">
-          <div class="mx-auto mb-3 size-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center">
+          <div class="mx-auto mb-3 size-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center">
             {{ i + 1 }}
           </div>
-          <p class="text-sm text-gray-600">{{ step }}</p>
+          <p class="text-sm text-muted">{{ step }}</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Recent requests -->
-  <section class="py-16 bg-gray-50">
+  <section class="py-16 bg-muted">
     <div class="container mx-auto px-4 max-w-4xl">
       <div class="flex items-center justify-between mb-8">
-        <h2 class="text-2xl font-bold">Ostatnie zapytania</h2>
+        <h2 class="text-2xl font-bold text-highlighted">Ostatnie zapytania</h2>
         <UButton to="/requests" variant="ghost">
           Zobacz wszystkie →
         </UButton>

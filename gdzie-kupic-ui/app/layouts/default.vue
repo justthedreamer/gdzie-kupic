@@ -6,7 +6,7 @@
       <slot />
     </main>
 
-    <footer class="border-t py-6 text-center text-sm text-gray-500">
+    <footer class="border-t border-default py-6 text-center text-sm text-muted">
       &copy; {{ new Date().getFullYear() }} Gdzie Kupić
     </footer>
   </div>

@@ -9,12 +9,12 @@ const props = defineProps<{
 </script>
 
 <template>
-  <section class="py-20 md:py-32 text-center bg-gradient-to-b from-white to-gray-50">
+  <section class="py-20 md:py-32 text-center bg-gradient-to-b from-default to-muted">
     <div class="container mx-auto px-4 max-w-2xl">
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-highlighted">
         {{ title }}
       </h1>
-      <p class="mt-5 text-lg md:text-xl text-gray-500">
+      <p class="mt-5 text-lg md:text-xl text-muted">
         {{ subtitle }}
       </p>
       <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
