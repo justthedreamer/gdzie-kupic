@@ -3,9 +3,11 @@
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Service.API;
 using Gdzie.Kupic.Service.API.Contract.Location;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
+[Authorize]
 [Route("api/location")]
 public class LocationController(ILocationService locationService) : ControllerBase
 {

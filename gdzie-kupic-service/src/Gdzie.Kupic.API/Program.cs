@@ -107,6 +107,11 @@ try
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
+            // Preserve claim types exactly as issued (e.g. "sub" stays "sub" instead of being
+            // remapped to the long ClaimTypes.NameIdentifier URI) so the Sub claim lookup below
+            // matches what JwtTokenGenerator actually writes into the token.
+            options.MapInboundClaims = false;
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
