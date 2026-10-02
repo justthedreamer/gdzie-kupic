@@ -1,18 +1,81 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Custom brand palette — see docs/theming.md */
+/*
+ * Brand & typography tokens — see docs/design-system.md
+ *
+ * Full 50–950 scale generated from the exact brand color (#087F60). Needed
+ * because NuxtUI resolves `primary` (bg-primary, text-primary, …) from a
+ * single shade of a full Tailwind-style palette, not from one hex value.
+ */
 @theme static {
-  --color-brand-50:  oklch(0.97 0.02 267);
-  --color-brand-100: oklch(0.93 0.05 267);
-  --color-brand-200: oklch(0.86 0.09 267);
-  --color-brand-300: oklch(0.76 0.14 267);
-  --color-brand-400: oklch(0.64 0.19 267);
-  --color-brand-500: oklch(0.54 0.23 267);
-  --color-brand-600: oklch(0.46 0.22 267);
-  --color-brand-700: oklch(0.39 0.18 267);
-  --color-brand-800: oklch(0.31 0.14 267);
-  --color-brand-900: oklch(0.24 0.10 267);
-  --color-brand-950: oklch(0.16 0.06 267);
+  --font-sans: 'Inter', sans-serif;
+
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d2f9e6;
+  --color-brand-200: #a9f1d2;
+  --color-brand-300: #71e4b9;
+  --color-brand-400: #39ce9b;
+  --color-brand-500: #15b483;
+  --color-brand-600: #09926b;
+  --color-brand-700: #087f60; /* = exact brand "Primary" */
+  --color-brand-800: #095c47;
+  --color-brand-900: #084c3c;
+  --color-brand-950: #032b22;
+}
+
+/*
+ * Our exact brand green sits at the `700` step of the generated scale above,
+ * not Tailwind's typical `500`. NuxtUI reads `--ui-primary` to color
+ * `bg-primary`/`text-primary`/etc., so point it at `700` to make solid
+ * buttons, active nav items, etc. render in the exact brand color. Dark mode
+ * keeps NuxtUI's default (`--ui-color-primary-400`).
+ *
+ * `--ui-radius` is NuxtUI's single base radius (drives `rounded-sm` → 6px,
+ * `rounded-md` → 9px, `rounded-lg` → 12px, `rounded-xl` → 18px), the closest
+ * practical match to the design system's 6/10/14/18px scale.
+ */
+:root {
+  --ui-primary: var(--ui-color-primary-700);
+  --ui-radius: 6px;
+
+  /* Brand (exact hex from the design system, independent of the generated scale above) */
+  --color-primary: #087f60;
+  --color-primary-hover: #066b51;
+  --color-primary-light: #e8f4ef;
+  --color-primary-subtle: #f2f8f5;
+
+  /* Backgrounds */
+  --color-background: #f7f9f8;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f3f5f3;
+  --color-surface-hover: #f8faf9;
+
+  /* Text */
+  --color-text-primary: #171c1a;
+  --color-text-secondary: #66716c;
+  --color-text-muted: #98a39e;
+  --color-text-inverse: #ffffff;
+
+  /* Borders */
+  --color-border: #e7ece9;
+  --color-border-strong: #d5deda;
+  --color-border-focus: #087f60;
+
+  /* Status */
+  --color-success: #16a05d;
+  --color-success-bg: #eaf6ef;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fff5e8;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fff0f0;
+  --color-neutral: #92999b;
+  --color-neutral-bg: #f2f3f4;
+
+  /* Shadows */
+  --shadow-card: 0 2px 12px rgba(20, 40, 30, 0.04);
+  --shadow-hover: 0 4px 16px rgba(20, 40, 30, 0.08);
+  --shadow-modal: 0 12px 32px rgba(20, 40, 30, 0.1);
 }
 

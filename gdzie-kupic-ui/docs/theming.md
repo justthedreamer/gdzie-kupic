@@ -1,5 +1,9 @@
 # Theming
 
+> This document describes the **mechanism** of styling (how NuxtUI/Tailwind map colours and how
+> to override them). For the concrete palette, typography and component patterns derived from
+> the mockups, see [`design-system.md`](./design-system.md).
+
 ## Semantic colours
 
 NuxtUI maps semantic names (`primary`, `neutral`, `success`, `error` …) to actual Tailwind colour palettes. Change them in **`app/app.config.ts`**:
