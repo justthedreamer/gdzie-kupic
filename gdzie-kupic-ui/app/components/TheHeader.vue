@@ -8,7 +8,7 @@ const navLinks = [
 </script>
 
 <template>
-  <header class="border-b bg-white">
+  <header class="border-b border-default bg-default">
     <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
       <AppLogo />
 
@@ -17,8 +17,8 @@ const navLinks = [
           v-for="link in navLinks"
           :key="link.to"
           :to="localePath(link.to)"
-          class="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          active-class="font-semibold text-gray-900"
+          class="text-sm text-muted hover:text-highlighted transition-colors"
+          active-class="font-semibold text-highlighted"
         >
           {{ link.label }}
         </NuxtLink>
@@ -26,7 +26,7 @@ const navLinks = [
 
       <div class="flex items-center gap-3">
         <template v-if="authStore.isAuthenticated">
-          <span class="text-sm text-gray-600 hidden sm:inline">
+          <span class="text-sm text-muted hidden sm:inline">
             {{ authStore.user?.email }}
           </span>
           <UButton

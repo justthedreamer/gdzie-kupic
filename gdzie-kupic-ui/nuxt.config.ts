@@ -14,6 +14,11 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
   ],
 
+  // ─── UI ───────────────────────────────────────────────────────────────────
+  ui: {
+    colorMode: false,
+  },
+
   // ─── PWA ──────────────────────────────────────────────────────────────────
   pwa: {
     registerType: 'autoUpdate',

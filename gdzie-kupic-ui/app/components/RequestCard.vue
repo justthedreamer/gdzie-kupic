@@ -22,11 +22,11 @@ const formattedDate = computed(() =>
 <template>
   <NuxtLink
     :to="`/requests/${id}`"
-    class="block rounded-xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+    class="block rounded-lg border border-default bg-default p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] transition-shadow"
   >
     <!-- Header row -->
     <div class="flex items-start justify-between gap-4">
-      <h3 class="font-semibold text-base leading-snug line-clamp-2">
+      <h3 class="font-semibold text-base leading-snug line-clamp-2 text-highlighted">
         {{ title }}
       </h3>
       <UBadge variant="soft" color="neutral" class="shrink-0">
@@ -35,7 +35,7 @@ const formattedDate = computed(() =>
     </div>
 
     <!-- Meta row -->
-    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
       <span class="flex items-center gap-1">
         <UIcon name="i-heroicons-map-pin" class="size-4" />
         {{ city }} · {{ radiusKm }} km
@@ -48,10 +48,10 @@ const formattedDate = computed(() =>
 
     <!-- Stats row -->
     <div class="mt-4 flex gap-4 text-sm font-medium">
-      <span class="text-gray-500">
+      <span class="text-muted">
         {{ notifiedCount }} powiadomionych
       </span>
-      <span class="text-green-600">
+      <span class="text-success">
         {{ offersCount }} ofert
       </span>
     </div>

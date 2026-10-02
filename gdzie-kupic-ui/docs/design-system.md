@@ -193,7 +193,7 @@ export default defineAppConfig({
 
 | Token | Swatch | Hex | Usage |
 |---|---|---|---|
-| Text Primary | ![#171C1A](https://img.shields.io/badge/-171C1A-171C1A?style=flat-square) | `#171C1A` | Main headings and body text |
+| Text Primary | ![#2A322E](https://img.shields.io/badge/-2A322E-2A322E?style=flat-square) | `#2A322E` | Main headings and body text |
 | Text Secondary | ![#66716C](https://img.shields.io/badge/-66716C-66716C?style=flat-square) | `#66716C` | Descriptions and secondary information |
 | Text Muted | ![#98A39E](https://img.shields.io/badge/-98A39E-98A39E?style=flat-square) | `#98A39E` | Placeholder text and muted labels |
 | Text Inverse | ![#FFFFFF](https://img.shields.io/badge/-FFFFFF-FFFFFF?style=flat-square) | `#FFFFFF` | Text on dark backgrounds |
@@ -206,9 +206,14 @@ export default defineAppConfig({
 | Border Strong | ![#D5DEDA](https://img.shields.io/badge/-D5DEDA-D5DEDA?style=flat-square) | `#D5DEDA` | Inputs and emphasized borders |
 | Border Focus | ![#087F60](https://img.shields.io/badge/-087F60-087F60?style=flat-square) | `#087F60` | Focused inputs and interactive elements |
 
-> Note: `zinc` (NuxtUI's `neutral` palette) is kept as-is for `neutral` in `app.config.ts` — its
-> stock stops (`zinc-50 #fafafa`, `zinc-200 #e4e4e7`, `zinc-500 #71717a`, `zinc-900 #18181b`)
-> already sit close enough to the tokens above that a custom override isn't needed.
+> Note: `neutral` stays set to `zinc` in `app.config.ts` (NuxtUI still needs a named palette for
+> component props like `color="neutral"`), but NuxtUI's neutral *text/background/border
+> utilities* (`text-highlighted`, `text-muted`, `bg-default`, `bg-muted`, `border-default`, …) are
+> re-pointed at the tokens above instead of zinc's stock stops, via `--ui-text-*`/`--ui-bg-*`/
+> `--ui-border-*` overrides in [`main.css`](../app/assets/css/main.css). Zinc's cool, slightly
+> blue-grey undertone (e.g. `zinc-900 #18181B` for headings) read noticeably off next to this
+> warm, green-tinted neutral scale — most visible on headings — so it's no longer used for text,
+> background or border rendering, only for component color props that require a named palette.
 
 ### 3.5 Status colors
 
@@ -249,6 +254,20 @@ All colors and typography are managed through centralized design tokens in
   --ui-primary: var(--ui-color-primary-700);
   --ui-radius: 6px;
 
+  --ui-text-highlighted: var(--color-text-primary);
+  --ui-text: var(--color-text-primary);
+  --ui-text-toned: var(--color-text-secondary);
+  --ui-text-muted: var(--color-text-secondary);
+  --ui-text-dimmed: var(--color-text-muted);
+
+  --ui-bg: var(--color-surface);
+  --ui-bg-muted: var(--color-background);
+  --ui-bg-elevated: var(--color-surface-secondary);
+
+  --ui-border: var(--color-border);
+  --ui-border-muted: var(--color-border);
+  --ui-border-accented: var(--color-border-strong);
+
   /* Brand (exact hex from the design system, independent of the generated `brand` scale) */
   --color-primary: #087f60;
   --color-primary-hover: #066b51;
@@ -261,8 +280,8 @@ All colors and typography are managed through centralized design tokens in
   --color-surface-secondary: #f3f5f3;
   --color-surface-hover: #f8faf9;
 
-  /* Text */
-  --color-text-primary: #171c1a;
+  /* Text (toned down from the original #171c1a — same warm neutral hue, softer than near-black) */
+  --color-text-primary: #2a322e;
   --color-text-secondary: #66716c;
   --color-text-muted: #98a39e;
   --color-text-inverse: #ffffff;
@@ -289,9 +308,10 @@ All colors and typography are managed through centralized design tokens in
 }
 ```
 
-Use these variables for any custom (non-NuxtUI) styling. For components rendered through NuxtUI
-(`<UButton color="primary">`, `<UBadge color="success">`, …) keep using the `color`/`ui` props —
-they already resolve to the same palette via `app.config.ts`.
+Use the plain `--color-*`/`--shadow-*` variables for any custom (non-NuxtUI) styling. For
+NuxtUI components and native semantic utilities (`<UButton color="primary">`, `text-highlighted`,
+`bg-muted`, `border-default`, …) nothing extra is needed — they already resolve to the same
+tokens via the `--ui-*` overrides above and `app.config.ts`.
 
 ---
 
@@ -445,7 +465,9 @@ When creating or modifying UI components:
       ([`app.config.ts`](../app/app.config.ts), [`main.css`](../app/assets/css/main.css)).
 - [x] `--ui-primary` pinned to `--ui-color-primary-700` so NuxtUI's solid/active/ring states
       render in the exact brand green instead of Tailwind's conventional `500` step.
-- [x] `neutral` kept as `zinc` (close enough match, verified against the tokens above).
+- [x] `neutral` stays `zinc` for component `color` props, but its `text-*`/`bg-*`/`border-*`
+      utilities are re-pointed at this design system's own tokens via `--ui-text-*`/`--ui-bg-*`/
+      `--ui-border-*` overrides (zinc's cool undertone read too stark/dark on headings).
 - [x] Inter wired as the default `font-sans` + Google Fonts import (`main.css`).
 - [x] Border radius driven by NuxtUI's unified `--ui-radius` (set to `6px`) instead of
       disconnected custom tokens.
@@ -455,6 +477,9 @@ When creating or modifying UI components:
       blue/violet hue).
 - [x] **Decision:** keep loading Inter via the Google Fonts `@import` for now — revisit
       `@nuxt/fonts` later if self-hosting becomes necessary (perf/privacy).
+- [x] **Decision:** force light mode for now (`ui: { colorMode: false }` in `nuxt.config.ts`) —
+      dark mode isn't themed yet, so letting the browser/OS preference switch to it produced
+      inconsistent, half-themed results. Revisit once dark mode is designed properly.
 
 ### Open questions
 
