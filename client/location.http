@@ -1,19 +1,52 @@
-﻿GET http://localhost:5211/api/location
+﻿@host = http://localhost:5000
+
+### Sign in as test Buyer (credentials: docs/local-dev.md)
+# @name signIn
+POST {{host}}/auth/sign-in
 Content-Type: application/json
 
 {
-  "latitude": "50.0614",
-  "longitude": "19.9366"
+  "email": "buyer-test@gdziekupic.local",
+  "password": "Buyer123!"
 }
 
 ###
+### GOOD - valid coordinates (Krakow), expect 200
+GET {{host}}/api/location?latitude=50.0614&longitude=19.9366
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
 
-GET http://localhost:5211/api/location
-Content-Type: application/json
+### GOOD - coordinates in ocean / no address, expect 404
+GET {{host}}/api/location?latitude=0&longitude=0
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
 
-{
-  "latitude": "XD",
-  "longitude": "XDD"
-}
+### BAD - missing latitude, expect 400
+GET {{host}}/api/location?longitude=19.9366
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
 
-###
+### BAD - missing longitude, expect 400
+GET {{host}}/api/location?latitude=50.0614
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
+
+### BAD - empty coordinates, expect 400
+GET {{host}}/api/location?latitude=&longitude=
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
+
+### BAD - non-numeric coordinates, expect 400 (validation gap candidate)
+GET {{host}}/api/location?latitude=abc&longitude=xyz
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
+
+### BAD - out-of-range latitude (>90), expect 400 (validation gap candidate)
+GET {{host}}/api/location?latitude=123.45&longitude=19.9366
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
+
+### BAD - out-of-range longitude (>180), expect 400 (validation gap candidate)
+GET {{host}}/api/location?latitude=50.0614&longitude=555
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
+
+### BAD - no token, expect 401
+GET {{host}}/api/location?latitude=50.0614&longitude=19.9366
+
+### BAD - invalid token, expect 401
+GET {{host}}/api/location?latitude=50.0614&longitude=19.9366
+Authorization: Bearer not-a-valid-jwt
+
