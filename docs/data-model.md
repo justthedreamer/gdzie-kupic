@@ -70,6 +70,7 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 |---|---|---|
 | `Id` | `uuid` | PK |
 | `Name` | `text` | Unique |
+| `IsDisabled` | `bool` | Soft-disable; default false |
 | `CreatedAt` | `timestamptz` | |
 
 ### `Tags`

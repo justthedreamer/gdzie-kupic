@@ -142,8 +142,8 @@ Serves as the basis for the formal FR/NFR technical specification.
 - A post always carries exactly one category and exactly one tag
 
 **Tag taxonomy seed list:**
-- Defined in a separate document (to be created before launch) and linked here
-- Seed list is a pre-launch deliverable, not a technical blocker
+- Defined in [catalogue-seed-list.md](catalogue-seed-list.md); provisioned automatically and idempotently at startup with stable IDs
+- Admin changes (renames, disabled flags) to seeded rows are never overwritten by re-running startup
 
 **Disabled tags:**
 - Tags are soft-disabled by admin - existing subscriptions remain but the tag receives no new post matches

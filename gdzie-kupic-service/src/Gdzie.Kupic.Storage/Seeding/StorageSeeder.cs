@@ -1,4 +1,4 @@
-using Gdzie.Kupic.Domain.Model;
+﻿using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Domain.Model.Auth;
 using Gdzie.Kupic.Domain.Seeding;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +10,7 @@ namespace Gdzie.Kupic.Storage.Seeding;
 internal sealed class StorageSeeder(
     AppDbContext db,
     IOptions<AdminSeedSettings> adminOptions,
+    CatalogueSeeder catalogueSeeder,
     ILogger<StorageSeeder> logger)
 {
     public async Task SeedAsync(CancellationToken ct = default)
@@ -17,6 +18,7 @@ internal sealed class StorageSeeder(
         await SeedAdminAsync(ct);
         await SeedMockAccountAsync(MockAccounts.Buyer.Id, MockAccounts.Buyer.Email, MockAccounts.Buyer.Password, Role.Buyer, ct);
         await SeedMockAccountAsync(MockAccounts.Merchant.Id, MockAccounts.Merchant.Email, MockAccounts.Merchant.Password, Role.Merchant, ct);
+        await catalogueSeeder.SeedAsync(ct);
     }
 
     private async Task SeedAdminAsync(CancellationToken ct)
@@ -55,4 +57,5 @@ internal sealed class StorageSeeder(
         logger.LogInformation("Seeded mock {Role} account {Email}", role, email);
     }
 }
+
 
