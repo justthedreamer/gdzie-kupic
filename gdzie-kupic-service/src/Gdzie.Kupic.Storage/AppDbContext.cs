@@ -5,6 +5,7 @@ namespace Gdzie.Kupic.Storage;
 using Gdzie.Kupic.Domain.Model.Auth;
 using Gdzie.Kupic.Domain.Model.Catalogue;
 using Gdzie.Kupic.Domain.Model.Location;
+using Gdzie.Kupic.Domain.Model.Marketplace;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options)
     : DbContext(options)
@@ -21,6 +22,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     // Location
     public DbSet<SavedLocation> SavedLocations => Set<SavedLocation>();
+
+    // Marketplace
+    public DbSet<Merchant> Merchants => Set<Merchant>();
+    public DbSet<MerchantAccount> MerchantAccounts => Set<MerchantAccount>();
+    public DbSet<MerchantBranch> MerchantBranches => Set<MerchantBranch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
