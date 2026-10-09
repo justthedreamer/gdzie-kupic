@@ -46,8 +46,8 @@ internal sealed class AuthStorage(AppDbContext db) : IAuthStorage
         await db.SaveChangesAsync(ct);
     }
 
-    public Task<bool> IsUserBannedAsync(Guid userId, CancellationToken ct = default) =>
-        db.Users.Where(u => u.Id == userId).Select(u => u.BanDetails != null).SingleAsync(ct);
+    public Task<bool?> IsUserBannedAsync(Guid userId, CancellationToken ct = default) =>
+        db.Users.Where(u => u.Id == userId).Select(u => (bool?)(u.BanDetails != null)).SingleOrDefaultAsync(ct);
 
     public async Task RevokeAllRefreshTokensForUserAsync(Guid userId, DateTimeOffset revokedAt, CancellationToken ct = default)
     {

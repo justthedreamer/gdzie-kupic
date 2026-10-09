@@ -6,6 +6,9 @@ using Gdzie.Kupic.Storage;
 
 public interface IAccountStatusCache
 {
+    /// <summary>
+    /// Returns <c>true</c> when the account is banned or no longer exists, i.e. when its tokens must be rejected.
+    /// </summary>
     Task<bool> IsBannedAsync(Guid userId, CancellationToken ct = default);
 }
 
@@ -29,7 +32,8 @@ public sealed class AccountStatusCache(
             return cachedIsBanned;
         }
 
-        var isBanned = await authStorage.IsUserBannedAsync(userId, ct);
+        // A token for a user that doesn't exist (e.g. deleted account) is rejected like a banned one.
+        var isBanned = await authStorage.IsUserBannedAsync(userId, ct) ?? true;
 
         memoryCache.Set(
             CacheKey(userId),

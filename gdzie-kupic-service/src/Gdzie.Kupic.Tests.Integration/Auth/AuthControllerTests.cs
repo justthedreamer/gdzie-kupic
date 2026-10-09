@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Service.API.Contract.Auth;
 using Gdzie.Kupic.Storage;
@@ -54,5 +56,16 @@ public class AuthControllerTests : IntegrationTestBase
         body.ShouldNotBeNull();
         body.AccessToken.ShouldNotBeNullOrEmpty();
         body.RefreshToken.ShouldNotBeNullOrEmpty();
+    }
+
+    [Test]
+    public async Task ValidToken_ForNonExistentUser_ReturnsUnauthorized()
+    {
+        using var scope = IntegrationTestSetup.Factory.Services.CreateScope();
+        var token = scope.ServiceProvider.GetRequiredService<IJwtTokenGenerator>()
+            .GenerateAccessToken(Guid.NewGuid(), Role.Admin, DateTime.UtcNow.AddDays(1)).Token;
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        (await Client.GetAsync("/api/catalogue/categories")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 }

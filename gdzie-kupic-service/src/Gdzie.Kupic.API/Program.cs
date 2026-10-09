@@ -145,7 +145,7 @@ try
 
                     if (await accountStatusCache.IsBannedAsync(userId))
                     {
-                        context.Fail("This account has been banned.");
+                        context.Fail("This account has been banned or does not exist.");
                     }
                 },
             };
