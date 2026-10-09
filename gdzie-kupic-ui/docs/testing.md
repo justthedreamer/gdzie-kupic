@@ -82,7 +82,7 @@ Helpers live in [`tests/e2e/support/api-mock.ts`](../tests/e2e/support/api-mock.
 
 - `mockApi(page, handlers)` intercepts only requests to the API origin and answers 404 for anything unmocked, so a missing mock fails visibly.
 - `waitForHydration(page)` — wait before the first click; interacting before Vue hydrates is a silent no-op.
-- `loginAs(page, role)` signs in through the Dev account switcher. Buyers land on `/home`, Merchants on `/feed`, other roles stay on `/`. A Merchant whose `GET /api/merchant/me` is unmocked (or 404) is redirected on to onboarding. Auth state is client-only (not persisted), so afterwards navigate with the nav links, never `page.goto()` to a protected page.
+- `loginAs(page, role)` signs in through the Dev account switcher. Buyers land on `/home`, Merchants on `/feed`, Admins on `/admin/catalogue`. A Merchant whose `GET /api/merchant/me` is unmocked (or 404) is redirected on to onboarding. Auth state is client-only (not persisted), so afterwards navigate with the nav links, never `page.goto()` to a protected page.
 - `openShellNav(page, label)` opens an entry of the Buyer/Merchant shell: the sidebar link on desktop, the header `Menu` overflow on mobile. Logout follows the same split (sidebar button vs. `Menu` item).
 - The Buyer home and the Merchant feed run on built-in sample data in dev (`buyerHomeMock`, `merchantFeedMock`), which is what Playwright's dev server serves. Nuxt UI tabs (`role="tab"`, reka-ui) switch on `mousedown`, not `click`, in unit tests.
 

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type { RequestCardProps } from '~/components/RequestCard.vue'
 
+definePageMeta({
+  layout: 'buyer',
+  middleware: ['auth', 'role'],
+  roles: ['Buyer'],
+  shellTitleKey: 'nav.requests',
+})
+
 useSeoMeta({ title: 'Zapytania | Gdzie Kupić' })
 
 const requests: RequestCardProps[] = []

@@ -58,6 +58,7 @@ export const emptyBuyerHome = (): BuyerHomeData => ({ requests: [], activity: []
 export function homePathFor(role: UserRole | undefined): string {
   if (role === 'Buyer') return '/home'
   if (role === 'Merchant') return '/feed'
+  if (role === 'Admin') return '/admin/catalogue'
   return '/'
 }
 
