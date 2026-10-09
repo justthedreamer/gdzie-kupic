@@ -1,5 +1,10 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({
+  layout: 'buyer',
+  middleware: ['auth', 'role'],
+  roles: ['Buyer'],
+  shellTitleKey: 'request.new',
+})
 useSeoMeta({ title: 'Nowe zapytanie | Gdzie Kupić' })
 
 const { t } = useI18n()

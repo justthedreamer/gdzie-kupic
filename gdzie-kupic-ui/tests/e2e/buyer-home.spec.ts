@@ -56,4 +56,21 @@ test.describe('Buyer home', () => {
       await expect(sidebar.getByRole('button', { name: /Czaty/ })).toBeDisabled()
     }
   })
+
+  test('the shell navigation stays on every Buyer page', async ({ page, isMobile }) => {
+    const nav = page.getByRole('navigation', { name: isMobile ? 'Nawigacja' : 'Nawigacja główna' })
+
+    // Client-side navigation only: a full reload would drop the in-memory session.
+    await nav.getByRole('link', { name: 'Zapytania' }).click()
+    await expect(page).toHaveURL('/requests')
+    await expect(nav).toBeVisible()
+
+    await page.getByRole('link', { name: 'Nowe zapytanie' }).first().click()
+    await expect(page).toHaveURL('/requests/new')
+    await expect(nav).toBeVisible()
+
+    await nav.getByRole('link', { name: 'Pulpit' }).click()
+    await expect(page).toHaveURL('/home')
+    await expect(nav).toBeVisible()
+  })
 })

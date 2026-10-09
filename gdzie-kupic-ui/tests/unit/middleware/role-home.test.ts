@@ -34,12 +34,12 @@ describe('role-home global middleware', () => {
     expect(navigateTo).toHaveBeenCalledWith('/feed')
   })
 
-  it('leaves an Admin on /', () => {
+  it('sends a signed-in Admin from / to the catalogue', () => {
     useAuthStore().setAuth('t', { id: '1', email: 'a@test', role: 'Admin' })
 
     visit('/')
 
-    expect(navigateTo).not.toHaveBeenCalled()
+    expect(navigateTo).toHaveBeenCalledWith('/admin/catalogue')
   })
 
   it('leaves anonymous visitors on the landing page', () => {

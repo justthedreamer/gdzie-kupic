@@ -72,3 +72,25 @@ export const merchantShell: ShellConfig = {
   tabsRight: [merchantChats, merchantProfile],
   overflow: [shopSettings, notifications],
 }
+
+// --- Admin ---
+export const ADMIN_CATALOGUE_PATH = '/admin/catalogue'
+
+const adminDashboard: ShellNavItem = { key: 'dashboard', icon: 'i-heroicons-squares-2x2', label: 'admin_nav.dashboard' }
+const adminUsers: ShellNavItem = { key: 'users', icon: 'i-heroicons-users', label: 'admin_nav.users' }
+const adminMerchants: ShellNavItem = { key: 'merchants', icon: 'i-heroicons-building-storefront', label: 'admin_nav.merchants' }
+const adminRequests: ShellNavItem = { key: 'requests', icon: 'i-heroicons-clipboard-document-list', label: 'admin_nav.requests' }
+const adminCatalogue: ShellNavItem = { key: 'catalogue', icon: 'i-heroicons-folder', label: 'admin_nav.catalogue', to: ADMIN_CATALOGUE_PATH }
+const adminReports: ShellNavItem = { key: 'reports', icon: 'i-heroicons-chart-bar', label: 'admin_nav.reports' }
+const adminModeration: ShellNavItem = { key: 'moderation', icon: 'i-heroicons-shield-check', label: 'admin_nav.moderation' }
+const adminSettings: ShellNavItem = { key: 'settings', icon: 'i-heroicons-cog-6-tooth', label: 'admin_nav.settings' }
+const adminLogs: ShellNavItem = { key: 'system_logs', icon: 'i-heroicons-document-text', label: 'admin_nav.system_logs' }
+
+export const adminShell: ShellConfig = {
+  roleLabel: 'admin_nav.role_label',
+  homePath: ADMIN_CATALOGUE_PATH,
+  sidebar: [adminDashboard, adminUsers, adminMerchants, adminRequests, adminCatalogue, adminReports, adminModeration, adminSettings, adminLogs],
+  tabsLeft: [adminCatalogue, adminUsers],
+  tabsRight: [adminMerchants, adminRequests],
+  overflow: [adminDashboard, adminReports, adminModeration, adminSettings, adminLogs],
+}
