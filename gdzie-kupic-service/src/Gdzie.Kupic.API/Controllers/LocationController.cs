@@ -51,4 +51,47 @@ public class LocationController(ILocationService locationService) : ControllerBa
             City: location.City,
             Country: location.Country));
     }
+
+    /// <summary>
+    /// Resolves a typed address to coordinates without storing anything, so clients can show the
+    /// match to the user before they save it.
+    /// </summary>
+    [HttpGet("search")]
+    [ProducesResponseType<SearchAddress.Response>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<SearchAddress.Response>> Search([FromQuery] SearchAddress.Request request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Address))
+        {
+            return this.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Validation error",
+                detail: "Address is required.");
+        }
+
+        var result = await locationService.GeocodeAddressAsync(request.Address.Trim());
+
+        if (result.Failure == GeocodeFailure.NotFound)
+        {
+            return this.Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Not found",
+                detail: "The address could not be found.");
+        }
+
+        if (!result.IsSuccess)
+        {
+            return this.Problem(
+                statusCode: StatusCodes.Status502BadGateway,
+                title: "Geocoding failed",
+                detail: "We can't resolve the address at the moment. Try again later or use your current location.");
+        }
+
+        return this.Ok(new SearchAddress.Response(
+            result.Address!.Latitude,
+            result.Address.Longitude,
+            result.Address.FormattedAddress));
+    }
 }
