@@ -27,6 +27,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Merchant> Merchants => Set<Merchant>();
     public DbSet<MerchantAccount> MerchantAccounts => Set<MerchantAccount>();
     public DbSet<MerchantBranch> MerchantBranches => Set<MerchantBranch>();
+    public DbSet<MerchantSubscription> MerchantSubscriptions => Set<MerchantSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

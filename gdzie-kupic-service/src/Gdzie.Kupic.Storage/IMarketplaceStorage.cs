@@ -16,4 +16,14 @@ public interface IMarketplaceStorage
         MerchantAccount account,
         MerchantBranch branch,
         CancellationToken ct = default);
+
+    Task<Guid?> FindMerchantIdByUserIdAsync(Guid userId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<MerchantSubscription>> GetSubscriptionsAsync(Guid merchantId, CancellationToken ct = default);
+
+    /// <summary>Returns false when the same (category, tag) subscription already exists for the merchant.</summary>
+    Task<bool> TryAddSubscriptionAsync(MerchantSubscription subscription, CancellationToken ct = default);
+
+    /// <summary>Removes the subscription only if it belongs to the merchant; returns false otherwise.</summary>
+    Task<bool> DeleteSubscriptionAsync(Guid merchantId, Guid subscriptionId, CancellationToken ct = default);
 }
