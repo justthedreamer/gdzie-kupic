@@ -56,5 +56,5 @@ public class SavedLocationsController(ISavedLocationService savedLocations) : Co
     }
 
     private static SavedLocations.Response ToResponse(SavedLocation l) =>
-        new(l.Id, l.DisplayName, l.Coordinates.Latitude, l.Coordinates.Longitude, l.CreatedAt);
+        new(l.Id, l.DisplayName, l.Coordinates.Latitude, l.Coordinates.Longitude, l.AddressDisplayName, l.CreatedAt);
 }

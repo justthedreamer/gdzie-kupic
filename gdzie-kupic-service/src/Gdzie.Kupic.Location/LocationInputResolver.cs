@@ -1,5 +1,6 @@
 namespace Gdzie.Kupic.Location;
 
+using System.Globalization;
 using Gdzie.Kupic.Domain.Model.Location;
 
 internal sealed class LocationInputResolver(ILocationService locationService) : ILocationInputResolver
@@ -21,7 +22,10 @@ internal sealed class LocationInputResolver(ILocationService locationService) : 
             if (double.IsNaN(longitude.Value) || longitude is < -180 or > 180)
                 return Invalid("Longitude must be between -180 and 180.");
 
-            return new ResolvedLocation(new Coordinates(latitude.Value, longitude.Value), null, LocationInputError.None);
+            return new ResolvedLocation(
+                new Coordinates(latitude.Value, longitude.Value),
+                await DescribeAsync(latitude.Value, longitude.Value),
+                LocationInputError.None);
         }
 
         var geocoded = await locationService.GeocodeAddressAsync(address!.Trim());
@@ -39,6 +43,26 @@ internal sealed class LocationInputResolver(ILocationService locationService) : 
             geocoded.Address.FormattedAddress,
             LocationInputError.None);
     }
+
+    // Best effort: a failing reverse geocoding must never prevent saving a valid location.
+    private async Task<string?> DescribeAsync(double latitude, double longitude)
+    {
+        var (location, _, _) = await locationService.GetLocationAsync(
+            longitude.ToString("R", CultureInfo.InvariantCulture),
+            latitude.ToString("R", CultureInfo.InvariantCulture));
+
+        if (location is null) return null;
+
+        var cityLine = string.Join(' ', new[] { location.PostalCode, location.City }.Where(IsKnown));
+        var parts = new[] { cityLine, IsKnown(location.Country) ? location.Country : string.Empty }
+            .Where(p => p.Length > 0);
+
+        var display = string.Join(", ", parts);
+        return display.Length > 0 ? display : null;
+    }
+
+    private static bool IsKnown(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && value != "Unknown";
 
     private static ResolvedLocation Invalid(string message) =>
         new(null, null, LocationInputError.Validation, message);

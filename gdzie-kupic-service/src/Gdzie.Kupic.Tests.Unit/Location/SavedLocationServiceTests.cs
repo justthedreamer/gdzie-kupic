@@ -39,6 +39,67 @@ public class SavedLocationServiceTests
     }
 
     [Test]
+    public async Task Create_WithCoordinates_StoresReverseGeocodedAddressLabel()
+    {
+        SetupReverse(new ILocationService.LocationData("Malopolskie", "31-042", "Krakow", "Polska"));
+
+        var result = await _service.CreateAsync(UserId, "Home", 50.06, 19.94, null);
+
+        result.Value!.AddressDisplayName.ShouldBe("31-042 Krakow, Polska");
+        (await _db.SavedLocations.SingleAsync()).AddressDisplayName.ShouldBe("31-042 Krakow, Polska");
+    }
+
+    [Test]
+    public async Task Create_WithCoordinates_SkipsUnknownParts()
+    {
+        SetupReverse(new ILocationService.LocationData("Unknown", "Unknown", "Krakow", "Unknown"));
+
+        var result = await _service.CreateAsync(UserId, "Home", 50.06, 19.94, null);
+
+        result.Value!.AddressDisplayName.ShouldBe("Krakow");
+    }
+
+    [Test]
+    public async Task Create_WithCoordinates_AllPartsUnknown_StoresNoLabel()
+    {
+        SetupReverse(new ILocationService.LocationData("Unknown", "Unknown", "Unknown", "Unknown"));
+
+        var result = await _service.CreateAsync(UserId, "Home", 50.06, 19.94, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value!.AddressDisplayName.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task Create_WithCoordinates_ReverseGeocodingFails_StillSavesWithoutLabel()
+    {
+        _geocoder.Setup(g => g.GetLocationAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(((ILocationService.LocationData?)null, (string?)null, true));
+
+        var result = await _service.CreateAsync(UserId, "Home", 50.06, 19.94, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value!.AddressDisplayName.ShouldBeNull();
+        (await _db.SavedLocations.CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task Create_WithAddress_StoresFormattedAddressAsLabel()
+    {
+        _geocoder.Setup(g => g.GeocodeAddressAsync("Rynek 1, Krakow"))
+            .ReturnsAsync(new GeocodeResult(new GeocodedAddress(50.0617, 19.9373, "Rynek Glowny 1, Krakow"), GeocodeFailure.None));
+
+        var result = await _service.CreateAsync(UserId, "Office", null, null, "Rynek 1, Krakow");
+
+        result.Value!.AddressDisplayName.ShouldBe("Rynek Glowny 1, Krakow");
+        _geocoder.Verify(g => g.GetLocationAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    private void SetupReverse(ILocationService.LocationData data) =>
+        _geocoder.Setup(g => g.GetLocationAsync("19.94", "50.06"))
+            .ReturnsAsync(((ILocationService.LocationData?)data, (string?)null, false));
+
+    [Test]
     public async Task Create_WithAddress_GeocodesOnceAndStoresCoordinates()
     {
         _geocoder.Setup(g => g.GeocodeAddressAsync("Rynek 1, Krakow"))

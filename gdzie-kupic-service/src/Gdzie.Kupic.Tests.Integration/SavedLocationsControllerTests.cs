@@ -44,6 +44,35 @@ public class SavedLocationsControllerTests : IntegrationTestBase
     }
 
     [Test]
+    public async Task Create_WithCoordinates_StoresReadableAddressLabel()
+    {
+        await AuthenticateAsync(Role.Buyer);
+        Geocoder.Reverse = _ => (new ReverseGeocoding.Response([
+            new ReverseGeocoding.Response.ResponseResults([
+                new ReverseGeocoding.Response.AddressComponent("31-042", "31-042", ["postal_code"]),
+                new ReverseGeocoding.Response.AddressComponent("Krakow", "Krakow", ["locality"]),
+                new ReverseGeocoding.Response.AddressComponent("Polska", "PL", ["country"])])]), false, false);
+
+        var response = await Client.PostAsJsonAsync(Url, new SavedLocations.CreateRequest("Home", 50.06, 19.94, null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await ReadAsAsync<SavedLocations.Response>(response))!.AddressDisplayName.ShouldBe("31-042 Krakow, Polska");
+        (await Client.GetFromJsonAsync<List<SavedLocations.Response>>(Url))!.Single().AddressDisplayName.ShouldBe("31-042 Krakow, Polska");
+    }
+
+    [Test]
+    public async Task Create_WithCoordinates_ReverseGeocodingFailure_StillCreatesWithoutLabel()
+    {
+        await AuthenticateAsync(Role.Buyer);
+        Geocoder.Reverse = _ => (new ReverseGeocoding.Response([]), true, false);
+
+        var response = await Client.PostAsJsonAsync(Url, new SavedLocations.CreateRequest("Home", 50.06, 19.94, null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await ReadAsAsync<SavedLocations.Response>(response))!.AddressDisplayName.ShouldBeNull();
+    }
+
+    [Test]
     public async Task Create_WithAddress_GeocodesOnceAndStoresResolvedCoordinates()
     {
         await AuthenticateAsync(Role.Buyer);
