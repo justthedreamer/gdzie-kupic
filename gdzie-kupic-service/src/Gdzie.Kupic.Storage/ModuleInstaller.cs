@@ -1,4 +1,4 @@
-﻿using Gdzie.Kupic.Storage.Seeding;
+using Gdzie.Kupic.Storage.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +22,7 @@ public static class ModuleInstaller
         services.AddScoped<StorageSeeder>();
         services.AddScoped<CatalogueSeeder>();
         services.AddScoped<IAuthStorage, AuthStorage>();
+        services.AddScoped<ICatalogueStorage, CatalogueStorage>();
     }
 
     public static async Task UseStorageModule(this IHost host, CancellationToken ct = default)
