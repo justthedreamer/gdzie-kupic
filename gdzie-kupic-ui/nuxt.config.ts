@@ -68,6 +68,30 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: 'http://localhost:5211',
+
+      // Pre-generated, non-expiring JWTs for the seeded test accounts — see
+      // docs/local-dev.md § Mock Accounts & Pre-Generated Tokens. Used by the
+      // dev account switcher (app/components/DevAccountSwitcher.vue) to log
+      // in instantly with no API call. Only valid against the default
+      // JWT_SECRET; override via NUXT_PUBLIC_MOCK_ACCOUNTS_* env vars if the
+      // backend uses a different secret.
+      mockAccounts: {
+        admin: {
+          id: '00000000-0000-0000-0000-000000000001',
+          email: 'admin@gdziekupic.local',
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImp0aSI6IjMzODg5MTAyLTUzMWUtNDk1ZS05ZjU1LTdhOTlmODEwNjIwMCIsImV4cCI6NDg5MTM2MzIwMCwiaXNzIjoiR2R6aWVLdXBpY1NlcnZpY2UiLCJhdWQiOiJHZHppZUt1cGljQ2xpZW50In0.n-dmUBeWB2P5DQfNMjJTXo0xwPCdmQWnbDFVM8o39Cs',
+        },
+        buyer: {
+          id: '00000000-0000-0000-0000-000000000002',
+          email: 'buyer-test@gdziekupic.local',
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJCdXllciIsImp0aSI6ImM3MTM1ZmVkLTM4NGQtNGRiOS05YmQ4LWJiNjM4MTE2MzJhZSIsImV4cCI6NDg5MTM2MzIwMCwiaXNzIjoiR2R6aWVLdXBpY1NlcnZpY2UiLCJhdWQiOiJHZHppZUt1cGljQ2xpZW50In0.WeftJ8-x9_E-BcNEkNSANy3lv2Nm2U_jdmatbSccR9s',
+        },
+        merchant: {
+          id: '00000000-0000-0000-0000-000000000003',
+          email: 'merchant-test@gdziekupic.local',
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJNZXJjaGFudCIsImp0aSI6IjZmZWU4OWY2LTJhYzAtNDdkMy1hODNhLWMzMzBlZTcwNTczMCIsImV4cCI6NDg5MTM2MzIwMCwiaXNzIjoiR2R6aWVLdXBpY1NlcnZpY2UiLCJhdWQiOiJHZHppZUt1cGljQ2xpZW50In0.KVkFwnZmHta80O6YhrnwR-kp6nhpdTTqKdwFJWhaV-Y',
+        },
+      },
     },
   },
 })

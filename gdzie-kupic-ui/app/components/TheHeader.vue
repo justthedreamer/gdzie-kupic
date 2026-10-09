@@ -25,6 +25,8 @@ const navLinks = [
       </div>
 
       <div class="flex items-center gap-3">
+        <DevAccountSwitcher />
+
         <template v-if="authStore.isAuthenticated">
           <span class="text-sm text-muted hidden sm:inline">
             {{ authStore.user?.email }}
