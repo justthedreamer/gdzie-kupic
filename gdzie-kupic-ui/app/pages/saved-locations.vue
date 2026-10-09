@@ -45,11 +45,6 @@ async function save() {
   }
   catch (err) {
     formError.value = resolveApiError(err, {
-      byStatus: {
-        502: t('saved_locations.errors.geocoding'),
-        503: t('saved_locations.errors.geocoding'),
-        504: t('saved_locations.errors.geocoding'),
-      },
       fallback: t('saved_locations.errors.generic'),
       unavailable: t('saved_locations.errors.unavailable'),
     })
@@ -137,9 +132,17 @@ async function confirmDelete() {
           :description="formError"
         />
 
-        <UButton type="submit" :loading="saving" :disabled="!canSave">
-          {{ $t('saved_locations.save') }}
-        </UButton>
+        <div class="flex justify-end">
+          <UButton
+            type="submit"
+            :loading="saving"
+            :color="canSave ? 'primary' : 'neutral'"
+            :variant="canSave ? 'solid' : 'soft'"
+            :disabled="!canSave"
+          >
+            {{ $t('saved_locations.save') }}
+          </UButton>
+        </div>
       </UForm>
     </UCard>
 
