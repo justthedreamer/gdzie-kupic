@@ -30,7 +30,7 @@ internal sealed class SavedLocationService(
         if (!resolved.IsSuccess)
             return new SavedLocationResult<SavedLocation>(null, SavedLocationError.GeocodingFailed, resolved.Message);
 
-        var location = new SavedLocation(Guid.NewGuid(), userId, name, resolved.Coordinates!, DateTimeOffset.UtcNow);
+        var location = new SavedLocation(Guid.NewGuid(), userId, name, resolved.Coordinates!, resolved.AddressDisplayName, DateTimeOffset.UtcNow);
         await storage.AddSavedLocationAsync(location, ct);
 
         return new SavedLocationResult<SavedLocation>(location, SavedLocationError.None);

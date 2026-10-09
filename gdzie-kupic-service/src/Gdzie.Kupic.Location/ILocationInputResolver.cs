@@ -9,7 +9,10 @@ public enum LocationInputError
     GeocodingFailed
 }
 
-/// <param name="AddressDisplayName">Human-readable address; set only when the location came from geocoding an address.</param>
+/// <param name="AddressDisplayName">
+/// Human-readable address: the formatted address when an address was geocoded, or the postal code, city and
+/// country found by reverse geocoding when coordinates were supplied. Null when it could not be determined.
+/// </param>
 public sealed record ResolvedLocation(
     Coordinates? Coordinates,
     string? AddressDisplayName,

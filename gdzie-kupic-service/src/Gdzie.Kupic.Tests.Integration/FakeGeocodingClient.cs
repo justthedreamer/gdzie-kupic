@@ -10,15 +10,19 @@ internal sealed class FakeGeocodingClient : IGoogleGeocodingHttpClient
     public Func<string, (ForwardGeocoding.Response? Response, bool ThirdPartyError, bool InternalError)> Forward { get; set; } =
         _ => (new ForwardGeocoding.Response([]), false, false);
 
+    public Func<ReverseGeocoding.Request, (ReverseGeocoding.Response Response, bool ThirdPartyError, bool InternalError)> Reverse { get; set; } =
+        _ => (new ReverseGeocoding.Response([]), false, false);
+
     public void Reset()
     {
         ForwardCalls = 0;
         Forward = _ => (new ForwardGeocoding.Response([]), false, false);
+        Reverse = _ => (new ReverseGeocoding.Response([]), false, false);
     }
 
     public Task<(ReverseGeocoding.Response Response, bool ThirdPartyError, bool InternalError)> ReverseGeocodeAsync(
         ReverseGeocoding.Request request) =>
-        Task.FromResult<(ReverseGeocoding.Response, bool, bool)>((new ReverseGeocoding.Response([]), false, false));
+        Task.FromResult(Reverse(request));
 
     public Task<(ForwardGeocoding.Response? Response, bool ThirdPartyError, bool InternalError)> ForwardGeocodeAsync(
         ForwardGeocoding.Request request)
