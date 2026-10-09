@@ -172,19 +172,34 @@
     "submit": "Publish request"
   },
   "location_input": {
-    "mode_coords": "Detect automatically",
-    "mode_address": "Type an address",
-    "find_me": "Detect my location",
+    "detect": "Detect automatically",
     "locating": "Getting your location…",
     "found": "Location detected: {coords}",
-    "address_label": "Address",
-    "address_placeholder": "e.g. 1 Main Square, Kraków",
+    "consent_title": "Use your location?",
+    "consent_description": "Your browser will ask for access to your current location. It will only be used to save this place.",
+    "consent_allow": "Allow",
+    "or_type": "or type an address:",
+    "postal_code": "Postal code",
+    "postal_code_placeholder": "00-000",
+    "city": "City",
+    "city_placeholder": "e.g. Kraków",
+    "street": "Street",
+    "street_placeholder": "e.g. Rynek Główny",
+    "house_number": "House number",
+    "house_number_placeholder": "e.g. 1",
+    "search": "Search",
+    "address_found": "Address found: {address}",
     "errors": {
       "denied": "Location access was denied. Allow it in your browser settings or type an address instead.",
       "unavailable": "Your location could not be determined. Type an address instead.",
       "timeout": "Getting your location timed out. Try again or type an address instead.",
       "unknown": "Could not get your location. Type an address instead.",
-      "unsupported": "Your browser does not support geolocation. Type an address instead."
+      "unsupported": "Your browser does not support geolocation. Type an address instead.",
+      "postal_code": "Enter the postal code as 00-000.",
+      "address_not_found": "The address could not be found. Check the details and try again.",
+      "geocoding": "Could not look up the address. Try again later or use automatic detection.",
+      "generic": "Could not look up the address. Try again.",
+      "unavailable": "The service is currently unavailable. Try again later."
     }
   },
   "catalogue": {
@@ -252,7 +267,6 @@
     "delete_confirm": "The location “{name}” will be deleted.",
     "errors": {
       "not_found": "Location not found — it may have already been deleted.",
-      "geocoding": "Could not resolve coordinates for this address. Please try again later.",
       "generic": "The operation failed. Please try again.",
       "unavailable": "The service is currently unavailable. Please try again later."
     }

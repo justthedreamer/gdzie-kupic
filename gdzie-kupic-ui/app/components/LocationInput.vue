@@ -1,7 +1,9 @@
 <script setup lang="ts">
 // Lets the user choose a location either via the browser Geolocation API
-// ("detect automatically") or by typing an address. Emits `null` until a
-// usable value is available. Use `:key` to reset it from the parent.
+// ("detect automatically", after an explicit consent) or by typing an address
+// (postal code and city required, street and house number optional) and
+// searching for it. Emits the resolved coordinates, or `null` while nothing is
+// resolved. Use `:key` to reset it from the parent.
 defineProps<{
   modelValue: LocationInputValue | null
 }>()
@@ -11,117 +13,211 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { searchAddress } = useLocationApi()
 
-type Mode = 'coords' | 'address'
-type GeoState = 'idle' | 'locating' | 'found' | 'error'
-
-const mode = ref<Mode>('coords')
-const geoState = ref<GeoState>('idle')
-const geoError = ref('')
-const coords = ref<{ latitude: number, longitude: number } | null>(null)
-const address = ref('')
-
-function setMode(next: Mode) {
-  if (mode.value === next) return
-  mode.value = next
-
-  if (next === 'address') {
-    emit('update:modelValue', toLocationInputValue(address.value))
-  }
-  else {
-    emit('update:modelValue', coords.value ? { kind: 'coords', ...coords.value } : null)
-  }
+interface Resolved {
+  source: 'geolocation' | 'address'
+  value: LocationInputValue
+  message: string
 }
 
-function toLocationInputValue(raw: string): LocationInputValue | null {
-  return raw.trim() ? { kind: 'address', address: raw } : null
+const resolved = ref<Resolved | null>(null)
+const errorMessage = ref('')
+const locating = ref(false)
+const searching = ref(false)
+const consentOpen = ref(false)
+let searchRun = 0
+
+const fields = reactive<AddressFields>({ postalCode: '', city: '', street: '', houseNumber: '' })
+
+const searchable = computed(() => isAddressSearchable(fields))
+const postalCodeError = computed(() =>
+  fields.postalCode.trim() && !isValidPostalCode(fields.postalCode) ? t('location_input.errors.postal_code') : undefined,
+)
+
+function setResolved(next: Resolved | null) {
+  resolved.value = next
+  emit('update:modelValue', next ? next.value : null)
 }
 
-function onAddressInput(raw: string) {
-  address.value = raw
-  emit('update:modelValue', toLocationInputValue(raw))
+// Editing the address invalidates a previous search result (a detected location is kept).
+watch(fields, () => {
+  searchRun++
+  searching.value = false
+  errorMessage.value = ''
+  if (resolved.value?.source === 'address') setResolved(null)
+})
+
+function confirmDetect() {
+  consentOpen.value = false
+  detect()
 }
 
 function detect() {
+  errorMessage.value = ''
+  setResolved(null)
+
   if (!('geolocation' in navigator)) {
-    geoState.value = 'error'
-    geoError.value = t('location_input.errors.unsupported')
+    errorMessage.value = t('location_input.errors.unsupported')
     return
   }
 
-  geoState.value = 'locating'
-  geoError.value = ''
-  coords.value = null
-  emit('update:modelValue', null)
+  locating.value = true
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      coords.value = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      }
-      geoState.value = 'found'
-      emit('update:modelValue', { kind: 'coords', ...coords.value })
+      locating.value = false
+      const value = { latitude: position.coords.latitude, longitude: position.coords.longitude }
+      setResolved({
+        source: 'geolocation',
+        value,
+        message: t('location_input.found', { coords: formatCoordinates(value.latitude, value.longitude) }),
+      })
     },
     (error) => {
-      geoState.value = 'error'
-      geoError.value = t(`location_input.errors.${geolocationFailure(error.code)}`)
+      locating.value = false
+      errorMessage.value = t(`location_input.errors.${geolocationFailure(error.code)}`)
     },
   )
+}
+
+async function search() {
+  if (!searchable.value || searching.value) return
+
+  const run = ++searchRun
+  searching.value = true
+  errorMessage.value = ''
+  setResolved(null)
+
+  try {
+    const result = await searchAddress(composeAddress(fields))
+    if (run !== searchRun) return
+
+    setResolved({
+      source: 'address',
+      value: { latitude: result.latitude, longitude: result.longitude },
+      message: t('location_input.address_found', { address: result.formattedAddress }),
+    })
+  }
+  catch (err) {
+    if (run !== searchRun) return
+
+    errorMessage.value = resolveApiError(err, {
+      byStatus: {
+        404: t('location_input.errors.address_not_found'),
+        502: t('location_input.errors.geocoding'),
+        503: t('location_input.errors.geocoding'),
+        504: t('location_input.errors.geocoding'),
+      },
+      fallback: t('location_input.errors.generic'),
+      unavailable: t('location_input.errors.unavailable'),
+    })
+  }
+  finally {
+    if (run === searchRun) searching.value = false
+  }
 }
 </script>
 
 <template>
-  <div class="space-y-3">
-    <div class="flex gap-2">
-      <UButton
-        size="sm"
-        :variant="mode === 'coords' ? 'solid' : 'outline'"
-        icon="i-heroicons-map-pin-solid"
-        @click="setMode('coords')"
-      >
-        {{ $t('location_input.mode_coords') }}
-      </UButton>
-      <UButton
-        size="sm"
-        :variant="mode === 'address' ? 'solid' : 'outline'"
-        icon="i-heroicons-pencil-square"
-        @click="setMode('address')"
-      >
-        {{ $t('location_input.mode_address') }}
-      </UButton>
+  <div class="space-y-4">
+    <UButton
+      variant="subtle"
+      icon="i-heroicons-map-pin"
+      :loading="locating"
+      @click="consentOpen = true"
+    >
+      {{ locating ? $t('location_input.locating') : $t('location_input.detect') }}
+    </UButton>
+
+    <p class="text-sm text-muted">
+      {{ $t('location_input.or_type') }}
+    </p>
+
+    <div class="grid gap-3 sm:grid-cols-12">
+      <UFormField :label="$t('location_input.postal_code')" :error="postalCodeError" required class="sm:col-span-4">
+        <UInput
+          v-model="fields.postalCode"
+          :placeholder="$t('location_input.postal_code_placeholder')"
+          inputmode="numeric"
+          autocomplete="postal-code"
+          maxlength="6"
+          class="w-full"
+          @keydown.enter.prevent="search"
+        />
+      </UFormField>
+
+      <UFormField :label="$t('location_input.city')" required class="sm:col-span-8">
+        <UInput
+          v-model="fields.city"
+          :placeholder="$t('location_input.city_placeholder')"
+          autocomplete="address-level2"
+          class="w-full"
+          @keydown.enter.prevent="search"
+        />
+      </UFormField>
+
+      <UFormField :label="$t('location_input.street')" :hint="$t('common.optional')" class="sm:col-span-5">
+        <UInput
+          v-model="fields.street"
+          :placeholder="$t('location_input.street_placeholder')"
+          autocomplete="address-line1"
+          class="w-full"
+          @keydown.enter.prevent="search"
+        />
+      </UFormField>
+
+      <UFormField :label="$t('location_input.house_number')" :hint="$t('common.optional')" class="sm:col-span-3">
+        <UInput
+          v-model="fields.houseNumber"
+          :placeholder="$t('location_input.house_number_placeholder')"
+          class="w-full"
+          @keydown.enter.prevent="search"
+        />
+      </UFormField>
+
+      <div class="flex items-end sm:col-span-4">
+        <UButton
+          icon="i-heroicons-magnifying-glass"
+          class="w-full justify-center"
+          :color="searchable ? 'primary' : 'neutral'"
+          :variant="searchable ? 'solid' : 'soft'"
+          :disabled="!searchable"
+          :loading="searching"
+          @click="search"
+        >
+          {{ $t('location_input.search') }}
+        </UButton>
+      </div>
     </div>
 
-    <div v-if="mode === 'coords'" class="space-y-3">
-      <UButton
-        variant="subtle"
-        icon="i-heroicons-map-pin"
-        :loading="geoState === 'locating'"
-        @click="detect"
-      >
-        {{ geoState === 'locating' ? $t('location_input.locating') : $t('location_input.find_me') }}
-      </UButton>
+    <p v-if="resolved" class="text-sm text-success" role="status">
+      {{ resolved.message }}
+    </p>
 
-      <p v-if="geoState === 'found' && coords" class="text-sm text-success" role="status">
-        {{ $t('location_input.found', { coords: formatCoordinates(coords.latitude, coords.longitude) }) }}
-      </p>
+    <UAlert
+      v-if="errorMessage"
+      color="error"
+      variant="subtle"
+      icon="i-heroicons-exclamation-circle"
+      :description="errorMessage"
+    />
 
-      <UAlert
-        v-if="geoState === 'error'"
-        color="error"
-        variant="subtle"
-        icon="i-heroicons-exclamation-circle"
-        :description="geoError"
-      />
-    </div>
-
-    <UFormField v-else :label="$t('location_input.address_label')">
-      <UInput
-        :model-value="address"
-        :placeholder="$t('location_input.address_placeholder')"
-        class="w-full"
-        @update:model-value="onAddressInput(String($event))"
-      />
-    </UFormField>
+    <UModal
+      v-model:open="consentOpen"
+      :title="$t('location_input.consent_title')"
+      :description="$t('location_input.consent_description')"
+    >
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton color="neutral" variant="outline" @click="consentOpen = false">
+            {{ $t('common.cancel') }}
+          </UButton>
+          <UButton @click="confirmDetect">
+            {{ $t('location_input.consent_allow') }}
+          </UButton>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>

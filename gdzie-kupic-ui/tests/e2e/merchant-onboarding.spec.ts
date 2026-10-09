@@ -36,12 +36,22 @@ const catalogueHandler: MockHandler = {
   respond: () => ({ json: categories }),
 }
 
+const searchHandler: MockHandler = {
+  method: 'GET',
+  path: '/api/location/search',
+  respond: () => ({ json: { latitude: 50.0617, longitude: 19.9373, formattedAddress: 'Rynek Główny 1, 31-042 Kraków, Polska' } }),
+}
+
 async function fillBusinessStep(page: Page) {
   await page.getByLabel('Nazwa firmy').fill('Sklep Testowy')
   await page.getByLabel('Nazwa oddziału').fill('Oddział Rynek')
   await page.getByLabel('Telefon').fill('+48 600 100 200')
-  await page.getByRole('button', { name: 'Wpisz adres' }).click()
-  await page.getByLabel('Adres').fill('Rynek Główny 1, Kraków')
+  await page.getByLabel('Kod pocztowy').fill('31-042')
+  await page.getByLabel('Miasto').fill('Kraków')
+  await page.getByLabel('Ulica').fill('Rynek Główny')
+  await page.getByLabel('Numer domu').fill('1')
+  await page.getByRole('button', { name: 'Szukaj' }).click()
+  await expect(page.getByText(/Znaleziono adres/)).toBeVisible()
   await page.getByRole('button', { name: 'Dalej' }).click()
 }
 
@@ -64,6 +74,7 @@ test('onboarding happy path: business, location, subscriptions', async ({ page }
 
   await mockApi(page, [
     catalogueHandler,
+    searchHandler,
     {
       method: 'GET',
       path: '/api/merchant/me',
@@ -110,7 +121,7 @@ test('onboarding happy path: business, location, subscriptions', async ({ page }
 
   expect(onboardingBody).toEqual({
     name: 'Sklep Testowy',
-    branch: { displayName: 'Oddział Rynek', phone: '+48 600 100 200', address: 'Rynek Główny 1, Kraków' },
+    branch: { displayName: 'Oddział Rynek', phone: '+48 600 100 200', latitude: 50.0617, longitude: 19.9373 },
   })
   expect(subscriptionBodies).toEqual([
     { categoryId: 'c1' },
@@ -126,6 +137,7 @@ test('a failed subscription can be retried without re-entering data or re-creati
 
   await mockApi(page, [
     catalogueHandler,
+    searchHandler,
     {
       method: 'GET',
       path: '/api/merchant/me',

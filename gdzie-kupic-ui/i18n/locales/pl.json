@@ -172,19 +172,34 @@
     "submit": "Opublikuj zapytanie"
   },
   "location_input": {
-    "mode_coords": "Wykryj automatycznie",
-    "mode_address": "Wpisz adres",
-    "find_me": "Wykryj moją lokalizację",
+    "detect": "Wykryj automatycznie",
     "locating": "Pobieranie lokalizacji…",
     "found": "Wykryto lokalizację: {coords}",
-    "address_label": "Adres",
-    "address_placeholder": "np. Rynek Główny 1, Kraków",
+    "consent_title": "Użyć Twojej lokalizacji?",
+    "consent_description": "Przeglądarka poprosi o dostęp do Twojej bieżącej lokalizacji. Zostanie ona użyta tylko do zapisania tego miejsca.",
+    "consent_allow": "Zezwalam",
+    "or_type": "lub wpisz adres:",
+    "postal_code": "Kod pocztowy",
+    "postal_code_placeholder": "00-000",
+    "city": "Miasto",
+    "city_placeholder": "np. Kraków",
+    "street": "Ulica",
+    "street_placeholder": "np. Rynek Główny",
+    "house_number": "Numer domu",
+    "house_number_placeholder": "np. 1",
+    "search": "Szukaj",
+    "address_found": "Znaleziono adres: {address}",
     "errors": {
       "denied": "Odmówiono dostępu do lokalizacji. Zezwól na dostęp w ustawieniach przeglądarki lub wpisz adres ręcznie.",
       "unavailable": "Nie można określić Twojej lokalizacji. Wpisz adres ręcznie.",
       "timeout": "Upłynął limit czasu pobierania lokalizacji. Spróbuj ponownie lub wpisz adres ręcznie.",
       "unknown": "Nie udało się pobrać lokalizacji. Wpisz adres ręcznie.",
-      "unsupported": "Twoja przeglądarka nie obsługuje geolokalizacji. Wpisz adres ręcznie."
+      "unsupported": "Twoja przeglądarka nie obsługuje geolokalizacji. Wpisz adres ręcznie.",
+      "postal_code": "Podaj kod pocztowy w formacie 00-000.",
+      "address_not_found": "Nie znaleziono podanego adresu. Sprawdź dane i spróbuj ponownie.",
+      "geocoding": "Nie udało się wyszukać adresu. Spróbuj ponownie później lub użyj wykrywania automatycznego.",
+      "generic": "Nie udało się wyszukać adresu. Spróbuj ponownie.",
+      "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
     }
   },
   "catalogue": {
@@ -252,7 +267,6 @@
     "delete_confirm": "Lokalizacja „{name}” zostanie usunięta.",
     "errors": {
       "not_found": "Nie znaleziono lokalizacji — mogła zostać już usunięta.",
-      "geocoding": "Nie udało się ustalić współrzędnych dla podanego adresu. Spróbuj ponownie później.",
       "generic": "Nie udało się wykonać operacji. Spróbuj ponownie.",
       "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
     }
