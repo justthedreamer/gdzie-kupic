@@ -37,4 +37,54 @@ internal sealed class MarketplaceStorage(AppDbContext db) : IMarketplaceStorage
             throw;
         }
     }
+
+    public async Task<Guid?> FindMerchantIdByUserIdAsync(Guid userId, CancellationToken ct = default) =>
+        await db.MerchantAccounts
+            .AsNoTracking()
+            .Where(a => a.UserId == userId)
+            .Select(a => (Guid?)a.MerchantId)
+            .SingleOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<MerchantSubscription>> GetSubscriptionsAsync(Guid merchantId, CancellationToken ct = default) =>
+        await db.MerchantSubscriptions
+            .AsNoTracking()
+            .Where(s => s.MerchantId == merchantId)
+            .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.Id)
+            .ToListAsync(ct);
+
+    public async Task<bool> TryAddSubscriptionAsync(MerchantSubscription subscription, CancellationToken ct = default)
+    {
+        if (await SubscriptionExistsAsync(subscription, ct)) return false;
+
+        db.MerchantSubscriptions.Add(subscription);
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateException)
+        {
+            // Lost a race against a concurrent identical subscription (unique indexes).
+            db.ChangeTracker.Clear();
+            if (await SubscriptionExistsAsync(subscription, ct)) return false;
+            throw;
+        }
+    }
+
+    public async Task<bool> DeleteSubscriptionAsync(Guid merchantId, Guid subscriptionId, CancellationToken ct = default)
+    {
+        var subscription = await db.MerchantSubscriptions
+            .SingleOrDefaultAsync(s => s.Id == subscriptionId && s.MerchantId == merchantId, ct);
+        if (subscription is null) return false;
+
+        db.MerchantSubscriptions.Remove(subscription);
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    private Task<bool> SubscriptionExistsAsync(MerchantSubscription s, CancellationToken ct) =>
+        db.MerchantSubscriptions.AnyAsync(
+            x => x.MerchantId == s.MerchantId && x.CategoryId == s.CategoryId && x.TagId == s.TagId, ct);
 }

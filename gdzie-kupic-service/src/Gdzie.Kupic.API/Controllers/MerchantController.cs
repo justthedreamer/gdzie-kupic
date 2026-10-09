@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Authorize(Roles = nameof(Role.Merchant))]
 [Route("api/merchant")]
-public class MerchantController(IMerchantService merchantService) : ControllerBase
+public class MerchantController(IMerchantService merchantService, ISubscriptionService subscriptionService) : ControllerBase
 {
     [HttpGet("me")]
     [ProducesResponseType<MerchantMeResponse>(StatusCodes.Status200OK)]
@@ -45,6 +45,56 @@ public class MerchantController(IMerchantService merchantService) : ControllerBa
         return result.IsSuccess ? Created("/api/merchant/me", ToResponse(result.Value!)) : ToProblem(result);
     }
 
+    [HttpGet("subscriptions")]
+    [ProducesResponseType<IReadOnlyList<Subscriptions.Response>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListSubscriptions(CancellationToken ct)
+    {
+        var result = await subscriptionService.ListAsync(User.GetUserId(), ct);
+
+        return result.IsSuccess
+            ? Ok(result.Value!.Select(ToResponse).ToList())
+            : ToProblem(result);
+    }
+
+    [HttpPost("subscriptions")]
+    [ProducesResponseType<Subscriptions.Response>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AddSubscription([FromBody] Subscriptions.Request request, CancellationToken ct)
+    {
+        var result = await subscriptionService.AddAsync(User.GetUserId(), request.CategoryId, request.TagId, ct);
+
+        return result.IsSuccess
+            ? Created($"/api/merchant/subscriptions/{result.Value!.Id}", ToResponse(result.Value))
+            : ToProblem(result);
+    }
+
+    [HttpDelete("subscriptions/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveSubscription(Guid id, CancellationToken ct)
+    {
+        var result = await subscriptionService.RemoveAsync(User.GetUserId(), id, ct);
+
+        return result.IsSuccess ? NoContent() : ToProblem(result);
+    }
+
+    private IActionResult ToProblem<T>(SubscriptionResult<T> result)
+    {
+        var (status, title) = result.Error switch
+        {
+            SubscriptionError.NotOnboarded => (StatusCodes.Status404NotFound, "Not onboarded"),
+            SubscriptionError.NotFound => (StatusCodes.Status404NotFound, "Subscription not found"),
+            SubscriptionError.Duplicate => (StatusCodes.Status409Conflict, "Duplicate subscription"),
+            _ => (StatusCodes.Status400BadRequest, "Validation error"),
+        };
+
+        return Problem(statusCode: status, title: title, detail: result.Message);
+    }
+
+    private static Subscriptions.Response ToResponse(MerchantSubscription s) => new(s.Id, s.CategoryId, s.TagId);
     private IActionResult ToProblem<T>(MerchantResult<T> result)
     {
         var (status, title) = result.Error switch
