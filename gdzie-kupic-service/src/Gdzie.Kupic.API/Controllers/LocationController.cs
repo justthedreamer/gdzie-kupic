@@ -29,20 +29,20 @@ public class LocationController(ILocationService locationService) : ControllerBa
                 detail: validationError);
         }
 
-        if (location  is null)
-        {
-            return this.Problem(
-                statusCode: 404,
-                title: "Not found",
-                detail: "Location not found for the provided coordinates.");
-        }
-
         if (internalError)
         {
             return this.Problem(
                 statusCode: 500,
                 title: "Internal error",
                 detail: Constants.INTERNAL_ERROR_MESSAGES.LOCATION_FETCH_ERROR);
+        }
+
+        if (location is null)
+        {
+            return this.Problem(
+                statusCode: 404,
+                title: "Not found",
+                detail: "Location not found for the provided coordinates.");
         }
 
         return this.Ok(new GetLocation.Response(
