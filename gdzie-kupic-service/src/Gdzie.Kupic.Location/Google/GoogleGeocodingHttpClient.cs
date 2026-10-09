@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Location.Google;
+namespace Gdzie.Kupic.Location.Google;
 
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
@@ -43,6 +43,38 @@ internal class GoogleGeocodingHttpClient(
         {
             Console.WriteLine(e);
             throw;
+        }
+    }
+
+    public async Task<(ForwardGeocoding.Response? Response, bool ThirdPartyError, bool InternalError)>
+        ForwardGeocodeAsync(ForwardGeocoding.Request request)
+    {
+        try
+        {
+            using var message = new HttpRequestMessage(
+                HttpMethod.Get,
+                $"geocode/address/{Uri.EscapeDataString(request.Address)}");
+            message.Headers.Add("X-Goog-FieldMask", "results.location,results.formattedAddress");
+
+            using var response = await client.SendAsync(message);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError(
+                    "Google Geocoding API (address) returned {StatusCode}. Response content: {Content}",
+                    response.StatusCode,
+                    await response.Content.ReadAsStringAsync());
+
+                return (null, ThirdPartyError: true, InternalError: false);
+            }
+
+            var (content, error) = await this.TryDeserializeResponseAsync<ForwardGeocoding.Response>(response);
+
+            return error ? (null, false, true) : (content, false, false);
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        {
+            logger.LogError(e, "Google Geocoding API (address) request failed");
+            return (null, ThirdPartyError: true, InternalError: false);
         }
     }
 
