@@ -160,6 +160,26 @@ describe('Merchant request details page', () => {
 })
 
 describe('Merchant response buttons', () => {
+  it('offers all four FR-RESP-1 states, best to worst', async () => {
+    const wrapper = await mountSuspended(ResponseButtons, { props: { current: null } })
+
+    expect(wrapper.findAll('button').map(button => button.attributes('aria-label'))).toEqual([
+      'I have it',
+      'I may have it',
+      'I can order it',
+      'I can\'t help',
+    ])
+  })
+
+  it('emits CanOrderIt and highlights it when current', async () => {
+    const wrapper = await mountSuspended(ResponseButtons, { props: { current: 'CanOrderIt' } })
+
+    expect(wrapper.find('button[aria-label="I can order it"]').attributes('aria-pressed')).toBe('true')
+
+    await wrapper.find('button[aria-label="I may have it"]').trigger('click')
+    expect(wrapper.emitted('select')).toEqual([['MayHaveIt']])
+  })
+
   it('emits the chosen state and highlights the current one', async () => {
     const wrapper = await mountSuspended(ResponseButtons, { props: { current: 'CantHelp' } })
 

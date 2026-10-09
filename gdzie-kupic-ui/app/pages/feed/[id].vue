@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatBudget, formatDistance } from '~/utils/merchantFeed'
+import { formatBudget, formatDistance, RESPONSE_COLOR } from '~/utils/merchantFeed'
 
 definePageMeta({
   layout: 'merchant',
@@ -18,8 +18,6 @@ const request = computed(() => feedStore.byId(String(route.params.id)))
 const isLoading = computed(() => feedStore.status === 'idle' || feedStore.status === 'pending')
 
 useSeoMeta({ title: () => `${request.value?.title ?? t('merchant_feed.details_title')} | Gdzie Kupić` })
-
-const RESPONSE_COLOR = { HaveIt: 'success', MayHaveIt: 'warning', CantHelp: 'error' } as const
 
 const posted = computed(() => (request.value ? formatRelativeTime(request.value.postedAt, locale.value) : ''))
 const budget = computed(() =>

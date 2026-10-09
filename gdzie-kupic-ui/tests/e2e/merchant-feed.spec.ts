@@ -69,6 +69,10 @@ test.describe('Merchant requests feed', () => {
     await page.getByRole('button', { name: 'Mogę mieć' }).click()
     await expect(page.getByTestId('current-response')).toHaveText('Mogę mieć')
 
+    await page.getByRole('button', { name: 'Mogę zamówić' }).click()
+    await expect(page.getByTestId('current-response')).toHaveText('Mogę zamówić')
+    await expect(page.getByRole('button', { name: 'Mogę zamówić' })).toHaveAttribute('aria-pressed', 'true')
+
     await page.getByRole('button', { name: 'Nie pomogę' }).click()
     await expect(page.getByTestId('current-response')).toHaveText('Nie pomogę')
 

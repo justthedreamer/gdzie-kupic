@@ -4,10 +4,19 @@ import type { LiveCounts } from '~/utils/buyerHome'
 // responses get real endpoints in Phases 4–5; until then
 // `useMerchantFeedApi` supplies it.
 
-/** The merchant's own answer to a request (FR-RESP-1; `CanOrderIt` follows in Phase 5). */
-export type MerchantResponse = 'HaveIt' | 'MayHaveIt' | 'CantHelp'
+/** The merchant's own answer to a request (FR-RESP-1). */
+export type MerchantResponse = 'HaveIt' | 'MayHaveIt' | 'CanOrderIt' | 'CantHelp'
 
-export const MERCHANT_RESPONSES: readonly MerchantResponse[] = ['HaveIt', 'MayHaveIt', 'CantHelp']
+/** Button order: best to worst availability. */
+export const MERCHANT_RESPONSES: readonly MerchantResponse[] = ['HaveIt', 'MayHaveIt', 'CanOrderIt', 'CantHelp']
+
+/** Shared by the response buttons and the response badges. */
+export const RESPONSE_COLOR = {
+  HaveIt: 'success',
+  MayHaveIt: 'warning',
+  CanOrderIt: 'info',
+  CantHelp: 'error',
+} as const satisfies Record<MerchantResponse, string>
 
 export interface MerchantFeedRequest extends LiveCounts {
   id: string

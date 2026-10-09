@@ -135,6 +135,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 - Merchant onboarding flow: branch location setup + category/tag subscription setup — **L**
 - Buyer home page (Dashboard): default page after login; responsive Buyer app shell + widgets per `gdzie-kupic-ui/docs/ui/buyer.png`, mocked data until Phases 4–5 — **L**
 - Merchant home page (Requests Feed): default page after login; shared app shell, feed with filters/tabs/response buttons and request details per `gdzie-kupic-ui/docs/ui/merchant.png`, mocked data until Phases 4–5 — **L**
+- Merchant response "I can order it" (`CanOrderIt`): the fourth FR-RESP-1 state on the feed and request details, mocked data until Phases 4–5 — **S**
 
 ---
 

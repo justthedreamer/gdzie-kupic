@@ -5,6 +5,8 @@ import {
   filterFeed,
   formatBudget,
   formatDistance,
+  MERCHANT_RESPONSES,
+  RESPONSE_COLOR,
   unansweredCount,
   type FeedFilters,
   type MerchantFeedRequest,
@@ -107,6 +109,15 @@ describe('filterFeed ordering', () => {
 describe('feed helpers', () => {
   it('counts unanswered requests', () => {
     expect(unansweredCount([request(), request({ myResponse: 'MayHaveIt' }), request()])).toBe(2)
+  })
+
+  it('counts a CanOrderIt request as answered', () => {
+    expect(unansweredCount([request(), request({ myResponse: 'CanOrderIt' })])).toBe(1)
+  })
+
+  it('defines all four FR-RESP-1 states, each with its own colour', () => {
+    expect(MERCHANT_RESPONSES).toEqual(['HaveIt', 'MayHaveIt', 'CanOrderIt', 'CantHelp'])
+    expect(new Set(MERCHANT_RESPONSES.map(state => RESPONSE_COLOR[state])).size).toBe(4)
   })
 
   it('lists distinct categories alphabetically', () => {

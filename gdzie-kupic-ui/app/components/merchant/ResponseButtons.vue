@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MERCHANT_RESPONSES, type MerchantResponse } from '~/utils/merchantFeed'
+import { MERCHANT_RESPONSES, RESPONSE_COLOR, type MerchantResponse } from '~/utils/merchantFeed'
 
 defineProps<{
   /** The merchant's current answer, highlighted. */
@@ -8,10 +8,11 @@ defineProps<{
 
 defineEmits<{ select: [state: MerchantResponse] }>()
 
-const BUTTONS: Record<MerchantResponse, { color: 'success' | 'warning' | 'error', icon: string }> = {
-  HaveIt: { color: 'success', icon: 'i-heroicons-check' },
-  MayHaveIt: { color: 'warning', icon: 'i-heroicons-clock' },
-  CantHelp: { color: 'error', icon: 'i-heroicons-x-mark' },
+const ICONS: Record<MerchantResponse, string> = {
+  HaveIt: 'i-heroicons-check',
+  MayHaveIt: 'i-heroicons-clock',
+  CanOrderIt: 'i-heroicons-truck',
+  CantHelp: 'i-heroicons-x-mark',
 }
 </script>
 
@@ -20,9 +21,9 @@ const BUTTONS: Record<MerchantResponse, { color: 'success' | 'warning' | 'error'
     <UButton
       v-for="state in MERCHANT_RESPONSES"
       :key="state"
-      :color="BUTTONS[state].color"
+      :color="RESPONSE_COLOR[state]"
       :variant="current === state ? 'solid' : 'outline'"
-      :icon="BUTTONS[state].icon"
+      :icon="ICONS[state]"
       :aria-label="$t(`merchant_feed.response.${state}`)"
       :aria-pressed="current === state"
       @click="$emit('select', state)"
