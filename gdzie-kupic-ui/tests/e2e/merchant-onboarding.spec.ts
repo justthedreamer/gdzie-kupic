@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { loginAs, mockApi, type MockHandler } from './support/api-mock'
+import { loginAs, mockApi, openShellNav, type MockHandler } from './support/api-mock'
 
 const categories = [
   {
@@ -51,7 +51,6 @@ test('a merchant who has not onboarded is directed into the onboarding flow', as
   ])
 
   await loginAs(page, 'Merchant')
-  await page.getByRole('link', { name: 'Moja firma' }).click()
 
   await expect(page).toHaveURL('/merchant/onboarding')
   await expect(page.getByRole('heading', { name: 'Skonfiguruj swoją firmę' })).toBeVisible()
@@ -93,7 +92,6 @@ test('onboarding happy path: business, location, subscriptions', async ({ page }
   ])
 
   await loginAs(page, 'Merchant')
-  await page.getByRole('link', { name: 'Moja firma' }).click()
   await expect(page).toHaveURL('/merchant/onboarding')
 
   await fillBusinessStep(page)
@@ -155,7 +153,6 @@ test('a failed subscription can be retried without re-entering data or re-creati
   ])
 
   await loginAs(page, 'Merchant')
-  await page.getByRole('link', { name: 'Moja firma' }).click()
   await fillBusinessStep(page)
 
   await page.getByRole('checkbox', { name: /^Elektronika/ }).click()
@@ -192,7 +189,8 @@ test('an onboarded merchant is not forced into onboarding and can remove subscri
   ])
 
   await loginAs(page, 'Merchant')
-  await page.getByRole('link', { name: 'Moja firma' }).click()
+  await expect(page).toHaveURL('/feed')
+  await openShellNav(page, 'Ustawienia sklepu')
 
   await expect(page).toHaveURL('/merchant/subscriptions')
   await expect(page.getByText('Elektronika').first()).toBeVisible()

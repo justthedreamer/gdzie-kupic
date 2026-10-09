@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, mockApi, openBuyerNav } from './support/api-mock'
+import { loginAs, mockApi, openShellNav } from './support/api-mock'
 
 interface Tag { id: string, name: string, isDisabled: boolean }
 interface Category { id: string, name: string, isDisabled: boolean, tags: Tag[] }
@@ -105,7 +105,7 @@ test('a buyer does not get the catalogue link', async ({ page }) => {
 
   await expect(page).toHaveURL('/home')
   await expect(page.getByRole('link', { name: 'Katalog' })).toHaveCount(0)
-  await openBuyerNav(page, 'Moje lokalizacje')
+  await openShellNav(page, 'Moje lokalizacje')
   await expect(page).toHaveURL('/saved-locations')
   await expect(page.getByRole('link', { name: 'Katalog' })).toHaveCount(0)
 })

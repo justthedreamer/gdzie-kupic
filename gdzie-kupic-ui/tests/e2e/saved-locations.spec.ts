@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, mockApi, openBuyerNav, type MockHandler } from './support/api-mock'
+import { loginAs, mockApi, openShellNav, type MockHandler } from './support/api-mock'
 
 interface Saved { id: string, displayName: string, latitude: number, longitude: number, createdAt: string }
 
@@ -11,7 +11,7 @@ async function openSavedLocations(page: import('@playwright/test').Page, items: 
     ...extra,
   ])
   await loginAs(page, 'Buyer')
-  await openBuyerNav(page, 'Moje lokalizacje')
+  await openShellNav(page, 'Moje lokalizacje')
   await expect(page).toHaveURL('/saved-locations')
 }
 

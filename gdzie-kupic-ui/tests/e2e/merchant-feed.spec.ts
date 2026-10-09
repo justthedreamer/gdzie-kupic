@@ -1,0 +1,115 @@
+import { test, expect } from '@playwright/test'
+import { loginAs, mockApi, openShellNav } from './support/api-mock'
+
+// The Merchant feed runs on mocked data in dev (`merchantFeedMock`), which is
+// what the dev server used by Playwright serves.
+
+test.describe('Merchant requests feed', () => {
+  test.beforeEach(async ({ page }) => {
+    // An onboarded merchant, otherwise the onboarding guard takes over.
+    await mockApi(page, [
+      {
+        method: 'GET',
+        path: '/api/merchant/me',
+        respond: () => ({
+          json: {
+            merchantId: 'm1',
+            name: 'Audio Shop Kraków',
+            description: null,
+            branch: { id: 'b1', displayName: 'Rynek', latitude: 50.06, longitude: 19.94, addressDisplayName: null, phone: null, website: null },
+          },
+        }),
+      },
+    ])
+
+    await loginAs(page, 'Merchant')
+    await expect(page).toHaveURL('/feed')
+  })
+
+  test('is the default page after login: new requests, urgent first', async ({ page, isMobile }) => {
+    // The page title is the mobile top bar on small screens and the page heading on desktop.
+    if (isMobile) {
+      await expect(page.getByRole('banner').getByText('Zapytania w okolicy')).toBeVisible()
+    }
+    else {
+      await expect(page.getByRole('heading', { name: 'Zapytania w okolicy', level: 1 })).toBeVisible()
+    }
+
+    const cards = page.getByTestId('feed-card')
+    await expect(cards).toHaveCount(4)
+    await expect(cards.first().getByRole('heading')).toHaveText('Pilnie: kable XLR 5 m, 4 sztuki')
+    await expect(cards.first().getByText('Pilne')).toBeVisible()
+  })
+
+  test('responding from a card moves it from New to Responded', async ({ page }) => {
+    const cards = page.getByTestId('feed-card')
+    const title = 'Szukam mikrofonu Shure SM7B'
+
+    await cards.filter({ hasText: title }).getByRole('button', { name: 'Mam to' }).click()
+
+    await expect(cards).toHaveCount(3)
+    await expect(page.getByText(title)).toHaveCount(0)
+
+    await page.getByRole('tab', { name: /Odpowiedziane/ }).click()
+    await expect(cards).toHaveCount(4)
+    const answered = cards.filter({ hasText: title })
+    await expect(answered).toBeVisible()
+    await expect(answered.getByRole('button', { name: 'Mam to' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('the response can be changed on the details page and stays after going back', async ({ page }) => {
+    const title = 'Interfejs audio USB do domowego studia'
+
+    await page.getByRole('link', { name: title }).click()
+    await expect(page).toHaveURL('/feed/feed-2')
+    await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
+    await expect(page.getByTestId('notified-count')).toHaveText('12')
+    await expect(page.getByTestId('current-response')).toContainText('Nie odpowiedziano')
+
+    await page.getByRole('button', { name: 'Mogę mieć' }).click()
+    await expect(page.getByTestId('current-response')).toHaveText('Mogę mieć')
+
+    await page.getByRole('button', { name: 'Nie pomogę' }).click()
+    await expect(page.getByTestId('current-response')).toHaveText('Nie pomogę')
+
+    await page.goBack()
+    await expect(page).toHaveURL('/feed')
+    await expect(page.getByText(title)).toHaveCount(0)
+  })
+
+  test('filters narrow the list', async ({ page, isMobile }) => {
+    if (isMobile) await page.getByRole('button', { name: 'Filtry' }).click()
+
+    await page.getByRole('tab', { name: /Wszystkie/ }).click()
+    const cards = page.getByTestId('feed-card')
+    await expect(cards).toHaveCount(7)
+
+    await page.getByRole('combobox', { name: 'Maksymalna odległość' }).click()
+    await page.getByRole('option', { name: '5 km', exact: true }).click()
+
+    await expect(cards).toHaveCount(3)
+  })
+
+  test('shop settings opens the subscriptions page in the same shell', async ({ page }) => {
+    await openShellNav(page, 'Ustawienia sklepu')
+
+    await expect(page).toHaveURL('/merchant/subscriptions')
+  })
+
+  test('desktop shows the sidebar, mobile shows bottom tabs without a centre action', async ({ page, isMobile }) => {
+    if (isMobile) {
+      const tabs = page.getByRole('navigation', { name: 'Nawigacja' })
+      await expect(tabs).toBeVisible()
+      await expect(tabs.getByRole('link', { name: 'Zapytania' })).toHaveAttribute('href', '/feed')
+      await expect(tabs.getByRole('button', { name: 'Moje odpowiedzi' })).toBeDisabled()
+      await expect(tabs.getByRole('link', { name: 'Nowe zapytanie' })).toHaveCount(0)
+    }
+    else {
+      const sidebar = page.getByRole('navigation', { name: 'Nawigacja główna' })
+      await expect(sidebar.getByRole('link', { name: 'Zapytania' })).toBeVisible()
+      await expect(sidebar.getByRole('button', { name: /Moje odpowiedzi/ })).toBeDisabled()
+      await expect(sidebar.getByRole('link', { name: 'Ustawienia sklepu' })).toHaveAttribute('href', '/merchant/subscriptions')
+      await expect(page.getByText('Audio Shop Kraków')).toBeVisible()
+    }
+  })
+})

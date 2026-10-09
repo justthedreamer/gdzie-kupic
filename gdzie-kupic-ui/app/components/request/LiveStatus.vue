@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { BuyerRequestSummary } from '~/utils/buyerHome'
+import type { LiveCounts } from '~/utils/buyerHome'
 
-const props = defineProps<{ request: BuyerRequestSummary }>()
+const props = defineProps<{ request: LiveCounts }>()
 
 const breakdown = computed(() => statusBreakdown(props.request))
 

@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'buyer',
   middleware: ['auth', 'role'],
   roles: ['Buyer'],
-  buyerTitleKey: 'buyer_home.mobile_title',
+  shellTitleKey: 'buyer_home.mobile_title',
 })
 
 const { t } = useI18n()
@@ -93,7 +93,7 @@ const name = computed(() => displayNameFromEmail(authStore.user?.email))
 
       <div class="grid gap-6 lg:grid-cols-3">
         <BuyerRequestSummary :request="selected" class="lg:col-span-2" />
-        <BuyerLiveStatus :request="selected" />
+        <RequestLiveStatus :request="selected" />
       </div>
 
       <div class="grid gap-6 lg:grid-cols-2">

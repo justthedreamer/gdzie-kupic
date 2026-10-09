@@ -26,8 +26,16 @@ describe('role-home global middleware', () => {
     expect(navigateTo).toHaveBeenCalledWith('/home')
   })
 
-  it.each(['Merchant', 'Admin'] as const)('leaves a %s on /', (role) => {
-    useAuthStore().setAuth('t', { id: '1', email: 'x@test', role })
+  it('sends a signed-in Merchant from / to /feed', () => {
+    useAuthStore().setAuth('t', { id: '1', email: 'm@test', role: 'Merchant' })
+
+    visit('/')
+
+    expect(navigateTo).toHaveBeenCalledWith('/feed')
+  })
+
+  it('leaves an Admin on /', () => {
+    useAuthStore().setAuth('t', { id: '1', email: 'a@test', role: 'Admin' })
 
     visit('/')
 
