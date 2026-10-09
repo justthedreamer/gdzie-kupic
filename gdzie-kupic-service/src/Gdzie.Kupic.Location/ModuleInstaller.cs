@@ -15,13 +15,20 @@ public static class ModuleInstaller
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var googleOptions = new GoogleOptions();
-        configuration.Bind("GoogleOptions", googleOptions);
+        // `GoogleMaps:ApiKey` is what docker-compose and the docs use (env var `GoogleMaps__ApiKey`);
+        // the older `GoogleOptions:GeolocationApiKey` is still honoured.
+        var legacyOptions = new GoogleOptions();
+        configuration.Bind("GoogleOptions", legacyOptions);
+        var apiKey = configuration["GoogleMaps:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            apiKey = legacyOptions.GeolocationApiKey;
+        }
 
         services.AddHttpClient<IGoogleGeocodingHttpClient, GoogleGeocodingHttpClient>(client =>
         {
             client.BaseAddress = new Uri("https://geocode.googleapis.com/v4/");
-            client.DefaultRequestHeaders.Add("X-Goog-Api-Key", googleOptions.GeolocationApiKey);
+            client.DefaultRequestHeaders.Add("X-Goog-Api-Key", apiKey);
         });
 
         services.AddScoped<ILocationService, LocationService>();
