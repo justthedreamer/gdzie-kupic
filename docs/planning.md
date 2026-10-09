@@ -133,6 +133,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 - CRUD component(s) for category management (admin) — **M**
 - Buyer saved location management: add via browser geolocation + manual address input, list, delete — **M**
 - Merchant onboarding flow: branch location setup + category/tag subscription setup — **L**
+- Buyer home page (Dashboard): default page after login; responsive Buyer app shell + widgets per `gdzie-kupic-ui/docs/ui/buyer.png`, mocked data until Phases 4–5 — **L**
 
 ---
 

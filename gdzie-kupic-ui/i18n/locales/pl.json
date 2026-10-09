@@ -14,6 +14,58 @@
     "saved_locations": "Moje lokalizacje",
     "my_business": "Moja firma"
   },
+  "buyer_nav": {
+    "role_label": "Kupujący",
+    "aria_main": "Nawigacja główna",
+    "aria_tabs": "Nawigacja",
+    "menu": "Menu",
+    "home": "Pulpit",
+    "chats": "Czaty",
+    "saved_searches": "Zapisane wyszukiwania",
+    "profile": "Profil",
+    "settings": "Ustawienia",
+    "install_title": "Zainstaluj aplikację",
+    "install_text": "Otrzymuj natychmiastowe powiadomienia.",
+    "install_cta": "Zainstaluj aplikację"
+  },
+  "buyer_home": {
+    "title": "Pulpit",
+    "mobile_title": "Moje zapytanie",
+    "welcome": "Witaj ponownie, {name}!",
+    "new_request": "Nowe zapytanie",
+    "active_requests": "Aktywne zapytania",
+    "scroll_left": "Przewiń w lewo",
+    "scroll_right": "Przewiń w prawo",
+    "live": "Na żywo",
+    "closed": "Zakończone",
+    "responses": "brak odpowiedzi | {n} odpowiedź | {n} odpowiedzi",
+    "posted": "Dodano {time}",
+    "radius": "Zasięg {km} km",
+    "view_details": "Zobacz szczegóły",
+    "view_all": "Zobacz wszystko",
+    "live_status": "Status na żywo",
+    "merchants_notified": "Powiadomionych sprzedawców",
+    "status": {
+      "checking": "Sprawdza dostępność",
+      "have": "Ma produkt",
+      "cannot": "Nie pomoże",
+      "none": "Brak odpowiedzi"
+    },
+    "activity": {
+      "title": "Ostatnia aktywność",
+      "empty": "Brak aktywności sprzedawców.",
+      "Have": "Złożył ofertę",
+      "Checking": "Sprawdza dostępność",
+      "Cannot": "Nie pomoże"
+    },
+    "chats": {
+      "title": "Ostatnie czaty",
+      "empty": "Brak rozmów."
+    },
+    "empty_title": "Nie masz aktywnych zapytań",
+    "empty_text": "Opisz czego szukasz, a pobliscy sprzedawcy odpiszą.",
+    "load_error": "Nie udało się wczytać pulpitu."
+  },
   "common": {
     "save": "Zapisz",
     "cancel": "Anuluj",
@@ -22,7 +74,8 @@
     "loading": "Ładowanie…",
     "back": "Wstecz",
     "next": "Dalej",
-    "optional": "opcjonalnie"
+    "optional": "opcjonalnie",
+    "soon": "wkrótce"
   },
   "auth": {
     "login": "Zaloguj się",

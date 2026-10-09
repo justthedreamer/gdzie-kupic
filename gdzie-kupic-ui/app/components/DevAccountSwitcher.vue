@@ -5,12 +5,16 @@ import type { MockAccount } from '~/composables/useMockAccounts'
 const authStore = useAuthStore()
 const accounts = useMockAccounts()
 
-function loginAs(account: MockAccount) {
+async function loginAs(account: MockAccount) {
   authStore.setAuth(account.token, {
     id: account.id,
     email: account.email,
     role: account.role,
   })
+
+  // Buyers land on their home page; other roles stay where they are.
+  const home = homePathFor(account.role)
+  if (home !== '/') await navigateTo(home)
 }
 
 function isActive(account: MockAccount) {

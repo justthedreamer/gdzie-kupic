@@ -74,13 +74,30 @@ export async function waitForHydration(page: Page) {
 }
 
 /**
- * Signs in through the Dev account switcher. The auth state is client-only
- * (not persisted), so tests must navigate client-side afterwards — via the
- * header links — rather than with `page.goto()`.
+ * Signs in through the Dev account switcher. Buyers land on `/home`, other
+ * roles stay on `/`. The auth state is client-only (not persisted), so tests
+ * must navigate client-side afterwards — via the nav links — rather than with
+ * `page.goto()`.
  */
 export async function loginAs(page: Page, role: 'Admin' | 'Buyer' | 'Merchant') {
   await page.goto('/')
   await waitForHydration(page)
   await page.getByRole('button', { name: 'Dev', exact: true }).click()
   await page.getByRole('menuitem', { name: new RegExp(`^${role}`) }).click()
+}
+
+/**
+ * Opens an entry of the Buyer shell navigation: the sidebar link on desktop,
+ * the header overflow menu ("Menu") on mobile. Matches the Polish label.
+ */
+export async function openBuyerNav(page: Page, label: string) {
+  const isDesktop = (page.viewportSize()?.width ?? 0) >= 1024
+
+  if (isDesktop) {
+    await page.getByRole('link', { name: label }).click()
+    return
+  }
+
+  await page.getByRole('button', { name: 'Menu' }).click()
+  await page.getByRole('menuitem', { name: label }).click()
 }

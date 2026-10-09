@@ -14,7 +14,7 @@ async function submit() {
       form,
     )
     useAuthStore().setAuth(res.token, res.user)
-    await navigateTo('/')
+    await navigateTo(homePathFor(res.user.role))
   }
   catch {
     error.value = 'Nieprawidłowy e-mail lub hasło'

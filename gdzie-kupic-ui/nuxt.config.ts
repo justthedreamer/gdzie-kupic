@@ -6,6 +6,12 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  $development: {
+    runtimeConfig: {
+      public: { buyerHomeMock: true },
+    },
+  },
+
   // Nuxt only scans top-level composables; also auto-import the per-controller
   // API composables (see docs/api.md § Domain composables).
   imports: {
@@ -74,6 +80,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: 'http://localhost:5211',
+
+      // Buyer home page shows sample data until the post/response/chat
+      // endpoints exist (Phases 4–5). On in dev, off in production builds;
+      // override with NUXT_PUBLIC_BUYER_HOME_MOCK. See docs/api.md.
+      buyerHomeMock: false,
 
       // Pre-generated, non-expiring JWTs for the seeded test accounts — see
       // docs/local-dev.md § Mock Accounts & Pre-Generated Tokens. Used by the
