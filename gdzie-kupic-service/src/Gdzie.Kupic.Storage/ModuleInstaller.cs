@@ -20,6 +20,7 @@ public static class ModuleInstaller
 
         services.Configure<AdminSeedSettings>(configuration.GetSection("Seeding:Admin"));
         services.AddScoped<StorageSeeder>();
+        services.AddScoped<CatalogueSeeder>();
         services.AddScoped<IAuthStorage, AuthStorage>();
     }
 

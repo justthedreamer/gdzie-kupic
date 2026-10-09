@@ -1,4 +1,4 @@
-namespace Gdzie.Kupic.Domain.Model.Catalogue;
+﻿namespace Gdzie.Kupic.Domain.Model.Catalogue;
 
 public sealed class Tag(
     Guid id,
@@ -9,9 +9,10 @@ public sealed class Tag(
 {
     public Guid Id { get; init; } = id;
     public Guid CategoryId { get; init; } = categoryId;
-    public string Name { get; init; } = name;
-    public bool IsDisabled { get; init; } = isDisabled;
+    public string Name { get; set; } = name;
+    public bool IsDisabled { get; set; } = isDisabled;
     public DateTimeOffset CreatedAt { get; init; } = createdAt;
 
     public Category Category { get; init; } = null!;
 }
+
