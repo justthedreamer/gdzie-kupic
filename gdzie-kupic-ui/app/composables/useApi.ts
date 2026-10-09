@@ -9,13 +9,13 @@ export const useApi = () => {
     get: <T>(path: string, opts?: Parameters<typeof $fetch>[1]) =>
       $api<T>(path, { baseURL, ...opts }),
 
-    post: <T>(path: string, body: undefined, opts?: Parameters<typeof $fetch>[1]) =>
+    post: <T>(path: string, body?: object, opts?: Parameters<typeof $fetch>[1]) =>
       $api<T>(path, { method: 'POST', body, baseURL, ...opts }),
 
-    put: <T>(path: string, body: undefined, opts?: Parameters<typeof $fetch>[1]) =>
+    put: <T>(path: string, body?: object, opts?: Parameters<typeof $fetch>[1]) =>
       $api<T>(path, { method: 'PUT', body, baseURL, ...opts }),
 
-    patch: <T>(path: string, body: undefined, opts?: Parameters<typeof $fetch>[1]) =>
+    patch: <T>(path: string, body?: object, opts?: Parameters<typeof $fetch>[1]) =>
       $api<T>(path, { method: 'PATCH', body, baseURL, ...opts }),
 
     del: <T>(path: string, opts?: Parameters<typeof $fetch>[1]) =>

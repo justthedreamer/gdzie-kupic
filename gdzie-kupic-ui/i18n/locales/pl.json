@@ -8,6 +8,22 @@
     "step_2": "Pobliskie sklepy i sprzedawcy otrzymują powiadomienie",
     "step_3": "Odbierasz oferty bez szukania – w jednym miejscu"
   },
+  "nav": {
+    "requests": "Zapytania",
+    "catalogue": "Katalog",
+    "saved_locations": "Moje lokalizacje",
+    "my_business": "Moja firma"
+  },
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "retry": "Spróbuj ponownie",
+    "loading": "Ładowanie…",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "optional": "opcjonalnie"
+  },
   "auth": {
     "login": "Zaloguj się",
     "register": "Zarejestruj się",
@@ -26,6 +42,107 @@
     "category": "Kategoria",
     "urgency": "Pilność",
     "submit": "Opublikuj zapytanie"
+  },
+  "location_input": {
+    "mode_coords": "Wykryj automatycznie",
+    "mode_address": "Wpisz adres",
+    "find_me": "Wykryj moją lokalizację",
+    "locating": "Pobieranie lokalizacji…",
+    "found": "Wykryto lokalizację: {coords}",
+    "address_label": "Adres",
+    "address_placeholder": "np. Rynek Główny 1, Kraków",
+    "errors": {
+      "denied": "Odmówiono dostępu do lokalizacji. Zezwól na dostęp w ustawieniach przeglądarki lub wpisz adres ręcznie.",
+      "unavailable": "Nie można określić Twojej lokalizacji. Wpisz adres ręcznie.",
+      "timeout": "Upłynął limit czasu pobierania lokalizacji. Spróbuj ponownie lub wpisz adres ręcznie.",
+      "unknown": "Nie udało się pobrać lokalizacji. Wpisz adres ręcznie.",
+      "unsupported": "Twoja przeglądarka nie obsługuje geolokalizacji. Wpisz adres ręcznie."
+    }
+  },
+  "catalogue": {
+    "title": "Katalog kategorii i tagów",
+    "description": "Zarządzaj kategoriami i tagami, po których sprzedawcy subskrybują zapytania.",
+    "add_category": "Dodaj kategorię",
+    "category_name": "Nazwa kategorii",
+    "add_tag": "Dodaj tag",
+    "tag_name": "Nazwa tagu",
+    "rename": "Zmień nazwę",
+    "disable": "Wyłącz",
+    "enable": "Włącz",
+    "disabled": "Wyłączona",
+    "empty": "Brak kategorii. Dodaj pierwszą.",
+    "no_tags": "Brak tagów w tej kategorii.",
+    "load_error": "Nie udało się załadować katalogu.",
+    "errors": {
+      "duplicate": "Element o takiej nazwie już istnieje.",
+      "not_found": "Nie znaleziono elementu — mógł zostać usunięty. Odśwież listę.",
+      "generic": "Nie udało się zapisać zmian. Spróbuj ponownie.",
+      "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
+    }
+  },
+  "saved_locations": {
+    "title": "Moje lokalizacje",
+    "description": "Zapisane miejsca, których możesz użyć przy tworzeniu zapytania.",
+    "add_title": "Dodaj lokalizację",
+    "name_label": "Nazwa",
+    "name_placeholder": "np. Dom, Praca",
+    "location_label": "Lokalizacja",
+    "save": "Zapisz lokalizację",
+    "empty": "Nie masz jeszcze zapisanych lokalizacji.",
+    "load_error": "Nie udało się załadować lokalizacji.",
+    "delete_title": "Usunąć lokalizację?",
+    "delete_confirm": "Lokalizacja „{name}” zostanie usunięta.",
+    "errors": {
+      "not_found": "Nie znaleziono lokalizacji — mogła zostać już usunięta.",
+      "geocoding": "Nie udało się ustalić współrzędnych dla podanego adresu. Spróbuj ponownie później.",
+      "generic": "Nie udało się wykonać operacji. Spróbuj ponownie.",
+      "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
+    }
+  },
+  "merchant": {
+    "onboarding": {
+      "title": "Skonfiguruj swoją firmę",
+      "description": "Podaj dane firmy i lokalizację oraz wybierz kategorie, z których chcesz otrzymywać zapytania.",
+      "step_of": "Krok {current} z {total}",
+      "step_business": "Firma i oddział",
+      "step_subscriptions": "Subskrypcje",
+      "business_name": "Nazwa firmy",
+      "business_description": "Opis firmy",
+      "branch_name": "Nazwa oddziału",
+      "branch_name_placeholder": "np. Sklep przy Rynku",
+      "phone": "Telefon",
+      "website": "Strona internetowa",
+      "branch_location": "Lokalizacja oddziału",
+      "subscriptions_hint": "Wybierz całe kategorie lub pojedyncze tagi. Wyłączone pozycje nie są dostępne. Możesz też pominąć ten krok i zrobić to później.",
+      "whole_category": "Cała kategoria",
+      "no_categories": "Brak dostępnych kategorii.",
+      "categories_load_error": "Nie udało się załadować kategorii.",
+      "finish": "Zakończ konfigurację",
+      "errors": {
+        "validation": "Uzupełnij nazwę firmy, nazwę oddziału i lokalizację.",
+        "onboarding": "Nie udało się zapisać danych firmy. Twoje dane zostały zachowane — spróbuj ponownie.",
+        "geocoding": "Nie udało się ustalić współrzędnych dla podanego adresu. Spróbuj ponownie później.",
+        "subscriptions": "Firma została zapisana, ale nie wszystkie subskrypcje się powiodły. Wybór został zachowany — spróbuj ponownie.",
+        "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
+      }
+    },
+    "subscriptions": {
+      "title": "Moja firma",
+      "branch": "Oddział",
+      "section_title": "Subskrypcje",
+      "description": "Otrzymujesz zapytania z tych kategorii i tagów.",
+      "empty": "Nie masz jeszcze żadnych subskrypcji.",
+      "whole_category": "Cała kategoria",
+      "remove": "Usuń subskrypcję",
+      "add_title": "Dodaj subskrypcje",
+      "add_selected": "Dodaj wybrane",
+      "load_error": "Nie udało się załadować subskrypcji.",
+      "errors": {
+        "not_found": "Nie znaleziono subskrypcji — mogła zostać już usunięta.",
+        "generic": "Nie udało się usunąć subskrypcji. Spróbuj ponownie.",
+        "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
+      }
+    }
   },
   "errors": {
     "not_found": "Strona nie została znaleziona",

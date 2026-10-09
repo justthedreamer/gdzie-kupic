@@ -6,6 +6,12 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  // Nuxt only scans top-level composables; also auto-import the per-controller
+  // API composables (see docs/api.md § Domain composables).
+  imports: {
+    dirs: ['~/composables/api'],
+  },
+
   modules: [
     '@nuxt/ui',
     '@pinia/nuxt',

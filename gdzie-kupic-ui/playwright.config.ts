@@ -10,6 +10,9 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
+    // The app defaults to Polish, but i18n also detects the browser language;
+    // pin it so tests do not depend on the machine's locale.
+    locale: 'pl-PL',
     trace: 'on-first-retry',
   },
 
