@@ -1,4 +1,4 @@
-﻿# Local Development Environment
+# Local Development Environment
 
 ## Prerequisites
 
@@ -270,3 +270,16 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0
 
 For the full logging architecture, enrichment properties, and step-by-step verification guide see [observability.md](observability.md).
 
+## Running .NET tooling in a container (when the host blocks DLLs)
+
+Windows Smart App Control / Code Integrity policies can block unsigned assemblies such as `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite.dll`. Symptoms: `dotnet ef` fails with "An Application Control policy has blocked this file" and `Tests.Integration` reports no tests. Run the tooling in the .NET SDK container instead:
+
+```powershell
+cd gdzie-kupic-service
+./scripts/dotnet-docker.ps1 "dotnet test Gdzie.Kupic.Tests.Integration"
+
+# generate an EF migration and copy it back to the host
+./scripts/dotnet-docker.ps1 'dotnet tool install -g dotnet-ef >/dev/null 2>&1; export PATH=$PATH:/root/.dotnet/tools; dotnet ef migrations add <Name> --project Gdzie.Kupic.Storage --startup-project Gdzie.Kupic.API' -SyncBack Gdzie.Kupic.Storage/Migrations
+```
+
+Sources are copied into the container (without `bin`/`obj`), so host build output is not touched. Never write migrations by hand.
