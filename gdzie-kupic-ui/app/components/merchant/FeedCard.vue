@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatBudget, formatDistance, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
+import { formatBudget, formatDistance, RESPONSE_COLOR, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
 
 const props = defineProps<{ request: MerchantFeedRequest }>()
 
@@ -10,8 +10,6 @@ const { locale } = useI18n()
 const posted = computed(() => formatRelativeTime(props.request.postedAt, locale.value))
 const budget = computed(() => (props.request.budget === null ? null : formatBudget(props.request.budget, locale.value)))
 const category = computed(() => [props.request.category, props.request.tag].filter(Boolean).join(' · '))
-
-const RESPONSE_COLOR = { HaveIt: 'success', MayHaveIt: 'warning', CantHelp: 'error' } as const
 </script>
 
 <template>

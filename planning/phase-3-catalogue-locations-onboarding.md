@@ -26,6 +26,7 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | U3 | [UI]: Merchant Onboarding Flow | L | contract S1/S2 (read), S4, S5 | [#52](https://github.com/justthedreamer/gdzie-kupic/issues/52) |
 | U4 | [UI]: Buyer Home Page | L | — (mocked data; real wiring in Phase 4/5) | [#59](https://github.com/justthedreamer/gdzie-kupic/issues/59) |
 | U5 | [UI]: Merchant Home Page (Requests Feed) | L | — (mocked data; real wiring in Phase 4/5) | [#62](https://github.com/justthedreamer/gdzie-kupic/issues/62) |
+| U6 | [UI]: Merchant response — I can order it (`CanOrderIt`) | S | U5 (mocked data) | [#64](https://github.com/justthedreamer/gdzie-kupic/issues/64) |
 
 U1–U3 and S1–S5 come 1:1 from [planning.md](../docs/planning.md) Phase 3.1 / 3.2. U4 was added mid-phase at the architect's request (buyer default page after login, based on the [buyer mockup](../gdzie-kupic-ui/docs/ui/buyer.png)). U5 is its Merchant counterpart (based on the [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png)) and generalises the Buyer shell into shared components.
 
@@ -431,7 +432,7 @@ On mobile the tabs are Feed / Responses / Chats / Profile; Shop Settings and Not
 2. **Filters** — category (all categories present in the loaded data), maximum distance (5 / 10 / 15 / 25 / 50 km), sort (Newest first — urgent requests first, then newest, per FR-FEED-3 — or Nearest first). Desktop: one row under the header. Mobile: behind a filter button in the page header.
 3. **Tabs** — **New** (not answered yet, with a count badge), **Responded** (answered, flat list with the response state visible, per FR-FEED-2), **All**. Default: New. Same tabs on desktop and mobile.
 4. **Request cards** — title, short description, distance from the branch ("5.2 km"), budget ("up to 2 000 PLN", hidden when absent), category/tag, relative posted time, an "Urgent" badge when applicable, and a **"New"** badge until answered (afterwards a badge with the merchant's response). Clicking the card body opens the details page.
-5. **Response buttons** on every card (and on the details page): **I have it** (green), **I may have it** (amber), **I can't help** (red). The mockup shows three; the fourth FR-RESP-1 state (`CanOrderIt`) is not in the mockup and is added by the Phase 5 response ticket. Clicking sets the response and can be changed at any time (FR-RESP-3). In this ticket the response is **local state** on the mocked data (kept in a store, survives navigation between feed and details, lost on reload) — the seam exposes `respond(id, state)` so Phase 5 only swaps the implementation. A "can't help" request stays in Responded, rendered dimmed (FR-RESP-1 "archived").
+5. **Response buttons** on every card (and on the details page): **I have it** (green), **I may have it** (amber), **I can't help** (red). The mockup shows three; the fourth FR-RESP-1 state (`CanOrderIt`) is not in the mockup and is added right after by U6 ([#64](https://github.com/justthedreamer/gdzie-kupic/issues/64)). Clicking sets the response and can be changed at any time (FR-RESP-3). In this ticket the response is **local state** on the mocked data (kept in a store, survives navigation between feed and details, lost on reload) — the seam exposes `respond(id, state)` so Phase 5 only swaps the implementation. A "can't help" request stays in Responded, rendered dimmed (FR-RESP-1 "archived").
 6. **Empty states** — no requests at all ("No requests in your area yet — we will notify you"), none in the current tab/filter ("Nothing here"), load error with retry.
 
 Infinite scroll, real-time insert/removal and the post-closed banner (FR-FEED-4..6) are Phase 5/6 and not part of this ticket.
@@ -456,6 +457,40 @@ Separate page on all viewports with a back arrow to the feed, as in the mockup:
 | Shop Settings | `/merchant/subscriptions` | #52 (moved into the new shell here) |
 | My Responses, Chats / Chat thread | — | Phase 5 |
 | Profile, Notifications | — | not planned in this phase (Notifications: Phase 7) |
+
+---
+
+## Ready — `[UI]`: Merchant response "I can order it" (`CanOrderIt`)
+
+**Size:** S
+
+**Brief Description**
+Adds the fourth merchant response state from FR-RESP-1, **"I can order it"** (`CanOrderIt`), to the Merchant Requests Feed and Request Details so all four states from the requirements can be set from the UI.
+
+**User Story**
+As a merchant, I want to tell a buyer that I do not have an item in stock but can source it so that the buyer knows I am still an option.
+
+**Description**
+The merchant mockup shows three response buttons, but [FR-RESP-1](../docs/requirements.md) (and the data model, `State` = `CantHelp` / `MayHaveIt` / `HaveIt` / `CanOrderIt`) define four. U5 delivered the three from the mockup on mocked data and deferred the fourth; this ticket adds it. Still mocked data behind `useMerchantFeedApi` — the seam already carries the state, so Phase 5 only swaps the implementation.
+
+### Scope
+
+- `MerchantResponse` gains `CanOrderIt`; `MERCHANT_RESPONSES` order is **I have it, I may have it, I can order it, I can't help** (best to worst availability).
+- Button + badge label "I can order it" / "Mogę zamówić" (PL), with a distinct `info` (blue) colour and its own icon, so it is not confused with "I have it" (green) or "I may have it" (amber). The colour mapping lives in one place and is shared by the buttons, the card badge and the details badge.
+- Behaves like the other positive states: appears under **Responded**, can be changed at any time (FR-RESP-3), shown on the card badge and in "Your Response" on the details page. Four buttons must fit on a card on mobile (wrap) without breaking the layout.
+- Unit tests (utils, response buttons, store) and an E2E case for the new state.
+
+### Out of scope (Phase 5)
+
+- Server-side rules: rejecting responses once a post is closed (FR-RESP-4/5) and creating the chat thread on a positive response (FR-RESP-2, FR-CHAT-2). Nothing in the UI creates a thread yet.
+
+### Acceptance Criteria
+
+- [ ] Every card and the details page offer four response buttons in the order above.
+- [ ] Choosing "I can order it" marks the request as answered (Responded tab, badge, "Your Response") and can be switched to any other state and back.
+- [ ] Labels exist in PL and EN; the new colour is distinguishable from the other three.
+- [ ] Layout holds on desktop and mobile.
+- [ ] Unit and E2E tests cover the new state; `vue-tsc`, `vitest`, `playwright` pass.
 
 **Documentation:** [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png) · [docs/design-system.md](../gdzie-kupic-ui/docs/design-system.md) · [docs/api.md](../gdzie-kupic-ui/docs/api.md) · [FRAMEWORK.md](../gdzie-kupic-ui/FRAMEWORK.md) · [requirements.md](../docs/requirements.md)
 **Requirements:** FR-FEED-1..3, FR-RESP-1 (three of four states), FR-RESP-3 (display and local change only — wired in Phases 4–5)

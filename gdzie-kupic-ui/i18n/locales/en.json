@@ -53,6 +53,7 @@
     "response": {
       "HaveIt": "I have it",
       "MayHaveIt": "I may have it",
+      "CanOrderIt": "I can order it",
       "CantHelp": "I can't help"
     },
     "tabs": {

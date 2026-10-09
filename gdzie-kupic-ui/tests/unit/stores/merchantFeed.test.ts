@@ -61,6 +61,17 @@ describe('merchantFeed store', () => {
     expect(store.byId(target.id)?.myResponse).toBe('CantHelp')
   })
 
+  it('supports the fourth state, CanOrderIt', async () => {
+    const store = useMerchantFeedStore()
+    await store.load()
+    const target = store.requests.find(request => request.myResponse === null)!
+
+    await store.respond(target.id, 'CanOrderIt')
+
+    expect(store.byId(target.id)?.myResponse).toBe('CanOrderIt')
+    expect(api.respond).toHaveBeenCalledWith(target.id, 'CanOrderIt')
+  })
+
   it('keeps the previous answer when the API call fails', async () => {
     const store = useMerchantFeedStore()
     await store.load()
