@@ -33,9 +33,9 @@ function request(overrides: Partial<BuyerRequestSummary> = {}): BuyerRequestSumm
 }
 
 describe('homePathFor', () => {
-  it('sends Buyers to /home and everyone else to /', () => {
+  it('sends Buyers to /home, Merchants to /feed and everyone else to /', () => {
     expect(homePathFor('Buyer')).toBe('/home')
-    expect(homePathFor('Merchant')).toBe('/')
+    expect(homePathFor('Merchant')).toBe('/feed')
     expect(homePathFor('Admin')).toBe('/')
     expect(homePathFor(undefined)).toBe('/')
   })

@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import type { ShellConfig } from '~/utils/shellNav'
+
+const props = defineProps<{
+  config: ShellConfig
+  /** Display name in the user card. */
+  name: string
+  email: string
+}>()
+
 const authStore = useAuthStore()
 const { t } = useI18n()
-
-const email = computed(() => authStore.user?.email ?? '')
-const name = computed(() => displayNameFromEmail(email.value))
 </script>
 
 <template>
@@ -11,13 +17,13 @@ const name = computed(() => displayNameFromEmail(email.value))
     <div>
       <AppLogo />
       <p class="mt-1 text-xs text-muted">
-        {{ $t('buyer_nav.role_label') }}
+        {{ t(props.config.roleLabel) }}
       </p>
     </div>
 
-    <nav :aria-label="$t('buyer_nav.aria_main')" class="flex-1 overflow-y-auto">
+    <nav :aria-label="$t('shell.aria_main')" class="flex-1 overflow-y-auto">
       <ul class="space-y-1">
-        <li v-for="item in buyerSidebarNav" :key="item.key">
+        <li v-for="item in props.config.sidebar" :key="item.key">
           <NuxtLink
             v-if="item.to"
             :to="item.to"
@@ -46,10 +52,10 @@ const name = computed(() => displayNameFromEmail(email.value))
       <div class="rounded-xl bg-primary/10 p-4">
         <p class="flex items-center gap-2 text-sm font-semibold text-highlighted">
           <UIcon name="i-heroicons-device-phone-mobile" class="size-5 text-primary" />
-          {{ $t('buyer_nav.install_title') }}
+          {{ $t('shell.install_title') }}
         </p>
         <p class="mt-1 text-xs text-muted">
-          {{ $t('buyer_nav.install_text') }}
+          {{ $t('shell.install_text') }}
         </p>
         <UButton
           size="sm"
@@ -57,18 +63,18 @@ const name = computed(() => displayNameFromEmail(email.value))
           block
           disabled
         >
-          {{ $t('buyer_nav.install_cta') }}
+          {{ $t('shell.install_cta') }}
         </UButton>
       </div>
 
       <div class="flex items-center gap-3 border-t border-default pt-4">
-        <UAvatar :text="name.charAt(0)" size="md" />
+        <UAvatar :text="props.name.charAt(0)" size="md" />
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-medium text-highlighted">
-            {{ name }}
+            {{ props.name }}
           </p>
-          <p class="truncate text-xs text-muted" :title="email">
-            {{ email }}
+          <p class="truncate text-xs text-muted" :title="props.email">
+            {{ props.email }}
           </p>
         </div>
       </div>

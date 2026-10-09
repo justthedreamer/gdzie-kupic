@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'buyer',
   middleware: ['auth', 'role'],
   roles: ['Buyer'],
-  buyerTitleKey: 'saved_locations.title',
+  shellTitleKey: 'saved_locations.title',
 })
 
 const { t } = useI18n()

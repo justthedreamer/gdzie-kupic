@@ -24,6 +24,9 @@ export interface BuyerRequestSummary {
   cannotCount: number
 }
 
+/** The fields the Live Status widget needs; shared by the Buyer and Merchant views of a request. */
+export type LiveCounts = Pick<BuyerRequestSummary, 'isLive' | 'notifiedCount' | 'checkingCount' | 'haveCount' | 'cannotCount'>
+
 export type ActivityState = 'Have' | 'Checking' | 'Cannot'
 
 export interface BuyerActivityEvent {
@@ -53,7 +56,9 @@ export const emptyBuyerHome = (): BuyerHomeData => ({ requests: [], activity: []
 
 /** Where a user lands after signing in, and what `/` redirects to. */
 export function homePathFor(role: UserRole | undefined): string {
-  return role === 'Buyer' ? '/home' : '/'
+  if (role === 'Buyer') return '/home'
+  if (role === 'Merchant') return '/feed'
+  return '/'
 }
 
 export interface StatusBreakdown {
@@ -65,12 +70,12 @@ export interface StatusBreakdown {
 }
 
 /** Merchants that answered in some way (anything except "no response yet"). */
-export function respondedCount(request: BuyerRequestSummary): number {
+export function respondedCount(request: LiveCounts): number {
   return request.checkingCount + request.haveCount + request.cannotCount
 }
 
 /** The four response buckets; they always add up to the notified total. */
-export function statusBreakdown(request: BuyerRequestSummary): StatusBreakdown {
+export function statusBreakdown(request: LiveCounts): StatusBreakdown {
   const responded = respondedCount(request)
   const notified = Math.max(request.notifiedCount, responded)
 

@@ -25,8 +25,9 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | U2 | [UI]: Buyer Saved Locations | M | contract S3 | [#51](https://github.com/justthedreamer/gdzie-kupic/issues/51) |
 | U3 | [UI]: Merchant Onboarding Flow | L | contract S1/S2 (read), S4, S5 | [#52](https://github.com/justthedreamer/gdzie-kupic/issues/52) |
 | U4 | [UI]: Buyer Home Page | L | — (mocked data; real wiring in Phase 4/5) | [#59](https://github.com/justthedreamer/gdzie-kupic/issues/59) |
+| U5 | [UI]: Merchant Home Page (Requests Feed) | L | — (mocked data; real wiring in Phase 4/5) | [#62](https://github.com/justthedreamer/gdzie-kupic/issues/62) |
 
-U1–U3 and S1–S5 come 1:1 from [planning.md](../docs/planning.md) Phase 3.1 / 3.2. U4 was added mid-phase at the architect's request (buyer default page after login, based on the [buyer mockup](../gdzie-kupic-ui/docs/ui/buyer.png)).
+U1–U3 and S1–S5 come 1:1 from [planning.md](../docs/planning.md) Phase 3.1 / 3.2. U4 was added mid-phase at the architect's request (buyer default page after login, based on the [buyer mockup](../gdzie-kupic-ui/docs/ui/buyer.png)). U5 is its Merchant counterpart (based on the [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png)) and generalises the Buyer shell into shared components.
 
 ---
 
@@ -384,6 +385,94 @@ The lower half of the mockup (Merchant feed, "Respond to this request", merchant
 - [ ] Widgets get their data from a single mocked data source, so Phases 4–5 can replace it with real endpoints without reworking the widgets
 - [ ] Relative times and all UI text are localised (pl/en) via the existing i18n setup
 - [ ] Unit tests cover widget rendering + empty states + request selection; e2e test covers login-as-Buyer → lands on Dashboard on desktop and mobile viewports
+
+---
+
+## Ready — `[UI]`: Merchant Home Page (Requests Feed)
+
+**Size:** L
+
+**Brief Description**
+After signing in, an onboarded Merchant lands on the Requests Feed: new purchase requests from buyers in their area, with one-tap response buttons, a request details page and a responsive Merchant app shell (sidebar on desktop, bottom tab bar on mobile).
+
+**User Story**
+As a merchant, I want a feed of nearby purchase requests that I can answer with one tap so that I can quickly tell buyers whether I have what they are looking for.
+
+**Description**
+Implements the Merchant part of the [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png) (desktop **Requests Feed**, **Request Details** and the mobile feed). The feed (`/feed`) is the Merchant's default page: successful login/registration as a Merchant and a visit to `/` while signed in as a Merchant both land on it. A Merchant who has not onboarded yet is still sent to onboarding first (existing guard from #52). Anonymous visitors, Buyers and Admins keep their current behaviour. Request images from the mockup are out of scope for now.
+
+Posts, matching and merchant responses do not exist in the backend until Phases 4–5, so this ticket builds the **layout, widgets, navigation and local response interaction** against mocked data behind a single data-access seam (`useMerchantFeedApi`, same pattern as `useBuyerHomeApi`) that is replaced by real endpoints in Phases 4–5. With no data (the real state until then) the feed renders a designed empty state. No new backend endpoints are defined here.
+
+### Shared app shell
+
+The Buyer shell (#59) is generalised into role-agnostic shell components (sidebar, bottom tab bar, mobile top bar) driven by a per-role navigation config; the Buyer layout is moved onto them with no visible change, and a new `merchant` layout uses the same components.
+
+| Viewport | Structure |
+|---|---|
+| Desktop (`lg` and up) | Left sidebar: logo, role label ("Merchant"), navigation, "Install App" card, user card (avatar, shop name, role) at the bottom. Main area: page header + content. |
+| Mobile (below `lg`) | Top bar (back arrow on sub-pages, page title, overflow `...` menu) and fixed bottom tab bar: **Feed · Responses · Chats · Profile** (no centre action — merchants do not create requests). |
+
+Sidebar navigation (desktop):
+
+| Item | Destination | State in this ticket |
+|---|---|---|
+| Requests Feed | `/feed` | active (this ticket) |
+| My Responses | — | disabled ("soon") until Phase 5 |
+| Chats | — | disabled ("soon") until Phase 5 |
+| Profile | — | disabled ("soon"); no ticket planned |
+| Shop Settings | `/merchant/subscriptions` | active — the existing subscriptions page (#52) moves into the new shell; it is the "Shop Settings" entry of the mockup |
+| Notifications | — | disabled ("soon") until Phase 7 |
+
+On mobile the tabs are Feed / Responses / Chats / Profile; Shop Settings and Notifications live in the overflow menu. Unread/new badges from the mockup are not rendered until the data exists (Phase 5/6). The onboarding flow keeps its current standalone layout (the merchant has no shop yet).
+
+### Requests Feed (`/feed`)
+
+1. **Page header** — title "Requests Feed", subtitle "New purchase requests from buyers in your area." and a refresh button (re-runs the data load).
+2. **Filters** — category (all categories present in the loaded data), maximum distance (5 / 10 / 15 / 25 / 50 km), sort (Newest first — urgent requests first, then newest, per FR-FEED-3 — or Nearest first). Desktop: one row under the header. Mobile: behind a filter button in the page header.
+3. **Tabs** — **New** (not answered yet, with a count badge), **Responded** (answered, flat list with the response state visible, per FR-FEED-2), **All**. Default: New. Same tabs on desktop and mobile.
+4. **Request cards** — title, short description, distance from the branch ("5.2 km"), budget ("up to 2 000 PLN", hidden when absent), category/tag, relative posted time, an "Urgent" badge when applicable, and a **"New"** badge until answered (afterwards a badge with the merchant's response). Clicking the card body opens the details page.
+5. **Response buttons** on every card (and on the details page): **I have it** (green), **I may have it** (amber), **I can't help** (red). The mockup shows three; the fourth FR-RESP-1 state (`CanOrderIt`) is not in the mockup and is added by the Phase 5 response ticket. Clicking sets the response and can be changed at any time (FR-RESP-3). In this ticket the response is **local state** on the mocked data (kept in a store, survives navigation between feed and details, lost on reload) — the seam exposes `respond(id, state)` so Phase 5 only swaps the implementation. A "can't help" request stays in Responded, rendered dimmed (FR-RESP-1 "archived").
+6. **Empty states** — no requests at all ("No requests in your area yet — we will notify you"), none in the current tab/filter ("Nothing here"), load error with retry.
+
+Infinite scroll, real-time insert/removal and the post-closed banner (FR-FEED-4..6) are Phase 5/6 and not part of this ticket.
+
+### Request Details (`/feed/{id}`)
+
+Separate page on all viewports with a back arrow to the feed, as in the mockup:
+
+- Title, "New"/response badge, description, detail list: buyer (display name), location (city + distance from the shop), budget (optional), category, posted time, urgency + deadline when urgent.
+- **Live Status** card (same widget as the Buyer home: notified count + checking / have / can't help / no-response breakdown, design-system status colours).
+- **Buyer Location** — approximate-area card: the buyer's search radius and city. A real map is not part of this ticket (no map component in the stack yet); the card is a static placeholder illustration with the radius and city text.
+- **Your Response** — current response ("You haven't responded yet." when none) and the three response buttons.
+- Unknown id → "Request not found" state with a link back to the feed.
+
+### Pages in the mockup and where they are delivered
+
+| Page | Route | Where it is delivered |
+|---|---|---|
+| Requests Feed (desktop + mobile) | `/feed` | **This ticket** |
+| Request Details | `/feed/{id}` | **This ticket** (mock data, local response state) |
+| Merchant app shell (sidebar / bottom tabs) | layout | **This ticket** (shared with Buyer) |
+| Shop Settings | `/merchant/subscriptions` | #52 (moved into the new shell here) |
+| My Responses, Chats / Chat thread | — | Phase 5 |
+| Profile, Notifications | — | not planned in this phase (Notifications: Phase 7) |
+
+**Documentation:** [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png) · [docs/design-system.md](../gdzie-kupic-ui/docs/design-system.md) · [docs/api.md](../gdzie-kupic-ui/docs/api.md) · [FRAMEWORK.md](../gdzie-kupic-ui/FRAMEWORK.md) · [requirements.md](../docs/requirements.md)
+**Requirements:** FR-FEED-1..3, FR-RESP-1 (three of four states), FR-RESP-3 (display and local change only — wired in Phases 4–5)
+
+**Definition of Done**
+- [ ] A Merchant is redirected to `/feed` after login/registration and when visiting `/` while signed in (an un-onboarded merchant still goes to onboarding); Buyers/Admins/anonymous users are unaffected
+- [ ] `/feed` and `/feed/{id}` are reachable only by authenticated Merchants (anonymous → sign-in, other roles denied)
+- [ ] Shell components are shared by Buyer and Merchant: sidebar with navigation, install card and user card on desktop; top bar + bottom tabs on mobile; Buyer pages look and behave as before; the subscriptions page uses the Merchant shell
+- [ ] Navigation items whose destination does not exist yet are visibly disabled, not broken links
+- [ ] Feed renders header, filters, New / Responded / All tabs and request cards on desktop and mobile, matching the mockup within design-system tokens
+- [ ] Category, distance and sort filters work (urgent first for "Newest first"); the New tab shows a count of unanswered requests
+- [ ] The three response buttons set and change the response on cards and on the details page; the card moves from New to Responded and shows the response; the state is kept when navigating feed ↔ details
+- [ ] Details page shows the request, Live Status (counts sum to the notified total), the buyer-location placeholder and "Your Response"; unknown id shows a not-found state
+- [ ] Every list has an empty state; a load failure offers a retry
+- [ ] Data comes from a single mocked source behind one seam, so Phases 4–5 can replace it with real endpoints without reworking the widgets
+- [ ] Relative times, distances, currency and all UI text are localised (pl/en)
+- [ ] Unit tests cover the feed logic (filtering, sorting, tabs, response state), widgets and empty states; e2e tests cover login-as-Merchant → lands on the feed, responding from a card, opening details, on desktop and mobile viewports; existing Buyer and Merchant e2e tests still pass
 
 ---
 

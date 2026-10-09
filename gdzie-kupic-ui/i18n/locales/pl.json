@@ -14,19 +14,80 @@
     "saved_locations": "Moje lokalizacje",
     "my_business": "Moja firma"
   },
-  "buyer_nav": {
-    "role_label": "Kupujący",
+  "shell": {
     "aria_main": "Nawigacja główna",
     "aria_tabs": "Nawigacja",
     "menu": "Menu",
+    "install_title": "Zainstaluj aplikację",
+    "install_text": "Otrzymuj natychmiastowe powiadomienia.",
+    "install_cta": "Zainstaluj aplikację"
+  },
+  "buyer_nav": {
+    "role_label": "Kupujący",
     "home": "Pulpit",
     "chats": "Czaty",
     "saved_searches": "Zapisane wyszukiwania",
     "profile": "Profil",
-    "settings": "Ustawienia",
-    "install_title": "Zainstaluj aplikację",
-    "install_text": "Otrzymuj natychmiastowe powiadomienia.",
-    "install_cta": "Zainstaluj aplikację"
+    "settings": "Ustawienia"
+  },
+  "merchant_nav": {
+    "role_label": "Sprzedawca",
+    "feed": "Zapytania",
+    "responses": "Moje odpowiedzi",
+    "chats": "Czaty",
+    "profile": "Profil",
+    "shop_settings": "Ustawienia sklepu",
+    "notifications": "Powiadomienia"
+  },
+  "merchant_feed": {
+    "title": "Zapytania w okolicy",
+    "subtitle": "Nowe zapytania kupujących z Twojej okolicy.",
+    "details_title": "Szczegóły zapytania",
+    "refresh": "Odśwież",
+    "load_error": "Nie udało się załadować zapytań.",
+    "empty_title": "Brak zapytań w Twojej okolicy",
+    "empty_text": "Powiadomimy Cię, gdy pojawi się zapytanie pasujące do Twoich subskrypcji.",
+    "new": "Nowe",
+    "urgent": "Pilne",
+    "budget_up_to": "do {amount}",
+    "response": {
+      "HaveIt": "Mam to",
+      "MayHaveIt": "Mogę mieć",
+      "CantHelp": "Nie pomogę"
+    },
+    "tabs": {
+      "label": "Widok zapytań",
+      "new": "Nowe",
+      "responded": "Odpowiedziane",
+      "all": "Wszystkie"
+    },
+    "filters": {
+      "toggle": "Filtry",
+      "all_categories": "Wszystkie kategorie",
+      "any_distance": "Dowolna odległość",
+      "distance": "Maksymalna odległość",
+      "sort": "Sortowanie",
+      "newest": "Najnowsze",
+      "nearest": "Najbliższe"
+    },
+    "empty_tab": {
+      "new": "Brak nowych zapytań.",
+      "responded": "Nie odpowiedziano jeszcze na żadne zapytanie.",
+      "all": "Brak zapytań dla wybranych filtrów."
+    },
+    "back_to_feed": "Wróć do zapytań",
+    "not_found": "Nie znaleziono zapytania.",
+    "buyer": "Kupujący",
+    "verified": "Zweryfikowany",
+    "km_from_you": "{distance} od Ciebie",
+    "posted": "Dodano",
+    "deadline": "Termin",
+    "description": "Opis",
+    "buyer_location": "Lokalizacja kupującego",
+    "buyer_location_aria": "Przybliżony obszar: {city}, zasięg {km} km",
+    "buyer_radius": "zasięg {km} km",
+    "your_response": "Twoja odpowiedź",
+    "no_response_yet": "Nie odpowiedziano jeszcze na to zapytanie."
   },
   "buyer_home": {
     "title": "Pulpit",

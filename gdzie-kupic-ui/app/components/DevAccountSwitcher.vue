@@ -12,7 +12,7 @@ async function loginAs(account: MockAccount) {
     role: account.role,
   })
 
-  // Buyers land on their home page; other roles stay where they are.
+  // Buyers and Merchants land on their home page; other roles stay where they are.
   const home = homePathFor(account.role)
   if (home !== '/') await navigateTo(home)
 }

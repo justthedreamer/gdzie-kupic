@@ -14,19 +14,80 @@
     "saved_locations": "My locations",
     "my_business": "My business"
   },
-  "buyer_nav": {
-    "role_label": "Buyer",
+  "shell": {
     "aria_main": "Main navigation",
     "aria_tabs": "Navigation",
     "menu": "Menu",
+    "install_title": "Install the app",
+    "install_text": "Get instant notifications.",
+    "install_cta": "Install app"
+  },
+  "buyer_nav": {
+    "role_label": "Buyer",
     "home": "Dashboard",
     "chats": "Chats",
     "saved_searches": "Saved searches",
     "profile": "Profile",
-    "settings": "Settings",
-    "install_title": "Install the app",
-    "install_text": "Get instant notifications.",
-    "install_cta": "Install app"
+    "settings": "Settings"
+  },
+  "merchant_nav": {
+    "role_label": "Merchant",
+    "feed": "Requests",
+    "responses": "My responses",
+    "chats": "Chats",
+    "profile": "Profile",
+    "shop_settings": "Shop settings",
+    "notifications": "Notifications"
+  },
+  "merchant_feed": {
+    "title": "Requests nearby",
+    "subtitle": "New purchase requests from buyers in your area.",
+    "details_title": "Request details",
+    "refresh": "Refresh",
+    "load_error": "Could not load requests.",
+    "empty_title": "No requests in your area yet",
+    "empty_text": "We will notify you when a request matching your subscriptions appears.",
+    "new": "New",
+    "urgent": "Urgent",
+    "budget_up_to": "up to {amount}",
+    "response": {
+      "HaveIt": "I have it",
+      "MayHaveIt": "I may have it",
+      "CantHelp": "I can't help"
+    },
+    "tabs": {
+      "label": "Requests view",
+      "new": "New",
+      "responded": "Responded",
+      "all": "All"
+    },
+    "filters": {
+      "toggle": "Filters",
+      "all_categories": "All categories",
+      "any_distance": "Any distance",
+      "distance": "Maximum distance",
+      "sort": "Sort",
+      "newest": "Newest first",
+      "nearest": "Nearest first"
+    },
+    "empty_tab": {
+      "new": "No new requests.",
+      "responded": "You have not responded to any request yet.",
+      "all": "No requests match the selected filters."
+    },
+    "back_to_feed": "Back to requests",
+    "not_found": "Request not found.",
+    "buyer": "Buyer",
+    "verified": "Verified",
+    "km_from_you": "{distance} from you",
+    "posted": "Posted",
+    "deadline": "Deadline",
+    "description": "Description",
+    "buyer_location": "Buyer location",
+    "buyer_location_aria": "Approximate area: {city}, radius {km} km",
+    "buyer_radius": "radius {km} km",
+    "your_response": "Your response",
+    "no_response_yet": "You haven't responded to this request yet."
   },
   "buyer_home": {
     "title": "Dashboard",

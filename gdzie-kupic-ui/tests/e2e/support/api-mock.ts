@@ -74,10 +74,10 @@ export async function waitForHydration(page: Page) {
 }
 
 /**
- * Signs in through the Dev account switcher. Buyers land on `/home`, other
- * roles stay on `/`. The auth state is client-only (not persisted), so tests
- * must navigate client-side afterwards — via the nav links — rather than with
- * `page.goto()`.
+ * Signs in through the Dev account switcher. Buyers land on `/home`, Merchants
+ * on `/feed`, other roles stay on `/`. The auth state is client-only (not
+ * persisted), so tests must navigate client-side afterwards — via the nav
+ * links — rather than with `page.goto()`.
  */
 export async function loginAs(page: Page, role: 'Admin' | 'Buyer' | 'Merchant') {
   await page.goto('/')
@@ -87,10 +87,10 @@ export async function loginAs(page: Page, role: 'Admin' | 'Buyer' | 'Merchant') 
 }
 
 /**
- * Opens an entry of the Buyer shell navigation: the sidebar link on desktop,
- * the header overflow menu ("Menu") on mobile. Matches the Polish label.
+ * Opens an entry of the Buyer/Merchant shell navigation: the sidebar link on
+ * desktop, the header overflow menu ("Menu") on mobile. Matches the Polish label.
  */
-export async function openBuyerNav(page: Page, label: string) {
+export async function openShellNav(page: Page, label: string) {
   const isDesktop = (page.viewportSize()?.width ?? 0) >= 1024
 
   if (isDesktop) {

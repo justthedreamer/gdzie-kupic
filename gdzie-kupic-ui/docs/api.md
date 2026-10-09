@@ -103,6 +103,7 @@ Turn API failures into user-facing messages with `resolveApiError()` from [`app/
 | `composables/api/useSavedLocationsApi.ts` | `/api/saved-locations` | List, add (coordinates or address) and delete buyer saved locations |
 | `composables/api/useMerchantApi.ts` | `/api/merchant/me`, `/api/merchant/onboarding`, `/api/merchant/subscriptions` | Merchant profile, onboarding and category / tag subscriptions |
 | `composables/api/useBuyerHomeApi.ts` | _(none yet)_ | Buyer home data (requests, activity, chats). No backend until Phases 4–5: returns mock data when `runtimeConfig.public.buyerHomeMock` is on (default in dev, `NUXT_PUBLIC_BUYER_HOME_MOCK` overrides), otherwise an empty result. Replace the body of `load()` when the endpoints exist. |
+| `composables/api/useMerchantFeedApi.ts` | _(none yet)_ | Merchant Requests Feed (`/feed`, `/feed/{id}`). `load()` returns the feed (`MerchantFeedRequest[]`), `respond(id, state)` records the merchant's answer. No backend until Phases 4–5: returns mock data when `runtimeConfig.public.merchantFeedMock` is on (default in dev, `NUXT_PUBLIC_MERCHANT_FEED_MOCK` overrides), otherwise an empty feed; mock answers are kept in memory for the page's lifetime. The pages talk to it only through the `useMerchantFeedStore` Pinia store. Replace the bodies of `load()` and `respond()` when the endpoints exist. |
 
 ---
 

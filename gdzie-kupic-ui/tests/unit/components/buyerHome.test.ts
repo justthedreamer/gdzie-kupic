@@ -5,7 +5,7 @@ import { useAuthStore } from '~/stores/auth'
 import { buildMockBuyerHome } from '~/mocks/buyerHome'
 import { emptyBuyerHome, type BuyerHomeData } from '~/utils/buyerHome'
 import HomePage from '~/pages/home.vue'
-import LiveStatus from '~/components/buyer/LiveStatus.vue'
+import LiveStatus from '~/components/request/LiveStatus.vue'
 import RecentActivity from '~/components/buyer/RecentActivity.vue'
 import RecentChats from '~/components/buyer/RecentChats.vue'
 

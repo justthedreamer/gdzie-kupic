@@ -79,10 +79,14 @@ The active layout wraps the page's content via `<slot />`.
 ```
 layouts/
 ├── default.vue    ← used automatically unless overridden
-└── auth.vue       ← minimal layout for login/register
+├── auth.vue       ← minimal layout for login/register
+├── buyer.vue      ← Buyer app shell (sidebar / bottom tabs)
+└── merchant.vue   ← Merchant app shell
 ```
 
 Switch layout per-page with `definePageMeta({ layout: 'auth' })`.
+
+`buyer.vue` and `merchant.vue` are thin wrappers around the shared `<ShellFrame>` (`components/shell/`), which renders the desktop sidebar, the mobile top bar and the bottom tab bar from a per-role `ShellConfig` in [`app/utils/shellNav.ts`](../app/utils/shellNav.ts). To add navigation, edit that config; an item without `to` is rendered disabled ("soon"). Pages inside a shell set the mobile top-bar title with `definePageMeta({ shellTitleKey: '<i18n key>' })`.
 
 ---
 

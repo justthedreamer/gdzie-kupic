@@ -1,28 +1,32 @@
 <script setup lang="ts">
-import { buyerTabsLeft, buyerTabsRight, type BuyerNavItem } from '~/utils/buyerNav'
+import type { ShellConfig, ShellNavItem } from '~/utils/shellNav'
+
+const props = defineProps<{ config: ShellConfig }>()
 
 const { t } = useI18n()
 
-function tabs(items: BuyerNavItem[]) {
+function tabs(items: ShellNavItem[]) {
   return items.map(item => ({ ...item, text: t(item.label) }))
 }
 
-const left = computed(() => tabs(buyerTabsLeft))
-const right = computed(() => tabs(buyerTabsRight))
+const groups = computed(() => [tabs(props.config.tabsLeft), tabs(props.config.tabsRight)])
+const columns = computed(() =>
+  props.config.tabsLeft.length + props.config.tabsRight.length + (props.config.centerAction ? 1 : 0),
+)
 </script>
 
 <template>
   <nav
-    :aria-label="$t('buyer_nav.aria_tabs')"
+    :aria-label="$t('shell.aria_tabs')"
     class="fixed inset-x-0 bottom-0 z-30 border-t border-default bg-default pb-[env(safe-area-inset-bottom)] lg:hidden"
   >
-    <ul class="grid grid-cols-5 items-end">
-      <template v-for="(group, groupIndex) in [left, right]" :key="groupIndex">
-        <!-- The centre "new request" action sits between the two tab groups. -->
-        <li v-if="groupIndex === 1" class="flex justify-center">
+    <ul class="grid items-end" :style="{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }">
+      <template v-for="(group, groupIndex) in groups" :key="groupIndex">
+        <!-- The optional centre action sits between the two tab groups. -->
+        <li v-if="groupIndex === 1 && props.config.centerAction" class="flex justify-center">
           <NuxtLink
-            :to="BUYER_NEW_REQUEST_PATH"
-            :aria-label="$t('request.new')"
+            :to="props.config.centerAction.to"
+            :aria-label="t(props.config.centerAction.label)"
             class="-mt-5 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-lg"
           >
             <UIcon name="i-heroicons-plus" class="size-7" />
