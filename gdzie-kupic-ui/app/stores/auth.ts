@@ -1,7 +1,9 @@
+export type UserRole = 'Buyer' | 'Merchant' | 'Admin'
+
 interface User {
   id: string
   email: string
-  role: 'Buyer' | 'Merchant' | 'Admin'
+  role: UserRole
 }
 
 export const useAuthStore = defineStore('auth', () => {

@@ -76,6 +76,16 @@ test('login flow', async ({ page }) => {
 3. `getByText` — for visible content
 4. `getByTestId` — add `data-testid` attribute as last resort
 
+### Mocking the API and logging in
+
+Helpers live in [`tests/e2e/support/api-mock.ts`](../tests/e2e/support/api-mock.ts):
+
+- `mockApi(page, handlers)` intercepts only requests to the API origin and answers 404 for anything unmocked, so a missing mock fails visibly.
+- `waitForHydration(page)` — wait before the first click; interacting before Vue hydrates is a silent no-op.
+- `loginAs(page, role)` signs in through the Dev account switcher. Auth state is client-only (not persisted), so afterwards navigate with the header links, never `page.goto()` to a protected page.
+
+The Playwright config pins `locale: 'pl-PL'`, because the app detects the browser language and the tests assert Polish copy. Use `exact: true` when a name is a prefix of another control (e.g. the `Dev` button).
+
 ### CI behaviour
 
 `playwright.config.ts` sets `retries: 2` and `workers: 1` in CI (detected via `process.env.CI`). Locally it runs in parallel with no retries.

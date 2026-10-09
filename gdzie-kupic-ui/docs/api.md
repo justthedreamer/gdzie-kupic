@@ -90,13 +90,18 @@ export const useRequestsApi = () => {
 }
 ```
 
-Because files in `app/composables/` are auto-imported, the composable is available anywhere without an import statement.
+Nuxt only auto-imports top-level files of `app/composables/`, so `nuxt.config.ts` adds `imports.dirs: ['~/composables/api']`. The composables in `composables/api/` are therefore available anywhere without an import statement.
+
+Turn API failures into user-facing messages with `resolveApiError()` from [`app/utils/apiError.ts`](../app/utils/apiError.ts): it maps status codes to i18n messages and only trusts server-provided text for 4xx responses.
 
 ### Existing domain composables
 
 | File | Endpoint | Description |
 |---|---|---|
 | `composables/api/useLocationApi.ts` | `GET /api/location` | Resolve GPS coords → address |
+| `composables/api/useCatalogueApi.ts` | `/api/catalogue/categories`, `/api/admin/categories`, `/api/admin/tags` | Read the catalogue; admin create / rename / disable / enable of categories and tags |
+| `composables/api/useSavedLocationsApi.ts` | `/api/saved-locations` | List, add (coordinates or address) and delete buyer saved locations |
+| `composables/api/useMerchantApi.ts` | `/api/merchant/me`, `/api/merchant/onboarding`, `/api/merchant/subscriptions` | Merchant profile, onboarding and category / tag subscriptions |
 
 ---
 
