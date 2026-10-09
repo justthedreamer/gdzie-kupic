@@ -20,7 +20,8 @@ public interface IAuthStorage
 
     Task AddExternalLoginAsync(ExternalLogin externalLogin, CancellationToken ct = default);
 
-    Task<bool> IsUserBannedAsync(Guid userId, CancellationToken ct = default);
+    /// <returns>Whether the user is banned, or <c>null</c> when no such user exists.</returns>
+    Task<bool?> IsUserBannedAsync(Guid userId, CancellationToken ct = default);
 
     Task RevokeAllRefreshTokensForUserAsync(Guid userId, DateTimeOffset revokedAt, CancellationToken ct = default);
 }

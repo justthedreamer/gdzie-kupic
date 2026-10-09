@@ -25,6 +25,18 @@ public class AccountStatusCacheTests
     }
 
     [Test]
+    public async Task IsBannedAsync_TreatsUnknownUserAsBanned()
+    {
+        var userId = Guid.NewGuid();
+        var authStorageMock = new Mock<IAuthStorage>();
+        authStorageMock.Setup(s => s.IsUserBannedAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync((bool?)null);
+
+        var sut = new AccountStatusCache(authStorageMock.Object, new MemoryCache(new MemoryCacheOptions()));
+
+        (await sut.IsBannedAsync(userId)).ShouldBeTrue();
+    }
+
+    [Test]
     public async Task IsBannedAsync_DoesNotHitStorageAgain_OnSubsequentCallWithinTtl()
     {
         var userId = Guid.NewGuid();
