@@ -4,6 +4,8 @@ export interface SavedLocation {
   displayName: string
   latitude: number
   longitude: number
+  /** Readable address (e.g. `31-042 Kraków, Polska`); `null` for locations saved before it was stored. */
+  addressDisplayName: string | null
   createdAt: string
 }
 

@@ -186,7 +186,7 @@ async function confirmDelete() {
               {{ item.displayName }}
             </p>
             <p class="text-sm text-muted">
-              {{ formatCoordinates(item.latitude, item.longitude) }}
+              {{ item.addressDisplayName || formatCoordinates(item.latitude, item.longitude) }}
             </p>
           </div>
           <UButton
