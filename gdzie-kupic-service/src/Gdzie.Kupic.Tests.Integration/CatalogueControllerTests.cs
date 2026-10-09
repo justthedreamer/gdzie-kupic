@@ -87,17 +87,4 @@ public class CatalogueControllerTests : IntegrationTestBase
         (await Client.PostAsync($"/api/admin/categories/{Guid.NewGuid()}/enable", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await Client.PutAsJsonAsync($"/api/admin/tags/{Guid.NewGuid()}", new NameRequest("X"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
-
-    private async Task AuthenticateAsync(Role role)
-    {
-        using var scope = IntegrationTestSetup.Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = new User(Guid.NewGuid(), $"{Guid.NewGuid():N}@example.com", null, role, DateTimeOffset.UtcNow);
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
-
-        var token = scope.ServiceProvider.GetRequiredService<IJwtTokenGenerator>()
-            .GenerateAccessToken(user.Id, role, DateTime.UtcNow.AddDays(1)).Token;
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    }
 }

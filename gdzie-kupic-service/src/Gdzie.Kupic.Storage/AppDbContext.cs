@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gdzie.Kupic.Storage;
 
 using Gdzie.Kupic.Domain.Model.Auth;
 using Gdzie.Kupic.Domain.Model.Catalogue;
+using Gdzie.Kupic.Domain.Model.Location;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options)
     : DbContext(options)
@@ -17,6 +18,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     // Catalogue
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Tag> Tags => Set<Tag>();
+
+    // Location
+    public DbSet<SavedLocation> SavedLocations => Set<SavedLocation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Location;
+namespace Gdzie.Kupic.Location;
 
 using Gdzie.Kupic.Location.Google;
 using Microsoft.Extensions.Logging;
@@ -55,5 +55,26 @@ internal class LocationService(
                 Country: country),
             ValidationError: null,
             InternalError: false);
+    }
+    public async Task<GeocodeResult> GeocodeAddressAsync(string address)
+    {
+        var (response, thirdPartyError, internalError) =
+            await client.ForwardGeocodeAsync(new ForwardGeocoding.Request(address));
+
+        if (thirdPartyError || internalError)
+        {
+            return new GeocodeResult(null, GeocodeFailure.ProviderError);
+        }
+
+        var best = response?.Results?.FirstOrDefault(r => r.Location is not null);
+        if (best?.Location is null)
+        {
+            logger.LogInformation("No geocoding results for the provided address");
+            return new GeocodeResult(null, GeocodeFailure.NotFound);
+        }
+
+        return new GeocodeResult(
+            new GeocodedAddress(best.Location.Latitude, best.Location.Longitude, best.FormattedAddress ?? address),
+            GeocodeFailure.None);
     }
 }

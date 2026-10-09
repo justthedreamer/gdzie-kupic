@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Location;
+namespace Gdzie.Kupic.Location;
 
 using Gdzie.Kupic.Location.Google;
 using Microsoft.Extensions.Configuration;
@@ -25,5 +25,6 @@ public static class ModuleInstaller
         });
 
         services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<ISavedLocationService, SavedLocationService>();
     }
 }

@@ -1,3 +1,4 @@
+using Gdzie.Kupic.Location.Google;
 using Gdzie.Kupic.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -38,6 +39,9 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase(_databaseName));
             services.AddScoped<IAuthStorage, AuthStorage>();
             services.AddScoped<ICatalogueStorage, CatalogueStorage>();
+            services.AddScoped<ILocationStorage, LocationStorage>();
+            services.AddSingleton<FakeGeocodingClient>();
+            services.AddScoped<IGoogleGeocodingHttpClient>(sp => sp.GetRequiredService<FakeGeocodingClient>());
         });
     }
 }
