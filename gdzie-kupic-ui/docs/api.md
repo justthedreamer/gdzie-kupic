@@ -4,6 +4,24 @@ The project uses two patterns depending on context. Choose based on when the dat
 
 ---
 
+## Authentication
+
+Every outgoing request — through both `useApi()` and `useFetch()` — is automatically
+authenticated. This is handled by a single shared mechanism in
+[`app/plugins/api.ts`](../app/plugins/api.ts), so call sites never attach the header
+themselves:
+
+- A Nuxt plugin creates an `ofetch` instance (`$api`) with an `onRequest` hook that reads
+  the token from `authStore` and attaches `Authorization: Bearer <token>` whenever the
+  user is logged in. Unauthenticated requests are sent as-is.
+- The same instance is also assigned to `globalThis.$fetch`, which is what `useFetch()`
+  resolves to internally when a call doesn't pass its own `$fetch` option — so SSR page
+  data fetches are covered too, without passing anything extra at the call site.
+- An `onResponseError` hook clears local auth state (`authStore.clearAuth()`) whenever
+  the API responds with `401`, to avoid looping on a stale/invalid token.
+
+---
+
 ## `useApi()` — imperative calls
 
 Use for **mutations** (POST / PUT / PATCH / DELETE) and any fetch triggered by a user action rather than a page load.
