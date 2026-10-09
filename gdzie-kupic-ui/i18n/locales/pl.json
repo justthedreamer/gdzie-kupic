@@ -174,7 +174,7 @@
   "location_input": {
     "detect": "Wykryj automatycznie",
     "locating": "Pobieranie lokalizacji…",
-    "found": "Wykryto lokalizację: {coords}",
+    "found": "Wykryto lokalizację: {place}",
     "consent_title": "Użyć Twojej lokalizacji?",
     "consent_description": "Przeglądarka poprosi o dostęp do Twojej bieżącej lokalizacji. Zostanie ona użyta tylko do zapisania tego miejsca.",
     "consent_allow": "Zezwalam",

@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   composeAddress,
   formatCoordinates,
+  formatPlace,
+  formatPostalCodeInput,
   geolocationFailure,
   isAddressSearchable,
   isValidPostalCode,
@@ -80,5 +82,49 @@ describe('geolocationFailure', () => {
 describe('formatCoordinates', () => {
   it('rounds to five decimals', () => {
     expect(formatCoordinates(50.064702, 19.945)).toBe('50.06470, 19.94500')
+  })
+})
+
+describe('formatPlace', () => {
+  it('joins postal code, city and country', () => {
+    expect(formatPlace({ postalCode: '31-042', city: 'Kraków', country: 'Polska' })).toBe('31-042 Kraków, Polska')
+  })
+
+  it('skips unknown and blank parts', () => {
+    expect(formatPlace({ postalCode: 'Unknown', city: 'Kraków', country: 'Unknown' })).toBe('Kraków')
+    expect(formatPlace({ postalCode: '31-042', city: ' ', country: 'Polska' })).toBe('31-042, Polska')
+    expect(formatPlace({ postalCode: null, city: undefined, country: 'Polska' })).toBe('Polska')
+  })
+
+  it('returns null when nothing is known', () => {
+    expect(formatPlace({ postalCode: 'Unknown', city: 'Unknown', country: 'Unknown' })).toBeNull()
+    expect(formatPlace({})).toBeNull()
+  })
+})
+
+describe('formatPostalCodeInput', () => {
+  it('adds the dash right after the second digit', () => {
+    expect(formatPostalCodeInput('3')).toBe('3')
+    expect(formatPostalCodeInput('31', '3')).toBe('31-')
+  })
+
+  it('keeps typing after the dash', () => {
+    expect(formatPostalCodeInput('31-0', '31-')).toBe('31-0')
+    expect(formatPostalCodeInput('31-042', '31-04')).toBe('31-042')
+  })
+
+  it('formats digits typed without the dash or pasted at once', () => {
+    expect(formatPostalCodeInput('310', '31')).toBe('31-0')
+    expect(formatPostalCodeInput('31042')).toBe('31-042')
+  })
+
+  it('lets Backspace remove the dash instead of re-adding it', () => {
+    expect(formatPostalCodeInput('31', '31-')).toBe('31')
+  })
+
+  it('drops non-digits and extra digits', () => {
+    expect(formatPostalCodeInput('3a1')).toBe('31-')
+    expect(formatPostalCodeInput('31-0425x', '31-042')).toBe('31-042')
+    expect(formatPostalCodeInput('')).toBe('')
   })
 })

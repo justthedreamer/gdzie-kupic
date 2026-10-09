@@ -174,7 +174,7 @@
   "location_input": {
     "detect": "Detect automatically",
     "locating": "Getting your location…",
-    "found": "Location detected: {coords}",
+    "found": "Location detected: {place}",
     "consent_title": "Use your location?",
     "consent_description": "Your browser will ask for access to your current location. It will only be used to save this place.",
     "consent_allow": "Allow",

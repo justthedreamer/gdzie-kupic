@@ -13,7 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { searchAddress } = useLocationApi()
+const { searchAddress, getLocation } = useLocationApi()
 
 interface Resolved {
   source: 'geolocation' | 'address'
@@ -41,6 +41,11 @@ function setResolved(next: Resolved | null) {
 }
 
 // Editing the address invalidates a previous search result (a detected location is kept).
+watch(() => fields.postalCode, (next, previous) => {
+  const formatted = formatPostalCodeInput(next, previous)
+  if (formatted !== next) fields.postalCode = formatted
+})
+
 watch(fields, () => {
   searchRun++
   searching.value = false
@@ -68,17 +73,34 @@ function detect() {
     (position) => {
       locating.value = false
       const value = { latitude: position.coords.latitude, longitude: position.coords.longitude }
-      setResolved({
+      const next: Resolved = {
         source: 'geolocation',
         value,
-        message: t('location_input.found', { coords: formatCoordinates(value.latitude, value.longitude) }),
-      })
+        message: t('location_input.found', { place: formatCoordinates(value.latitude, value.longitude) }),
+      }
+      setResolved(next)
+      // `resolved.value` is the reactive proxy of `next`; mutating it updates the message.
+      if (resolved.value) void describeDetected(resolved.value)
     },
     (error) => {
       locating.value = false
       errorMessage.value = t(`location_input.errors.${geolocationFailure(error.code)}`)
     },
   )
+}
+
+// Best effort: replaces the coordinates in the message with a readable address; coordinates stay on failure.
+async function describeDetected(target: Resolved) {
+  try {
+    const place = formatPlace(await getLocation({
+      latitude: String(target.value.latitude),
+      longitude: String(target.value.longitude),
+    }))
+    if (place && resolved.value === target) target.message = t('location_input.found', { place })
+  }
+  catch {
+    // keep the coordinates
+  }
 }
 
 async function search() {
