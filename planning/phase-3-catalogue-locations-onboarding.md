@@ -27,6 +27,7 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | U4 | [UI]: Buyer Home Page | L | — (mocked data; real wiring in Phase 4/5) | [#59](https://github.com/justthedreamer/gdzie-kupic/issues/59) |
 | U5 | [UI]: Merchant Home Page (Requests Feed) | L | — (mocked data; real wiring in Phase 4/5) | [#62](https://github.com/justthedreamer/gdzie-kupic/issues/62) |
 | U6 | [UI]: Merchant response — I can order it (`CanOrderIt`) | S | U5 (mocked data) | [#64](https://github.com/justthedreamer/gdzie-kupic/issues/64) |
+| U7 | [UI]: Admin Panel (shell + Catalog Management) | L | S2 (catalogue API, real data) | [#66](https://github.com/justthedreamer/gdzie-kupic/issues/66) |
 
 U1–U3 and S1–S5 come 1:1 from [planning.md](../docs/planning.md) Phase 3.1 / 3.2. U4 was added mid-phase at the architect's request (buyer default page after login, based on the [buyer mockup](../gdzie-kupic-ui/docs/ui/buyer.png)). U5 is its Merchant counterpart (based on the [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png)) and generalises the Buyer shell into shared components.
 
@@ -458,6 +459,23 @@ Separate page on all viewports with a back arrow to the feed, as in the mockup:
 | My Responses, Chats / Chat thread | — | Phase 5 |
 | Profile, Notifications | — | not planned in this phase (Notifications: Phase 7) |
 
+**Documentation:** [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png) · [docs/design-system.md](../gdzie-kupic-ui/docs/design-system.md) · [docs/api.md](../gdzie-kupic-ui/docs/api.md) · [FRAMEWORK.md](../gdzie-kupic-ui/FRAMEWORK.md) · [requirements.md](../docs/requirements.md)
+**Requirements:** FR-FEED-1..3, FR-RESP-1 (three of four states), FR-RESP-3 (display and local change only — wired in Phases 4–5)
+
+**Definition of Done**
+- [ ] A Merchant is redirected to `/feed` after login/registration and when visiting `/` while signed in (an un-onboarded merchant still goes to onboarding); Buyers/Admins/anonymous users are unaffected
+- [ ] `/feed` and `/feed/{id}` are reachable only by authenticated Merchants (anonymous → sign-in, other roles denied)
+- [ ] Shell components are shared by Buyer and Merchant: sidebar with navigation, install card and user card on desktop; top bar + bottom tabs on mobile; Buyer pages look and behave as before; the subscriptions page uses the Merchant shell
+- [ ] Navigation items whose destination does not exist yet are visibly disabled, not broken links
+- [ ] Feed renders header, filters, New / Responded / All tabs and request cards on desktop and mobile, matching the mockup within design-system tokens
+- [ ] Category, distance and sort filters work (urgent first for "Newest first"); the New tab shows a count of unanswered requests
+- [ ] The three response buttons set and change the response on cards and on the details page; the card moves from New to Responded and shows the response; the state is kept when navigating feed ↔ details
+- [ ] Details page shows the request, Live Status (counts sum to the notified total), the buyer-location placeholder and "Your Response"; unknown id shows a not-found state
+- [ ] Every list has an empty state; a load failure offers a retry
+- [ ] Data comes from a single mocked source behind one seam, so Phases 4–5 can replace it with real endpoints without reworking the widgets
+- [ ] Relative times, distances, currency and all UI text are localised (pl/en)
+- [ ] Unit tests cover the feed logic (filtering, sorting, tabs, response state), widgets and empty states; e2e tests cover login-as-Merchant → lands on the feed, responding from a card, opening details, on desktop and mobile viewports; existing Buyer and Merchant e2e tests still pass
+
 ---
 
 ## Ready — `[UI]`: Merchant response "I can order it" (`CanOrderIt`)
@@ -492,22 +510,50 @@ The merchant mockup shows three response buttons, but [FR-RESP-1](../docs/requir
 - [ ] Layout holds on desktop and mobile.
 - [ ] Unit and E2E tests cover the new state; `vue-tsc`, `vitest`, `playwright` pass.
 
-**Documentation:** [merchant mockup](../gdzie-kupic-ui/docs/ui/merchant.png) · [docs/design-system.md](../gdzie-kupic-ui/docs/design-system.md) · [docs/api.md](../gdzie-kupic-ui/docs/api.md) · [FRAMEWORK.md](../gdzie-kupic-ui/FRAMEWORK.md) · [requirements.md](../docs/requirements.md)
-**Requirements:** FR-FEED-1..3, FR-RESP-1 (three of four states), FR-RESP-3 (display and local change only — wired in Phases 4–5)
+---
 
-**Definition of Done**
-- [ ] A Merchant is redirected to `/feed` after login/registration and when visiting `/` while signed in (an un-onboarded merchant still goes to onboarding); Buyers/Admins/anonymous users are unaffected
-- [ ] `/feed` and `/feed/{id}` are reachable only by authenticated Merchants (anonymous → sign-in, other roles denied)
-- [ ] Shell components are shared by Buyer and Merchant: sidebar with navigation, install card and user card on desktop; top bar + bottom tabs on mobile; Buyer pages look and behave as before; the subscriptions page uses the Merchant shell
-- [ ] Navigation items whose destination does not exist yet are visibly disabled, not broken links
-- [ ] Feed renders header, filters, New / Responded / All tabs and request cards on desktop and mobile, matching the mockup within design-system tokens
-- [ ] Category, distance and sort filters work (urgent first for "Newest first"); the New tab shows a count of unanswered requests
-- [ ] The three response buttons set and change the response on cards and on the details page; the card moves from New to Responded and shows the response; the state is kept when navigating feed ↔ details
-- [ ] Details page shows the request, Live Status (counts sum to the notified total), the buyer-location placeholder and "Your Response"; unknown id shows a not-found state
-- [ ] Every list has an empty state; a load failure offers a retry
-- [ ] Data comes from a single mocked source behind one seam, so Phases 4–5 can replace it with real endpoints without reworking the widgets
-- [ ] Relative times, distances, currency and all UI text are localised (pl/en)
-- [ ] Unit tests cover the feed logic (filtering, sorting, tabs, response state), widgets and empty states; e2e tests cover login-as-Merchant → lands on the feed, responding from a card, opening details, on desktop and mobile viewports; existing Buyer and Merchant e2e tests still pass
+## Ready — `[UI]`: Admin Panel (shell + Catalog Management)
+
+**Size:** L
+
+**Brief Description**
+Gives the Admin a proper app shell and rebuilds Catalog Management on top of it, following the [admin mockup](../gdzie-kupic-ui/docs/ui/admin.png) and the Phase 3 catalogue API (S2): a categories list, a category detail with a tags table, and an Edit Tag panel.
+
+**User Story**
+As an admin, I want a dedicated admin panel with a master-detail catalogue editor so that I can curate categories and tags quickly.
+
+**Description**
+Phase 3 delivered the Admin catalogue (U1) as a single plain page. The mockup defines the full Admin Panel (sidebar + Catalog Management). This ticket adds the Admin shell (the shared `ShellFrame` from U4/U5, driven by an `adminShell` config) and rebuilds `/admin/catalogue` as master-detail. It talks to the **real** Phase 3 endpoints (`/api/catalogue/categories`, `/api/admin/categories|tags/*`); no new backend endpoints.
+
+### Admin shell
+
+- New `admin` layout, role label "Admin Panel", sidebar per mockup: Dashboard, Users, Merchants, Requests, **Catalog** (active, `/admin/catalogue`), Reports, Moderation, Settings, System Logs. Everything except Catalog has no page yet and is rendered disabled ("soon"). The mockup's "Catalog › Categories" sub-item is a single Catalog entry for now (no nested navigation in the shell config).
+- Mobile: top bar + bottom tabs (Catalog plus disabled placeholders) and overflow menu, like the other shells.
+- An Admin lands on `/admin/catalogue` after login / Dev switch and when visiting `/` (`homePathFor`); this replaces the "Admins keep the public landing page" behaviour.
+
+### Catalog Management (`/admin/catalogue`)
+
+| Area | Behaviour |
+|---|---|
+| Categories list (left) | Search, count badge; each row shows name, tag count and a disabled badge; selecting a row shows it in the detail. "Add Category" in the page header opens a dialog (name, same validation and duplicate-name error as today). Mobile: a category picker replaces the list. |
+| Category detail | Header (name, Active/Disabled badge, tag count), **Tags** tab and **Category Details** tab. Details tab: rename and enable/disable the category. |
+| Tags tab | Search, status filter (All / Active / Disabled), table (name, status, actions: edit, enable/disable), client-side pagination with rows per page (10 / 25 / 50) and "Showing x to y of N". "Add Tag" opens the tag panel in create mode. |
+| Edit Tag panel (right) | Name preview chip, tag name with character counter (max 100), category (read-only — tags cannot be moved), status switch, Save Changes. Inline column at `2xl`, slide-over below. Duplicate name (409) and stale item (404) errors are shown inline as today. |
+
+Load error / empty / loading states are kept.
+
+### Not in this ticket (no backend support yet)
+
+Drag-and-drop ordering and "Reorder Categories", tag description, tag statistics (requests / merchants reached / responses, "Requests (30d)" column), created / updated dates, Delete Tag and category images. These elements are not rendered until the API provides the data. The remaining sidebar entries (Dashboard, Users, Merchants, Requests, Reports, Moderation, Settings, System Logs) have no ticket yet; Admin ban UI is Phase 8.
+
+### Acceptance Criteria
+
+- [ ] Admin sees the Admin shell (sidebar / bottom tabs) on `/admin/catalogue` and lands there after login; Buyer and Merchant shells and landing pages are unchanged
+- [ ] Categories can be searched, selected, created, renamed and enabled/disabled; tags can be searched, filtered by status, paginated, created, renamed and enabled/disabled via the Edit Tag panel
+- [ ] Duplicate-name and stale-item errors are readable; the form keeps its input on failure
+- [ ] Layout works on desktop and mobile; the panel is a slide-over where it does not fit
+- [ ] Non-admins still cannot open the page
+- [ ] Unit and E2E tests updated; `vue-tsc`, `vitest`, `playwright` pass
 
 ---
 
