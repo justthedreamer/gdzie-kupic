@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gdzie.Kupic.Domain", "Gdzie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gdzie.Kupic.Tests.Integration", "Gdzie.Kupic.Tests.Integration\Gdzie.Kupic.Tests.Integration.csproj", "{682E01F8-7C28-4A38-AEB9-53370D5ECE5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gdzie.Kupic.Catalogue", "Gdzie.Kupic.Catalogue\Gdzie.Kupic.Catalogue.csproj", "{D70B72BD-BD2F-42B7-B4BF-018DF831851E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -211,6 +213,18 @@ Global
 		{682E01F8-7C28-4A38-AEB9-53370D5ECE5E}.Release|x64.Build.0 = Release|Any CPU
 		{682E01F8-7C28-4A38-AEB9-53370D5ECE5E}.Release|x86.ActiveCfg = Release|Any CPU
 		{682E01F8-7C28-4A38-AEB9-53370D5ECE5E}.Release|x86.Build.0 = Release|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Debug|x64.Build.0 = Debug|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Debug|x86.Build.0 = Debug|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Release|x64.ActiveCfg = Release|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Release|x64.Build.0 = Release|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Release|x86.ActiveCfg = Release|Any CPU
+		{D70B72BD-BD2F-42B7-B4BF-018DF831851E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

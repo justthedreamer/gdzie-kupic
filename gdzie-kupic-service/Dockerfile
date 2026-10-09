@@ -8,6 +8,7 @@ WORKDIR /src
 COPY src/Gdzie.Kupic.API/Gdzie.Kupic.API.csproj                     Gdzie.Kupic.API/
 COPY src/Gdzie.Kupic.API.Contract/Gdzie.Kupic.API.Contract.csproj   Gdzie.Kupic.API.Contract/
 COPY src/Gdzie.Kupic.Auth/Gdzie.Kupic.Auth.csproj                   Gdzie.Kupic.Auth/
+COPY src/Gdzie.Kupic.Catalogue/Gdzie.Kupic.Catalogue.csproj             Gdzie.Kupic.Catalogue/
 COPY src/Gdzie.Kupic.Domain/Gdzie.Kupic.Domain.csproj               Gdzie.Kupic.Domain/
 COPY src/Gdzie.Kupic.Location/Gdzie.Kupic.Location.csproj           Gdzie.Kupic.Location/
 COPY src/Gdzie.Kupic.Storage/Gdzie.Kupic.Storage.csproj             Gdzie.Kupic.Storage/

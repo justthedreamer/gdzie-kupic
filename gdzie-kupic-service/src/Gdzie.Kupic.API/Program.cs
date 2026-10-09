@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Gdzie.Kupic.Auth;
+using Gdzie.Kupic.Catalogue;
 using Gdzie.Kupic.Domain;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Storage;
@@ -96,6 +97,7 @@ try
     }
     builder.Services.InstallLocationModule(builder.Configuration);
     builder.Services.InstallAuthModule(builder.Configuration);
+    builder.Services.InstallCatalogueModule();
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");

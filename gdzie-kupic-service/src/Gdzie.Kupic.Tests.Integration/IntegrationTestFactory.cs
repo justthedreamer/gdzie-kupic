@@ -37,6 +37,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName));
             services.AddScoped<IAuthStorage, AuthStorage>();
+            services.AddScoped<ICatalogueStorage, CatalogueStorage>();
         });
     }
 }
