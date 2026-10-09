@@ -6,6 +6,7 @@ using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Catalogue;
 using Gdzie.Kupic.Domain;
 using Gdzie.Kupic.Location;
+using Gdzie.Kupic.Marketplace;
 using Gdzie.Kupic.Storage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -98,6 +99,7 @@ try
     builder.Services.InstallLocationModule(builder.Configuration);
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();
+    builder.Services.InstallMarketplaceModule();
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");

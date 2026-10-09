@@ -5,7 +5,7 @@ using Gdzie.Kupic.Storage;
 
 internal sealed class SavedLocationService(
     ILocationStorage storage,
-    ILocationService locationService) : ISavedLocationService
+    ILocationInputResolver resolver) : ISavedLocationService
 {
     public const int MaxDisplayNameLength = 100;
 
@@ -25,39 +25,12 @@ internal sealed class SavedLocationService(
         if (name.Length > MaxDisplayNameLength)
             return Invalid($"Display name must not exceed {MaxDisplayNameLength} characters.");
 
-        var hasCoordinates = latitude.HasValue || longitude.HasValue;
-        var hasAddress = !string.IsNullOrWhiteSpace(address);
+        var resolved = await resolver.ResolveAsync(latitude, longitude, address);
+        if (resolved.Error == LocationInputError.Validation) return Invalid(resolved.Message!);
+        if (!resolved.IsSuccess)
+            return new SavedLocationResult<SavedLocation>(null, SavedLocationError.GeocodingFailed, resolved.Message);
 
-        if (hasCoordinates == hasAddress)
-            return Invalid("Provide either coordinates (latitude and longitude) or an address.");
-
-        Coordinates coordinates;
-        if (hasCoordinates)
-        {
-            if (latitude is null || longitude is null)
-                return Invalid("Both latitude and longitude are required.");
-            if (latitude is < -90 or > 90 || double.IsNaN(latitude.Value))
-                return Invalid("Latitude must be between -90 and 90.");
-            if (longitude is < -180 or > 180 || double.IsNaN(longitude.Value))
-                return Invalid("Longitude must be between -180 and 180.");
-
-            coordinates = new Coordinates(latitude.Value, longitude.Value);
-        }
-        else
-        {
-            var geocoded = await locationService.GeocodeAddressAsync(address!.Trim());
-            if (geocoded.Failure == GeocodeFailure.NotFound)
-                return Invalid("The address could not be found.");
-            if (!geocoded.IsSuccess)
-                return new SavedLocationResult<SavedLocation>(
-                    null,
-                    SavedLocationError.GeocodingFailed,
-                    "We can't resolve the address at the moment. Try again later or use your current location.");
-
-            coordinates = new Coordinates(geocoded.Address!.Latitude, geocoded.Address.Longitude);
-        }
-
-        var location = new SavedLocation(Guid.NewGuid(), userId, name, coordinates, DateTimeOffset.UtcNow);
+        var location = new SavedLocation(Guid.NewGuid(), userId, name, resolved.Coordinates!, DateTimeOffset.UtcNow);
         await storage.AddSavedLocationAsync(location, ct);
 
         return new SavedLocationResult<SavedLocation>(location, SavedLocationError.None);

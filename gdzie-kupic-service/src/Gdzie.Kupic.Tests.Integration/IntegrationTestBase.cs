@@ -36,11 +36,11 @@ public abstract class IntegrationTestBase
     protected static async Task<T?> ReadAsAsync<T>(HttpResponseMessage response)
         => await response.Content.ReadFromJsonAsync<T>();
     /// <summary>Creates a user with the given role and sets its access token on <see cref="Client"/>.</summary>
-    protected async Task<Guid> AuthenticateAsync(Role role)
+    protected async Task<Guid> AuthenticateAsync(Role role, Guid? userId = null)
     {
         using var scope = IntegrationTestSetup.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = new User(Guid.NewGuid(), $"{Guid.NewGuid():N}@example.com", null, role, DateTimeOffset.UtcNow);
+        var user = new User(userId ?? Guid.NewGuid(), $"{Guid.NewGuid():N}@example.com", null, role, DateTimeOffset.UtcNow);
         db.Users.Add(user);
         await db.SaveChangesAsync();
 

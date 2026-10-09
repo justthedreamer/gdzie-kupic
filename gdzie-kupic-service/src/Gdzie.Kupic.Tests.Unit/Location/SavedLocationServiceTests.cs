@@ -20,7 +20,7 @@ public class SavedLocationServiceTests
         _db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _geocoder = new Mock<ILocationService>();
-        _service = new SavedLocationService(new LocationStorage(_db), _geocoder.Object);
+        _service = new SavedLocationService(new LocationStorage(_db), new LocationInputResolver(_geocoder.Object));
     }
 
     [TearDown]

@@ -25,6 +25,7 @@ public static class ModuleInstaller
         });
 
         services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<ILocationInputResolver, LocationInputResolver>();
         services.AddScoped<ISavedLocationService, SavedLocationService>();
     }
 }

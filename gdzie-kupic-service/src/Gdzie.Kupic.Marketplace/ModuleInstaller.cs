@@ -1,3 +1,13 @@
-﻿namespace Gdzie.Kupic.Marketplace;
+using Microsoft.Extensions.DependencyInjection;
 
-public static class ModuleInstaller;
+namespace Gdzie.Kupic.Marketplace;
+
+public static class ModuleInstaller
+{
+    public static IServiceCollection InstallMarketplaceModule(this IServiceCollection services)
+    {
+        services.AddScoped<IMerchantService, MerchantService>();
+
+        return services;
+    }
+}

@@ -40,6 +40,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddScoped<IAuthStorage, AuthStorage>();
             services.AddScoped<ICatalogueStorage, CatalogueStorage>();
             services.AddScoped<ILocationStorage, LocationStorage>();
+            services.AddScoped<IMarketplaceStorage, MarketplaceStorage>();
             services.AddSingleton<FakeGeocodingClient>();
             services.AddScoped<IGoogleGeocodingHttpClient>(sp => sp.GetRequiredService<FakeGeocodingClient>());
         });
