@@ -1,5 +1,10 @@
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'role'], roles: ['Buyer'] })
+definePageMeta({
+  layout: 'buyer',
+  middleware: ['auth', 'role'],
+  roles: ['Buyer'],
+  buyerTitleKey: 'saved_locations.title',
+})
 
 const { t } = useI18n()
 useSeoMeta({ title: () => `${t('saved_locations.title')} | Gdzie Kupić` })

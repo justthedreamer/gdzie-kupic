@@ -7,7 +7,7 @@ test('dev account switcher logs in as each test account with no logout required 
 
   await page.getByRole('button', { name: 'Dev', exact: true }).click()
   await page.getByRole('menuitem', { name: /^Buyer/ }).click()
-  await expect(page.getByRole('banner')).toContainText('buyer-test@gdziekupic.local')
+  await expect(page).toHaveURL('/home')
 
   await page.getByRole('button', { name: 'Dev', exact: true }).click()
   await page.getByRole('menuitem', { name: /^Merchant/ }).click()

@@ -82,7 +82,8 @@ Helpers live in [`tests/e2e/support/api-mock.ts`](../tests/e2e/support/api-mock.
 
 - `mockApi(page, handlers)` intercepts only requests to the API origin and answers 404 for anything unmocked, so a missing mock fails visibly.
 - `waitForHydration(page)` — wait before the first click; interacting before Vue hydrates is a silent no-op.
-- `loginAs(page, role)` signs in through the Dev account switcher. Auth state is client-only (not persisted), so afterwards navigate with the header links, never `page.goto()` to a protected page.
+- `loginAs(page, role)` signs in through the Dev account switcher. Buyers land on `/home`, other roles stay on `/`. Auth state is client-only (not persisted), so afterwards navigate with the nav links, never `page.goto()` to a protected page.
+- `openBuyerNav(page, label)` opens an entry of the Buyer shell: the sidebar link on desktop, the header `Menu` overflow on mobile.
 
 The Playwright config pins `locale: 'pl-PL'`, because the app detects the browser language and the tests assert Polish copy. Use `exact: true` when a name is a prefix of another control (e.g. the `Dev` button).
 

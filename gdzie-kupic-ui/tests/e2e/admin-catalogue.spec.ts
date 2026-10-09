@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, mockApi } from './support/api-mock'
+import { loginAs, mockApi, openBuyerNav } from './support/api-mock'
 
 interface Tag { id: string, name: string, isDisabled: boolean }
 interface Category { id: string, name: string, isDisabled: boolean, tags: Tag[] }
@@ -103,6 +103,9 @@ test('admin renames a category and a duplicate name shows a readable error', asy
 test('a buyer does not get the catalogue link', async ({ page }) => {
   await loginAs(page, 'Buyer')
 
-  await expect(page.getByRole('link', { name: 'Moje lokalizacje' })).toBeVisible()
+  await expect(page).toHaveURL('/home')
+  await expect(page.getByRole('link', { name: 'Katalog' })).toHaveCount(0)
+  await openBuyerNav(page, 'Moje lokalizacje')
+  await expect(page).toHaveURL('/saved-locations')
   await expect(page.getByRole('link', { name: 'Katalog' })).toHaveCount(0)
 })

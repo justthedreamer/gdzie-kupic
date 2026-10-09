@@ -14,6 +14,58 @@
     "saved_locations": "My locations",
     "my_business": "My business"
   },
+  "buyer_nav": {
+    "role_label": "Buyer",
+    "aria_main": "Main navigation",
+    "aria_tabs": "Navigation",
+    "menu": "Menu",
+    "home": "Dashboard",
+    "chats": "Chats",
+    "saved_searches": "Saved searches",
+    "profile": "Profile",
+    "settings": "Settings",
+    "install_title": "Install the app",
+    "install_text": "Get instant notifications.",
+    "install_cta": "Install app"
+  },
+  "buyer_home": {
+    "title": "Dashboard",
+    "mobile_title": "My request",
+    "welcome": "Welcome back, {name}!",
+    "new_request": "New request",
+    "active_requests": "Active requests",
+    "scroll_left": "Scroll left",
+    "scroll_right": "Scroll right",
+    "live": "Live",
+    "closed": "Complete",
+    "responses": "no responses | {n} response | {n} responses",
+    "posted": "Posted {time}",
+    "radius": "Radius {km} km",
+    "view_details": "View details",
+    "view_all": "View all",
+    "live_status": "Live status",
+    "merchants_notified": "Merchants notified",
+    "status": {
+      "checking": "Checking availability",
+      "have": "Have it",
+      "cannot": "Can't help",
+      "none": "No response yet"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No merchant activity yet.",
+      "Have": "Has offered",
+      "Checking": "Is checking availability",
+      "Cannot": "Can't help"
+    },
+    "chats": {
+      "title": "Recent chats",
+      "empty": "No conversations yet."
+    },
+    "empty_title": "You have no active requests",
+    "empty_text": "Describe what you are looking for and nearby merchants will reply.",
+    "load_error": "Could not load your dashboard."
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -22,7 +74,8 @@
     "loading": "Loading…",
     "back": "Back",
     "next": "Next",
-    "optional": "optional"
+    "optional": "optional",
+    "soon": "soon"
   },
   "auth": {
     "login": "Log in",

@@ -102,6 +102,7 @@ Turn API failures into user-facing messages with `resolveApiError()` from [`app/
 | `composables/api/useCatalogueApi.ts` | `/api/catalogue/categories`, `/api/admin/categories`, `/api/admin/tags` | Read the catalogue; admin create / rename / disable / enable of categories and tags |
 | `composables/api/useSavedLocationsApi.ts` | `/api/saved-locations` | List, add (coordinates or address) and delete buyer saved locations |
 | `composables/api/useMerchantApi.ts` | `/api/merchant/me`, `/api/merchant/onboarding`, `/api/merchant/subscriptions` | Merchant profile, onboarding and category / tag subscriptions |
+| `composables/api/useBuyerHomeApi.ts` | _(none yet)_ | Buyer home data (requests, activity, chats). No backend until Phases 4–5: returns mock data when `runtimeConfig.public.buyerHomeMock` is on (default in dev, `NUXT_PUBLIC_BUYER_HOME_MOCK` overrides), otherwise an empty result. Replace the body of `load()` when the endpoints exist. |
 
 ---
 
