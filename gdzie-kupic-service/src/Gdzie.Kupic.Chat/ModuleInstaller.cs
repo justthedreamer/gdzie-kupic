@@ -15,6 +15,9 @@ public static class ModuleInstaller
         services.TryAddSingleton<IObjectStorage, S3ObjectStorage>();
         services.AddHostedService<ObjectStorageInitializer>();
 
+        services.TryAddSingleton<IChatChannel, NullChatChannel>();
+        services.AddScoped<ChatEvents>();
+        services.AddScoped<IChatThreadEvents>(sp => sp.GetRequiredService<ChatEvents>());
         services.AddScoped<IChatService, ChatService>();
 
         return services;

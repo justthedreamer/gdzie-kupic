@@ -18,7 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gdzie.Kupic.API.Contract\Gdzie.Kupic.API.Contract.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Chat\Gdzie.Kupic.Chat.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Marketplace\Gdzie.Kupic.Marketplace.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Notifications\Gdzie.Kupic.Notifications.csproj" />
   </ItemGroup>
 
 </Project>

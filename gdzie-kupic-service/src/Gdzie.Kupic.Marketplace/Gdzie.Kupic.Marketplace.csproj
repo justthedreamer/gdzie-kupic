@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Gdzie.Kupic.Chat\Gdzie.Kupic.Chat.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Hangfire\Gdzie.Kupic.Hangfire.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Notifications\Gdzie.Kupic.Notifications.csproj" />

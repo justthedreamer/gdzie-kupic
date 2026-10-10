@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Notifications\Gdzie.Kupic.Notifications.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
   </ItemGroup>
 

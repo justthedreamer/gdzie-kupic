@@ -83,7 +83,7 @@ internal sealed class ChatStorage(AppDbContext db) : IChatStorage
         return threads.Sum();
     }
 
-    public async Task<int> SetLockForUserAsync(Guid userId, bool banned, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Guid>> SetLockForUserAsync(Guid userId, bool banned, CancellationToken ct = default)
     {
         var merchantIds = db.MerchantAccounts.Where(a => a.UserId == userId).Select(a => a.MerchantId);
 
@@ -91,19 +91,35 @@ internal sealed class ChatStorage(AppDbContext db) : IChatStorage
             .Where(t => t.Post.BuyerId == userId || merchantIds.Contains(t.MerchantId))
             .ToListAsync(ct);
 
-        var changed = 0;
+        var changed = new List<Guid>();
         foreach (var thread in threads)
         {
             var locked = banned || await HasBannedParticipantAsync(thread, ct);
             if (thread.IsLocked == locked) continue;
 
             thread.IsLocked = locked;
-            changed++;
+            changed.Add(thread.Id);
         }
 
         await db.SaveChangesAsync(ct);
 
         return changed;
+    }
+
+    public async Task<ChatThreadParticipants?> FindParticipantsAsync(Guid threadId, CancellationToken ct = default)
+    {
+        var thread = await db.ChatThreads.AsNoTracking()
+            .Where(t => t.Id == threadId)
+            .Select(t => new { t.PostId, t.Post.BuyerId, t.MerchantId })
+            .SingleOrDefaultAsync(ct);
+        if (thread is null) return null;
+
+        var merchantUserIds = await db.MerchantAccounts.AsNoTracking()
+            .Where(a => a.MerchantId == thread.MerchantId)
+            .Select(a => a.UserId)
+            .ToListAsync(ct);
+
+        return new ChatThreadParticipants(thread.PostId, thread.BuyerId, merchantUserIds);
     }
 
     private async Task<bool> HasBannedParticipantAsync(ChatThread thread, CancellationToken ct)

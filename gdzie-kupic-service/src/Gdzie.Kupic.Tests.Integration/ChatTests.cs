@@ -455,7 +455,7 @@ public class ChatTests : IntegrationTestBase
         async Task<int> LockAsync(Guid userId, bool banned)
         {
             using var scope = IntegrationTestSetup.Factory.Services.CreateScope();
-            return await scope.ServiceProvider.GetRequiredService<IChatStorage>().SetLockForUserAsync(userId, banned);
+            return (await scope.ServiceProvider.GetRequiredService<IChatStorage>().SetLockForUserAsync(userId, banned)).Count;
         }
 
         async Task<Dictionary<Guid, bool>> LocksAsync()
@@ -519,7 +519,7 @@ public class ChatTests : IntegrationTestBase
         });
 
         using var scope = IntegrationTestSetup.Factory.Services.CreateScope();
-        (await scope.ServiceProvider.GetRequiredService<IChatStorage>().SetLockForUserAsync(_buyerId, banned: false)).ShouldBe(0);
+        (await scope.ServiceProvider.GetRequiredService<IChatStorage>().SetLockForUserAsync(_buyerId, banned: false)).ShouldBeEmpty();
 
         await WithDbAsync(async db => (await db.ChatThreads.SingleAsync()).IsLocked.ShouldBeTrue());
     }

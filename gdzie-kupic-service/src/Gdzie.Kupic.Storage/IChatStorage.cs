@@ -29,6 +29,9 @@ public sealed record ChatThreadInfo(
     DateTimeOffset LastActivityAt,
     string? BuyerFirstName = null);
 
+/// <summary>The people on both sides of a thread: the post owner and every user account of the merchant.</summary>
+public sealed record ChatThreadParticipants(Guid PostId, Guid BuyerId, IReadOnlyList<Guid> MerchantUserIds);
+
 public sealed record ChatThreadCursor(DateTimeOffset LastActivityAt, Guid ThreadId);
 
 public sealed record ChatThreadPage(IReadOnlyList<ChatThreadInfo> Items, bool HasMore);
@@ -61,7 +64,10 @@ public interface IChatStorage
     /// <summary>
     /// Locks every thread the user takes part in (<paramref name="banned"/> = true) or, when the user is unbanned,
     /// recomputes the lock: a thread stays locked while any of its participants is still banned. Called by the ban
-    /// cascade inside the ban/unban transaction. Returns the number of threads whose flag changed.
+    /// cascade inside the ban/unban transaction. Returns the ids of the threads whose flag changed; the caller raises
+    /// the realtime events once the transaction is committed (see <c>IChatThreadEvents</c> in the Chat module).
     /// </summary>
-    Task<int> SetLockForUserAsync(Guid userId, bool banned, CancellationToken ct = default);
+    Task<IReadOnlyList<Guid>> SetLockForUserAsync(Guid userId, bool banned, CancellationToken ct = default);
+
+    Task<ChatThreadParticipants?> FindParticipantsAsync(Guid threadId, CancellationToken ct = default);
 }
