@@ -100,6 +100,7 @@ Copy to `.env` and fill in real values before starting the stack.
 | `MINIO_BUCKET_NAME` | `attachments` | S3 bucket for file uploads |
 | `MINIO_PUBLIC_URL` | `http://localhost:9000` | URL under which browsers reach MinIO; presigned attachment URLs are signed for it |
 | `SEQ_API_KEY` | *(empty)* | Seq ingestion API key; leave empty to accept all |
+| `APP_BASE_URL` | `http://localhost:3000` | Address of the web app, used for the links in e-mails (`App__BaseUrl`). E-mails are only logged until a provider is added |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | *(empty)* | VAPID identity for Web Push (e.g. `npx web-push generate-vapid-keys`; subject like `mailto:admin@example.com`). When empty Web Push is disabled: the service starts with a warning and `GET /api/push/vapid-public-key` answers `503` |
 | `JWT_SECRET` | *(required)* | Token signing secret, â‰¥ 32 characters |
 | `JWT_EXPIRY_DAYS` | `7` | Access token lifetime |
