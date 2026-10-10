@@ -1,38 +1,56 @@
 <script setup lang="ts">
-import type { BuyerChatPreview } from '~/utils/buyerHome'
+import { CHAT_PATH, INBOX_REFRESH_MS } from '~/utils/chat'
 
-defineProps<{ chats: BuyerChatPreview[] }>()
+// The latest conversations of the buyer, from the real chat threads (most recent activity
+// first). Refreshed on the inbox schedule while the home page is open.
+const LIMIT = 4
 
-const { locale } = useI18n()
+const chatStore = useChatStore()
+
+onMounted(() => chatStore.refreshThreads())
+usePolling(() => chatStore.refreshThreads(), INBOX_REFRESH_MS)
+
+const threads = computed(() => chatStore.threads.slice(0, LIMIT))
+const isLoading = computed(() => chatStore.status === 'idle' || chatStore.status === 'pending')
+const hasError = computed(() => chatStore.status === 'error')
 </script>
 
 <template>
   <UCard>
     <template #header>
-      <h2 class="text-base font-semibold text-highlighted">
-        {{ $t('buyer_home.chats.title') }}
-      </h2>
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="text-base font-semibold text-highlighted">
+          {{ $t('buyer_home.chats.title') }}
+        </h2>
+        <UButton v-if="threads.length" :to="CHAT_PATH" variant="link" color="neutral" size="xs" class="px-0" data-testid="chats-view-all">
+          {{ $t('buyer_home.chats.view_all') }}
+        </UButton>
+      </div>
     </template>
 
-    <p v-if="!chats.length" class="py-4 text-center text-sm text-muted">
+    <p v-if="isLoading && !threads.length" class="py-4 text-center text-sm text-muted" data-testid="chats-loading">
+      {{ $t('common.loading') }}
+    </p>
+
+    <div v-else-if="hasError && !threads.length" class="space-y-3">
+      <UAlert
+        color="error"
+        variant="subtle"
+        icon="i-heroicons-exclamation-circle"
+        :description="$t('chat.load_error')"
+      />
+      <UButton variant="outline" icon="i-heroicons-arrow-path" @click="chatStore.loadThreads()">
+        {{ $t('chat.retry') }}
+      </UButton>
+    </div>
+
+    <p v-else-if="!threads.length" class="py-4 text-center text-sm text-muted" data-testid="chats-empty">
       {{ $t('buyer_home.chats.empty') }}
     </p>
 
-    <!-- Chat threads arrive in Phase 5; until then the rows are not links. -->
-    <ul v-else class="divide-y divide-default">
-      <li v-for="chat in chats" :key="chat.id" class="flex items-center gap-3 py-3">
-        <UAvatar :text="chat.merchantName.charAt(0)" size="md" />
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-medium text-highlighted">
-            {{ chat.merchantName }}
-          </p>
-          <p class="truncate text-sm text-muted">
-            {{ chat.lastMessage }}
-          </p>
-        </div>
-        <time :datetime="chat.sentAt" class="shrink-0 text-xs text-muted">
-          {{ formatRelativeTime(chat.sentAt, locale) }}
-        </time>
+    <ul v-else class="space-y-2">
+      <li v-for="thread in threads" :key="thread.id">
+        <ChatThreadRow :thread="thread" />
       </li>
     </ul>
   </UCard>

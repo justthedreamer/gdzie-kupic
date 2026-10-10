@@ -1,8 +1,8 @@
 import type { UserRole } from '~/stores/auth'
 
-// Data model behind the Buyer home page. Requests come from the posts API;
-// merchant activity and chats get real endpoints in Phase 5 and are supplied
-// by `useBuyerHomeApi` until then.
+// Data model behind the Buyer home page. Requests, the status counts and the recent
+// chats come from the real APIs; the merchant activity feed has no endpoint yet and is
+// supplied by `useBuyerHomeApi`.
 
 export interface BuyerRequestSummary {
   id: string
@@ -23,7 +23,12 @@ export interface BuyerRequestSummary {
 }
 
 /** The fields the Live Status widget needs; shared by the Buyer and Merchant views of a request. */
-export type LiveCounts = Pick<BuyerRequestSummary, 'isLive' | 'notifiedCount' | 'checkingCount' | 'haveCount' | 'cannotCount'>
+export type LiveCounts = Pick<BuyerRequestSummary, 'isLive' | 'notifiedCount' | 'checkingCount' | 'haveCount' | 'cannotCount'> & {
+  /** The split of `haveCount`, when the source has it (the status endpoint does). */
+  haveItCount?: number
+  mayHaveItCount?: number
+  canOrderItCount?: number
+}
 
 export type ActivityState = 'Have' | 'Checking' | 'Cannot'
 
@@ -36,20 +41,11 @@ export interface BuyerActivityEvent {
   occurredAt: string
 }
 
-export interface BuyerChatPreview {
-  id: string
-  merchantName: string
-  lastMessage: string
-  /** ISO timestamp. */
-  sentAt: string
-}
-
 export interface BuyerHomeData {
   activity: BuyerActivityEvent[]
-  chats: BuyerChatPreview[]
 }
 
-export const emptyBuyerHome = (): BuyerHomeData => ({ activity: [], chats: [] })
+export const emptyBuyerHome = (): BuyerHomeData => ({ activity: [] })
 
 /** Where a user lands after signing in, and what `/` redirects to. */
 export function homePathFor(role: UserRole | undefined): string {
@@ -63,6 +59,8 @@ export interface StatusBreakdown {
   notified: number
   checking: number
   have: number
+  /** The positive answers by kind; `null` when only the total is known. */
+  positive: { haveIt: number, mayHaveIt: number, canOrderIt: number } | null
   cannot: number
   none: number
 }
@@ -81,6 +79,9 @@ export function statusBreakdown(request: LiveCounts): StatusBreakdown {
     notified,
     checking: request.checkingCount,
     have: request.haveCount,
+    positive: request.haveItCount === undefined || request.mayHaveItCount === undefined || request.canOrderItCount === undefined
+      ? null
+      : { haveIt: request.haveItCount, mayHaveIt: request.mayHaveItCount, canOrderIt: request.canOrderItCount },
     cannot: request.cannotCount,
     none: notified - responded,
   }

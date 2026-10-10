@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import type { Post, PostListItem, PostStatusInfo } from '~/composables/api/usePostsApi'
+import type { Post, PostListItem, PostResponse, PostStatusInfo } from '~/composables/api/usePostsApi'
 import {
+  RESPONSE_STATE_COLOR,
   STATUS_POLL_PENDING_MS,
   STATUS_POLL_SETTLED_MS,
   dismissLongLived,
@@ -10,6 +11,7 @@ import {
   postToSummary,
   remainingTime,
   statusPollInterval,
+  sortResponses,
   statusToLiveCounts,
 } from '~/utils/posts'
 
@@ -133,11 +135,46 @@ describe('statusToLiveCounts', () => {
       true,
     )
 
-    expect(counts).toEqual({ isLive: true, notifiedCount: 10, checkingCount: 2, haveCount: 6, cannotCount: 1 })
+    expect(counts).toEqual({
+      isLive: true,
+      notifiedCount: 10,
+      checkingCount: 2,
+      haveCount: 6,
+      cannotCount: 1,
+      haveItCount: 1,
+      mayHaveItCount: 2,
+      canOrderItCount: 3,
+    })
   })
 
   it('marks an ended request as not live', () => {
     expect(statusToLiveCounts(status(), false).isLive).toBe(false)
+  })
+})
+
+describe('sortResponses', () => {
+  const response = (merchantId: string, updatedAt: string): PostResponse => ({
+    merchantId,
+    shopName: merchantId,
+    state: 'HaveIt',
+    threadId: `t-${merchantId}`,
+    unreadCount: 0,
+    updatedAt,
+  })
+
+  it('puts the most recent answer first without mutating the input', () => {
+    const input = [
+      response('old', '2026-01-01T08:00:00Z'),
+      response('new', '2026-01-01T12:00:00Z'),
+      response('mid', '2026-01-01T10:00:00Z'),
+    ]
+
+    expect(sortResponses(input).map(r => r.merchantId)).toEqual(['new', 'mid', 'old'])
+    expect(input.map(r => r.merchantId)).toEqual(['old', 'new', 'mid'])
+  })
+
+  it('has a colour for every positive state', () => {
+    expect(Object.keys(RESPONSE_STATE_COLOR).sort()).toEqual(['CanOrderIt', 'HaveIt', 'MayHaveIt'])
   })
 })
 

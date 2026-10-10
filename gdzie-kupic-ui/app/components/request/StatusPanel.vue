@@ -2,7 +2,7 @@
 import type { Post, PostStatusInfo } from '~/composables/api/usePostsApi'
 
 // The status panel of one request: "looking for merchants" while matching is
-// pending, then the Live Status counts. Responses stay 0 until Phase 5.
+// pending, then the Live Status counts.
 const props = defineProps<{
   post: Pick<Post, 'status'>
   status: PostStatusInfo | null

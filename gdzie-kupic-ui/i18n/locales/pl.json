@@ -164,6 +164,8 @@
     "status": {
       "checking": "Sprawdza dostępność",
       "have": "Ma produkt",
+      "may_have": "Może mieć",
+      "can_order": "Może zamówić",
       "cannot": "Nie pomoże",
       "none": "Brak odpowiedzi"
     },
@@ -176,7 +178,8 @@
     },
     "chats": {
       "title": "Ostatnie czaty",
-      "empty": "Brak rozmów."
+      "empty": "Brak rozmów. Pojawią się, gdy sprzedawca odpowie na Twoje zapytanie.",
+      "view_all": "Wszystkie rozmowy"
     },
     "empty_title": "Nie masz aktywnych zapytań",
     "empty_text": "Opisz czego szukasz, a pobliscy sprzedawcy odpiszą.",
@@ -206,6 +209,11 @@
     "new": "Nowe zapytanie",
     "title": "Tytuł",
     "description": "Opis",
+    "response_state": {
+      "HaveIt": "Ma produkt",
+      "MayHaveIt": "Może mieć",
+      "CanOrderIt": "Może zamówić"
+    },
     "location": "Lokalizacja",
     "radius_km": "Zasięg (km)",
     "budget": "Budżet",
@@ -296,10 +304,10 @@
       "no_matches": "Żaden sprzedawca w okolicy jeszcze nie pasuje do tego zapytania.",
       "status_error": "Nie udało się wczytać statusu.",
       "status_stale": "Nie udało się odświeżyć statusu. Pokazujemy ostatnie dane.",
-      "responses_title": "Odpowiedzi sprzedawców",
-      "responses_placeholder": "Odpowiedzi sprzedawców pojawią się tutaj.",
-      "chats_title": "Rozmowy",
-      "chats_placeholder": "Rozmowy ze sprzedawcami pojawią się tutaj.",
+      "responses_title": "Sprzedawcy, którzy mogą pomóc",
+      "responses_empty": "Nikt jeszcze nie potwierdził, że ma produkt. Sprzedawcy, którzy odpowiedzą twierdząco, pojawią się tutaj.",
+      "responses_error": "Nie udało się pobrać odpowiedzi sprzedawców.",
+      "open_chat": "Napisz",
       "found": "Znalazłem",
       "close": "Zamknij zapytanie",
       "confirm_fulfil_title": "Oznaczyć jako znalezione?",

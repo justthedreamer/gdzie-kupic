@@ -48,7 +48,6 @@ const activity = computed(() =>
     .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt))
     .slice(0, 5),
 )
-const chats = computed(() => data.value.chats.slice(0, 4))
 
 const name = computed(() => displayNameFromEmail(authStore.user?.email))
 </script>
@@ -114,7 +113,7 @@ const name = computed(() => displayNameFromEmail(authStore.user?.email))
 
       <div class="grid gap-6 lg:grid-cols-2">
         <BuyerRecentActivity :events="activity" />
-        <BuyerRecentChats :chats="chats" class="hidden lg:block" />
+        <BuyerRecentChats class="hidden lg:block" />
       </div>
     </template>
   </div>

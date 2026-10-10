@@ -42,6 +42,7 @@ function handlers(server: Server): MockHandler[] {
       respond: ({ url }) => ({ json: url.searchParams.get('scope') === 'ended' ? server.ended : server.active }),
     },
     { method: 'GET', path: postPath('/status'), respond: () => ({ json: typeof server.status === 'function' ? server.status() : server.status }) },
+    { method: 'GET', path: postPath('/responses'), respond: () => ({ json: [] }) },
     {
       method: 'POST',
       path: postPath('/fulfil'),
@@ -161,7 +162,7 @@ test.describe('Request detail', () => {
     await expect(page.getByTestId('notified-count')).toHaveText('5')
     await expect(page.getByText('Szukamy sprzedawców…')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Znalazłem' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Odpowiedzi sprzedawców' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sprzedawcy, którzy mogą pomóc' })).toBeVisible()
   })
 
   test('shows "looking for merchants" while matching is pending and refreshes to the result', async ({ page }) => {

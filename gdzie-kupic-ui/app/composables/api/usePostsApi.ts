@@ -28,7 +28,7 @@ export interface PostListItem extends Post {
 
 export type PostScope = 'active' | 'ended'
 
-/** GET /api/posts/{id}/status: derived live; the response counts stay 0 until Phase 5. */
+/** GET /api/posts/{id}/status: derived live from the merchants' responses. */
 export interface PostStatusInfo {
   notificationDispatchStatus: NotificationDispatchStatus
   notifiedCount: number
@@ -38,6 +38,19 @@ export interface PostStatusInfo {
   canOrderItCount: number
   cannotHelpCount: number
   isZeroMatch: boolean
+}
+
+/** The positive answers a merchant can give; "can't help" only shows up in the counts. */
+export type PositiveResponseState = 'HaveIt' | 'MayHaveIt' | 'CanOrderIt'
+
+/** GET /api/posts/{id}/responses: one merchant that can help, with the chat thread it opened. */
+export interface PostResponse {
+  merchantId: string
+  shopName: string
+  state: PositiveResponseState
+  threadId: string | null
+  unreadCount: number
+  updatedAt: string
 }
 
 export interface CreatePostRequest {
@@ -68,6 +81,10 @@ export const usePostsApi = () => {
 
     status: (id: string): Promise<PostStatusInfo> =>
       api.get<PostStatusInfo>(`/api/posts/${id}/status`),
+
+    /** The merchants that answered positively ("can't help" is only in the status counts); 404 for a foreign post. */
+    responses: (id: string): Promise<PostResponse[]> =>
+      api.get<PostResponse[]>(`/api/posts/${id}/responses`),
 
     /** 204; 409 when the post is no longer active. */
     fulfil: async (id: string): Promise<void> => {
