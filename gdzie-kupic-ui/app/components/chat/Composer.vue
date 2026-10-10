@@ -1,17 +1,66 @@
 <script setup lang="ts">
-import { MAX_MESSAGE_LENGTH, messageProblem } from '~/utils/chat'
+import {
+  ATTACHMENT_ACCEPT,
+  MAX_ATTACHMENT_BYTES,
+  MAX_MESSAGE_LENGTH,
+  attachmentProblem,
+  messageProblem,
+  type AttachmentProblem,
+} from '~/utils/chat'
 
-// The message box of a thread. Enter sends, Shift+Enter starts a new line. In a locked
-// thread it is replaced by the explanation. The text is cleared only after `send`
-// accepted it (the parent clears it through the v-model).
+// The message box of a thread. Enter sends, Shift+Enter starts a new line. One image (JPEG,
+// PNG or WebP, within the size limit) can be attached: it is checked when chosen, shown as
+// a preview and can be removed before sending. In a locked thread the box is replaced by the
+// explanation. Text and image are cleared only after `send` accepted them (the parent clears
+// them through the v-models). `refused` (v-model) is the server's verdict on the image, shown
+// until the image is removed or another one is chosen.
 const props = defineProps<{ locked: boolean }>()
 const text = defineModel<string>({ default: '' })
+const image = defineModel<File | null>('image', { default: null })
+const refused = defineModel<AttachmentProblem | null>('refused', { default: null })
 const emit = defineEmits<{ send: [] }>()
 
-const problem = computed(() => messageProblem(text.value))
+const fileInput = ref<HTMLInputElement | null>(null)
+const chosenProblem = ref<AttachmentProblem | null>(null)
+const attachmentError = computed(() => chosenProblem.value ?? refused.value)
+const previewUrl = ref<string | null>(null)
+
+const problem = computed(() => messageProblem(text.value, image.value !== null))
 const length = computed(() => text.value.trim().length)
 const showCounter = computed(() => length.value >= MAX_MESSAGE_LENGTH * 0.8)
 const tooLong = computed(() => problem.value === 'too_long')
+
+watch(image, (file) => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = file ? URL.createObjectURL(file) : null
+}, { immediate: true })
+
+onBeforeUnmount(() => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+})
+
+function pick() {
+  fileInput.value?.click()
+}
+
+function onFileChosen(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  // The same file can be chosen again later.
+  input.value = ''
+  if (!file) return
+
+  refused.value = null
+  const rejected = attachmentProblem(file)
+  chosenProblem.value = rejected
+  if (!rejected) image.value = file
+}
+
+function removeImage() {
+  image.value = null
+  chosenProblem.value = null
+  refused.value = null
+}
 
 function submit() {
   if (props.locked || problem.value) return
@@ -34,7 +83,44 @@ function onKeydown(event: KeyboardEvent) {
     </p>
 
     <form v-else class="space-y-1" @submit.prevent="submit">
+      <div v-if="previewUrl" class="flex items-start gap-2" data-testid="chat-attachment-preview">
+        <img :src="previewUrl" :alt="$t('chat.attachment_preview')" class="size-16 rounded-lg border border-default object-cover">
+        <UButton
+          type="button"
+          size="xs"
+          color="neutral"
+          variant="outline"
+          icon="i-heroicons-x-mark"
+          :aria-label="$t('chat.attachment_remove')"
+          data-testid="chat-attachment-remove"
+          @click="removeImage"
+        />
+      </div>
+
+      <p v-if="attachmentError" class="text-xs text-error" role="alert" data-testid="chat-attachment-error">
+        {{ $t(`chat.attachment_${attachmentError === 'unsupported_type' ? 'unsupported' : attachmentError}`, { max: MAX_ATTACHMENT_BYTES / 1024 / 1024 }) }}
+      </p>
+
       <div class="flex items-end gap-2">
+        <input
+          ref="fileInput"
+          type="file"
+          class="hidden"
+          :accept="ATTACHMENT_ACCEPT"
+          tabindex="-1"
+          aria-hidden="true"
+          data-testid="chat-attach-input"
+          @change="onFileChosen"
+        >
+        <UButton
+          type="button"
+          color="neutral"
+          variant="ghost"
+          icon="i-heroicons-photo"
+          :aria-label="$t('chat.attach')"
+          data-testid="chat-attach"
+          @click="pick"
+        />
         <UTextarea
           v-model="text"
           class="flex-1"

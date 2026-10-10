@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
+  ATTACHMENT_ACCEPT,
+  MAX_ATTACHMENT_BYTES,
   MAX_MESSAGE_LENGTH,
+  attachmentProblem,
+  attachmentProblemFromStatus,
   formatMessageTime,
   isNearEnd,
   mergeMessages,
@@ -51,6 +55,54 @@ describe('messageProblem', () => {
 
   it('rejects text over the limit', () => {
     expect(messageProblem('a'.repeat(MAX_MESSAGE_LENGTH + 1))).toBe('too_long')
+  })
+
+  it('lets an image stand without text, but not text that is too long', () => {
+    expect(messageProblem('', true)).toBeNull()
+    expect(messageProblem('   ', true)).toBeNull()
+    expect(messageProblem('a'.repeat(MAX_MESSAGE_LENGTH + 1), true)).toBe('too_long')
+  })
+})
+
+describe('attachmentProblem', () => {
+  const file = (type: string, size = 1000) => ({ type, size })
+
+  it.each(['image/jpeg', 'image/png', 'image/webp'])('accepts %s', (type) => {
+    expect(attachmentProblem(file(type))).toBeNull()
+  })
+
+  it.each(['image/gif', 'image/svg+xml', 'application/pdf', 'text/plain', ''])('rejects the type "%s"', (type) => {
+    expect(attachmentProblem(file(type))).toBe('unsupported_type')
+  })
+
+  it('accepts a file up to the size limit and rejects a larger one', () => {
+    expect(attachmentProblem(file('image/png', MAX_ATTACHMENT_BYTES))).toBeNull()
+    expect(attachmentProblem(file('image/png', MAX_ATTACHMENT_BYTES + 1))).toBe('too_large')
+  })
+
+  it('rejects an empty file', () => {
+    expect(attachmentProblem(file('image/png', 0))).toBe('empty_file')
+  })
+
+  it('checks the type before the size', () => {
+    expect(attachmentProblem(file('image/gif', MAX_ATTACHMENT_BYTES + 1))).toBe('unsupported_type')
+  })
+
+  it('has an accept value with exactly the allowed types', () => {
+    expect(ATTACHMENT_ACCEPT).toBe('image/jpeg,image/png,image/webp')
+  })
+})
+
+describe('attachmentProblemFromStatus', () => {
+  it('maps the server answers 413 and 415', () => {
+    expect(attachmentProblemFromStatus(413)).toBe('too_large')
+    expect(attachmentProblemFromStatus(415)).toBe('unsupported_type')
+  })
+
+  it('knows nothing about other answers', () => {
+    expect(attachmentProblemFromStatus(400)).toBeNull()
+    expect(attachmentProblemFromStatus(500)).toBeNull()
+    expect(attachmentProblemFromStatus(null)).toBeNull()
   })
 })
 

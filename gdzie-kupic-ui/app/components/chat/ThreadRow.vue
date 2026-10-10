@@ -34,7 +34,7 @@ const time = computed(() =>
 
       <p class="truncate text-sm" :class="thread.unreadCount > 0 ? 'text-highlighted' : 'text-muted'">
         <template v-if="thread.lastMessage">
-          <span v-if="thread.lastMessage.isMine">{{ $t('chat.you') }} </span>{{ thread.lastMessage.preview }}
+          <span v-if="thread.lastMessage.isMine">{{ $t('chat.you') }} </span>{{ thread.lastMessage.preview || $t('chat.photo') }}
         </template>
         <template v-else>
           {{ $t('chat.no_messages') }}

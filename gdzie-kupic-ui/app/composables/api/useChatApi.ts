@@ -48,14 +48,16 @@ export const useChatApi = () => {
     },
 
     /**
-     * Sends a text message. The endpoint takes `multipart/form-data` (the image part belongs
-     * to the attachments ticket). Rejects with 403 `thread_locked`, 400 for empty or too long text.
+     * Sends a message: text, an image or both (`multipart/form-data`, parts `body` and `image`).
+     * Rejects with 403 `thread_locked`, 400 for an empty message or too long text, 413
+     * `attachment_too_large` and 415 `unsupported_attachment_type`.
      */
-    send: async (threadId: string, body: string): Promise<ChatMessage> => {
-      if (useMock) return (await mock()).sendMessage(threadId, body)
+    send: async (threadId: string, body: string, image: File | null = null): Promise<ChatMessage> => {
+      if (useMock) return (await mock()).sendMessage(threadId, body, image)
 
       const form = new FormData()
-      form.append('body', body)
+      if (body) form.append('body', body)
+      if (image) form.append('image', image)
       return api.post<ChatMessage>(`/api/chat/threads/${threadId}/messages`, form)
     },
 

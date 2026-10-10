@@ -99,7 +99,7 @@ npm run test:e2e:real             # playwright.real.config.ts
 
 - The service must verify the mock tokens: set `JWT_SECRET` to the dev value from `.env.example` (see `docs/local-dev.md` § Mock Accounts).
 - The API allows only the origin `http://localhost:3000`, so the config starts its own dev server there (`reuseExistingServer: false`) with `NUXT_PUBLIC_API_BASE=http://localhost:5000` and the Buyer-home / Merchant-feed / chat mocks off. Stop any other `npm run dev` first.
-- Tests create their own data (unique titles, a saved location when the Buyer has none) and pick a catalogue tag nobody subscribes to for the zero-match case. Matching runs in a Hangfire job, so allow up to a minute. `chat.real.spec.ts` drives the whole loop: the Buyer posts a request near the Dev Merchant's branch, the Merchant answers "Mam to" through the API, and both sides then talk (the Merchant's side over the API, the Buyer's in the UI).
+- Tests create their own data (unique titles, a saved location when the Buyer has none) and pick a catalogue tag nobody subscribes to for the zero-match case. Matching runs in a Hangfire job, so allow up to a minute. `chat.real.spec.ts` drives the whole loop: the Buyer posts a request near the Dev Merchant's branch, the Merchant answers "Mam to" through the API, and both sides then talk (the Merchant's side over the API, the Buyer's in the UI), including pictures: the server refuses a fake PNG (the text and file stay in the composer), accepts a real one, and the Merchant's picture loads in the open thread. `chat-images.spec.ts` covers the picture UI on the mock chat (the picture URLs of the other side are served or broken by the test through `page.route`).
 
 ### CI behaviour
 

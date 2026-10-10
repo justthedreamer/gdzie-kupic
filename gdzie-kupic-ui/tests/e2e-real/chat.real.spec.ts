@@ -145,3 +145,60 @@ test('a message the merchant sends while the buyer is on the inbox shows up as u
   await expect(row.getByTestId('chat-thread-unread')).toHaveText('1', { timeout: 45_000 })
   await expect(row).toContainText('Dzień dobry, mamy to w sklepie.')
 })
+
+test('pictures go both ways: the buyer uploads one, the merchant\'s one shows in the open thread', async ({ page }) => {
+  test.setTimeout(120_000)
+  const title = `E2E czat zdjecia ${Date.now()}`
+  const { threadId } = await openThreadWithMerchant(title)
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+  await loginAs(page, 'Buyer')
+  await expect(page).toHaveURL('/home')
+  await openChats(page)
+  await page.getByTestId('chat-thread-row').filter({ hasText: title }).click()
+  await expect(page).toHaveURL(`/chat/${threadId}`)
+
+  // A file that claims to be a PNG but is not: the server refuses it, the text and the file stay in the composer.
+  const caption = `Takie macie? ${Date.now()}`
+  await page.getByTestId('chat-attach-input').setInputFiles({ name: 'falszywe.png', mimeType: 'image/png', buffer: Buffer.from('to nie jest obraz') })
+  await page.getByRole('textbox', { name: 'Wiadomość' }).fill(caption)
+  await page.getByRole('button', { name: 'Wyślij' }).click()
+  await expect(page.getByTestId('chat-attachment-error')).toContainText('JPEG, PNG lub WebP')
+  await expect(page.getByRole('textbox', { name: 'Wiadomość' })).toHaveValue(caption)
+  await expect(page.getByTestId('chat-message')).toHaveCount(0)
+
+  // A real picture goes through: the merchant gets it with a URL that serves the same bytes.
+  await page.getByRole('button', { name: 'Usuń zdjęcie' }).click()
+  await page.getByTestId('chat-attach-input').setInputFiles({ name: 'zdjecie.png', mimeType: 'image/png', buffer: pixel })
+  await page.getByRole('button', { name: 'Wyślij' }).click()
+  const own = page.getByTestId('chat-message').filter({ hasText: caption })
+  await expect(own).toHaveAttribute('data-state', 'sent')
+  await expect(own.getByTestId('chat-image')).toBeVisible()
+
+  const stored = (await messagesOf(merchant, threadId) as Array<Message & { attachmentUrl: string | null }>).find(m => m.body === caption)
+  expect(stored?.attachmentUrl).toBeTruthy()
+  const download = await request.newContext()
+  const file = await download.get(stored!.attachmentUrl!)
+  expect(file.ok()).toBe(true)
+  expect(file.headers()['content-type']).toContain('image/png')
+  expect(Buffer.from(await file.body()).equals(pixel)).toBe(true)
+  await download.dispose()
+
+  // The merchant sends a picture: the open thread picks it up and the browser can load it.
+  const sent = await merchant.post(`/api/chat/threads/${threadId}/messages`, {
+    multipart: { image: { name: 'sklep.png', mimeType: 'image/png', buffer: pixel } },
+  })
+  expect(sent.status()).toBe(201)
+  const incoming = page.getByTestId('chat-message').last()
+  await expect(incoming).toHaveAttribute('data-own', 'false', { timeout: 15_000 })
+  await expect(incoming.getByTestId('chat-image')).toBeVisible()
+  await expect.poll(() => incoming.getByTestId('chat-image').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+
+  await incoming.getByRole('button', { name: 'Powiększ zdjęcie' }).click()
+  await expect(page.getByRole('dialog').getByTestId('chat-image-large')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  // In the inbox a message without text is named "Zdjęcie".
+  await page.getByTestId('chat-back').click()
+  await expect(page.getByTestId('chat-thread-row').filter({ hasText: title })).toContainText('Zdjęcie')
+})

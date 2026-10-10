@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CHAT_PATH, POLL_INTERVAL_MS, isNearEnd } from '~/utils/chat'
+import { CHAT_PATH, POLL_INTERVAL_MS, isNearEnd, type AttachmentProblem } from '~/utils/chat'
 
 definePageMeta({
   layout: 'buyer',
@@ -91,12 +91,23 @@ useInfiniteScroll(
 
 // ─── Sending ────────────────────────────────────────────────────────────────
 const text = ref('')
+const image = ref<File | null>(null)
+const refused = ref<AttachmentProblem | null>(null)
 
 async function send() {
   const body = text.value
+  const file = image.value
   text.value = ''
-  const result = await chatStore.send(threadId.value, body)
-  if (result === 'invalid') text.value = body
+  image.value = null
+  refused.value = null
+
+  const result = await chatStore.send(threadId.value, body, file)
+  if (result === 'invalid' || result === 'too_large' || result === 'unsupported_type') {
+    // Nothing was sent: the writer gets the text and the picture back.
+    text.value = body
+    image.value = file
+    if (result !== 'invalid') refused.value = result
+  }
 }
 </script>
 
@@ -184,14 +195,17 @@ async function send() {
               :key="message.id"
               :own="message.isMine"
               :body="message.body"
+              :attachment-url="message.attachmentUrl"
               :created-at="message.createdAt"
               :author="thread.counterpart.displayName"
+              @reload-image="chatStore.refreshMessages(threadId)"
             />
             <ChatMessageBubble
               v-for="item in pending"
               :key="item.localId"
               own
               :body="item.body"
+              :attachment-url="item.previewUrl"
               :created-at="item.createdAt"
               :author="thread.counterpart.displayName"
               :state="item.status"
@@ -213,7 +227,7 @@ async function send() {
         </UButton>
       </div>
 
-      <ChatComposer v-model="text" :locked="thread.isLocked" @send="send" />
+      <ChatComposer v-model="text" v-model:image="image" v-model:refused="refused" :locked="thread.isLocked" @send="send" />
     </template>
   </div>
 </template>

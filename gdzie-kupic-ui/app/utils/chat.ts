@@ -43,6 +43,10 @@ export interface ChatMessagePage {
 export interface PendingMessage {
   localId: string
   body: string
+  /** The attached image, kept so that a failed message can be sent again. */
+  image: File | null
+  /** Object URL of `image` for showing it while the message is pending; revoked when it is dropped. */
+  previewUrl: string | null
   status: 'sending' | 'failed'
   /** ISO timestamp of the click. */
   createdAt: string
@@ -51,6 +55,13 @@ export interface PendingMessage {
 export const THREADS_PAGE_SIZE = 20
 export const MESSAGES_PAGE_SIZE = 30
 export const MAX_MESSAGE_LENGTH = 2000
+
+/** The server limit (`Chat:MaxAttachmentBytes`) in its default: the UI checks before uploading. */
+export const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+/** The types the server accepts for an image (it verifies them by content, too). */
+export const ATTACHMENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+/** Value for the `accept` attribute of the file input. */
+export const ATTACHMENT_ACCEPT = ATTACHMENT_TYPES.join(',')
 
 /** How often an open thread asks for new messages (until real-time arrives in Phase 6). */
 export const POLL_INTERVAL_MS = 4000
@@ -63,11 +74,31 @@ export const CHAT_PATH = '/chat'
 
 export type MessageProblem = 'empty' | 'too_long'
 
-/** Why `text` cannot be sent, or `null` when it can. Surrounding whitespace does not count. */
-export function messageProblem(text: string): MessageProblem | null {
+/**
+ * Why `text` (with or without an image) cannot be sent, or `null` when it can. Surrounding
+ * whitespace does not count; a message needs a text or an image.
+ */
+export function messageProblem(text: string, hasImage = false): MessageProblem | null {
   const trimmed = text.trim()
-  if (trimmed.length === 0) return 'empty'
+  if (trimmed.length === 0) return hasImage ? null : 'empty'
   if (trimmed.length > MAX_MESSAGE_LENGTH) return 'too_long'
+  return null
+}
+
+export type AttachmentProblem = 'unsupported_type' | 'too_large' | 'empty_file'
+
+/** Why `file` cannot be attached (the server's rules: JPEG, PNG or WebP, at most 5 MB), or `null`. */
+export function attachmentProblem(file: { type: string, size: number }): AttachmentProblem | null {
+  if (!(ATTACHMENT_TYPES as readonly string[]).includes(file.type)) return 'unsupported_type'
+  if (file.size === 0) return 'empty_file'
+  if (file.size > MAX_ATTACHMENT_BYTES) return 'too_large'
+  return null
+}
+
+/** The attachment problem behind a server answer: 413 / 415, otherwise `null`. */
+export function attachmentProblemFromStatus(status: number | null): AttachmentProblem | null {
+  if (status === 413) return 'too_large'
+  if (status === 415) return 'unsupported_type'
   return null
 }
 
