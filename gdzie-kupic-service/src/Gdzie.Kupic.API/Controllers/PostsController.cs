@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Service.API.Controllers;
+namespace Gdzie.Kupic.Service.API.Controllers;
 
 using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Marketplace;
@@ -59,6 +59,32 @@ public class PostsController(IPostService postService) : ControllerBase
     public async Task<IActionResult> Get(Guid id, CancellationToken ct)
     {
         var result = await postService.GetAsync(User.GetUserId(), id, ct);
+
+        return result.IsSuccess ? Ok(PostMapping.ToDto(result.Value!)) : ToProblem(result);
+    }
+
+    [HttpGet("{id:guid}/status")]
+    [ProducesResponseType<Posts.StatusDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStatus(Guid id, CancellationToken ct)
+    {
+        var result = await postService.GetStatusAsync(User.GetUserId(), id, ct);
+        if (!result.IsSuccess) return ToProblem(result);
+
+        var s = result.Value!;
+
+        return Ok(new Posts.StatusDto(
+            s.NotificationDispatchStatus.ToString(), s.NotifiedCount, s.CheckingCount, s.HaveItCount,
+            s.MayHaveItCount, s.CanOrderItCount, s.CannotHelpCount, s.IsZeroMatch));
+    }
+
+    [HttpPost("{id:guid}/long-lived")]
+    [ProducesResponseType<Posts.PostWithCountDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> MakeLongLived(Guid id, CancellationToken ct)
+    {
+        var result = await postService.MakeLongLivedAsync(User.GetUserId(), id, ct);
 
         return result.IsSuccess ? Ok(PostMapping.ToDto(result.Value!)) : ToProblem(result);
     }

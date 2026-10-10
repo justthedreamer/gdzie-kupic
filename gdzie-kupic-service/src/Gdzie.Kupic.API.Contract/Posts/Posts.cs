@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Service.API.Contract.Posts;
+namespace Gdzie.Kupic.Service.API.Contract.Posts;
 
 public sealed class Posts
 {
@@ -11,6 +11,16 @@ public sealed class Posts
         string? Title,
         string? Description,
         DateTimeOffset? UrgentDeadline);
+
+    public sealed record StatusDto(
+        string NotificationDispatchStatus,
+        int NotifiedCount,
+        int CheckingCount,
+        int HaveItCount,
+        int MayHaveItCount,
+        int CanOrderItCount,
+        int CannotHelpCount,
+        bool IsZeroMatch);
 
     public sealed record NamedRef(Guid Id, string Name);
 
