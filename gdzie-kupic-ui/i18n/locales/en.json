@@ -108,6 +108,12 @@
     "your_response": "Your response",
     "no_response_yet": "You haven't responded to this request yet."
   },
+  "notification": {
+    "merchant_responded": "A merchant responded to your request",
+    "new_message": "You have a new message",
+    "open_request": "View request",
+    "open_chat": "Open conversation"
+  },
   "chat": {
     "title": "Messages",
     "inbox_label": "Your conversations",

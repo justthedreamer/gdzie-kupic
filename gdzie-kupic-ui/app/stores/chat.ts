@@ -174,6 +174,34 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  /**
+   * After a real-time event: re-reads the inbox when it has been loaded (merging it as the 30 s
+   * refresh does) and the unread count. An inbox that was never loaded is left to the page that
+   * shows it.
+   */
+  async function refreshInbox(): Promise<void> {
+    ensureOwner()
+    if (status.value === 'success') return refreshThreads()
+    return loadUnread()
+  }
+
+  /**
+   * Re-reads the summary of a loaded thread (its locked state, the status of its request) after
+   * `threadUpdated`. What is unread in an open thread stays the store's business (`markRead`).
+   */
+  async function refreshThread(threadId: string): Promise<void> {
+    const conversation = conversations.value[threadId]
+    if (!conversation || conversation.status !== 'success') return
+
+    try {
+      const thread = await useChatApi().thread(threadId)
+      conversation.thread = { ...thread, unreadCount: conversation.thread?.unreadCount ?? thread.unreadCount }
+    }
+    catch {
+      // Keeps the summary shown.
+    }
+  }
+
   function setThreadUnread(threadId: string, count: number) {
     const listed = threads.value.find(thread => thread.id === threadId)
     if (listed) listed.unreadCount = count
@@ -406,6 +434,8 @@ export const useChatStore = defineStore('chat', () => {
     refreshThreads,
     loadMoreThreads,
     loadUnread,
+    refreshInbox,
+    refreshThread,
     markRead,
     open,
     loadOlder,

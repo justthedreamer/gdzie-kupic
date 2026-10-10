@@ -47,7 +47,19 @@ async function open() {
 }
 onMounted(open)
 
-usePolling(() => (ready.value ? chatStore.poll(threadId.value) : undefined), POLL_INTERVAL_MS)
+// Real-time events bring new messages and the thread's state; polling only runs while the
+// connection is down. After a reconnect the thread catches up on what it missed.
+usePolling(() => (ready.value ? chatStore.poll(threadId.value) : undefined), POLL_INTERVAL_MS, { fallbackOnly: true })
+useRealtimeEvent('messageReceived', (event) => {
+  if (event.threadId === threadId.value) void chatStore.poll(threadId.value)
+})
+useRealtimeEvent('threadUpdated', (event) => {
+  if (event.threadId === threadId.value) void chatStore.refreshThread(threadId.value)
+})
+useRealtimeEvent('resync', () => {
+  void chatStore.poll(threadId.value)
+  void chatStore.refreshThread(threadId.value)
+})
 
 // ─── Scroll behaviour ───────────────────────────────────────────────────────
 // Older messages are prepended without moving what is on screen; a new message scrolls

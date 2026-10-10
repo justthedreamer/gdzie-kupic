@@ -31,7 +31,7 @@ function loadBadges() {
 }
 onMounted(loadBadges)
 watch(() => authStore.user?.id, loadBadges)
-usePolling(loadBadges, INBOX_REFRESH_MS)
+usePolling(loadBadges, INBOX_REFRESH_MS, { fallbackOnly: true })
 
 // A merchant's feed and its counters follow the server's events on every page of the shell
 // (the navigation badge counts the new requests); the feed and details pages only show the store.
@@ -40,6 +40,9 @@ if (props.role === 'Merchant') {
   useRealtimeEvent('postRemoved', event => void feedStore.postRemoved(event.postId))
   useRealtimeEvent('resync', () => void feedStore.refresh())
 }
+
+// The chat inbox, the unread badge and the notification toasts follow the server's events too.
+if (props.role !== 'Admin') useChatRealtime(loadBadges)
 
 // The user's own first name, for the user card (and the buyer greeting).
 onMounted(() => profileStore.load())
@@ -114,5 +117,6 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
     </div>
 
     <ShellBottomNav :config="config" :badges="badges" />
+    <UToaster />
   </div>
 </template>

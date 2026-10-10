@@ -72,6 +72,18 @@ export const INBOX_REFRESH_MS = 30_000
 export const threadPath = (threadId: string): string => `/chat/${threadId}`
 export const CHAT_PATH = '/chat'
 
+/** The thread shown at `path` (`/chat/<id>`), if any. */
+export function threadIdInPath(path: string): string | null {
+  const match = /^\/chat\/([^/?#]+)/.exec(path)
+  return match ? decodeURIComponent(match[1]!) : null
+}
+
+/** The request shown at `path` (`/requests/<id>` for a buyer, `/feed/<id>` for a merchant), if any. */
+export function postIdInPath(path: string): string | null {
+  const match = /^\/(?:requests|feed)\/([^/?#]+)/.exec(path)
+  return match ? decodeURIComponent(match[1]!) : null
+}
+
 export type MessageProblem = 'empty' | 'too_long'
 
 /**

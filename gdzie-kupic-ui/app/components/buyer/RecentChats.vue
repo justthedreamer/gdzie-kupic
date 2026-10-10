@@ -8,7 +8,7 @@ const LIMIT = 4
 const chatStore = useChatStore()
 
 onMounted(() => chatStore.refreshThreads())
-usePolling(() => chatStore.refreshThreads(), INBOX_REFRESH_MS)
+usePolling(() => chatStore.refreshThreads(), INBOX_REFRESH_MS, { fallbackOnly: true })
 
 const threads = computed(() => chatStore.threads.slice(0, LIMIT))
 const isLoading = computed(() => chatStore.status === 'idle' || chatStore.status === 'pending')

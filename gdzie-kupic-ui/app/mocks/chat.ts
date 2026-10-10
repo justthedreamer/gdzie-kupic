@@ -14,11 +14,13 @@ import {
 // endpoints (ascending message pages with `before` / `after`, unread counts, locked
 // threads), so the pages work the same on mock data and on the real API.
 //
-// Two hooks let a test or a manual session play the other side:
+// Three hooks let a test or a manual session play the other side:
 //   sessionStorage['gk:mock-chat-incoming']  = JSON [{ "threadId": "...", "body": "...", "attachmentUrl"?: "..." }]
 //     -> the counterpart's messages (with a picture, if given), delivered on the next request;
 //   sessionStorage['gk:mock-chat-fail-send'] = '1'
-//     -> sending fails with a 500 until the key is removed.
+//     -> sending fails with a 500 until the key is removed;
+//   sessionStorage['gk:mock-chat-lock']      = JSON ["threadId", ...]
+//     -> those threads are locked on the next request.
 
 const MINUTE = 60_000
 
@@ -173,9 +175,25 @@ export class MockChat {
     return thread
   }
 
+  /** Locks the threads a test queued (`gk:mock-chat-lock`), as the server does when a request ends. */
+  private applyLocks() {
+    try {
+      const ids: string[] = JSON.parse(sessionStorage.getItem('gk:mock-chat-lock') ?? '[]')
+      for (const id of ids) {
+        const thread = this.ensure(id)
+        if (thread) thread.isLocked = true
+      }
+    }
+    catch {
+      // A malformed hook is ignored.
+    }
+  }
+
   /** Delivers the counterpart's messages queued by a test (see the hooks above). */
   private deliverIncoming() {
     if (!import.meta.client) return
+
+    this.applyLocks()
 
     let queued: Array<{ threadId: string, body: string | null, attachmentUrl?: string }>
     try {
