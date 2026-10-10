@@ -198,6 +198,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `PostId` | `uuid` | FK → Posts |
 | `MerchantId` | `uuid` | FK → Merchants |
 | `IsLocked` | `bool` | Set when buyer or merchant is banned |
+| `BuyerLastReadAt` | `timestamptz` | Nullable; messages after it are unread for the buyer |
+| `MerchantLastReadAt` | `timestamptz` | Nullable; messages after it are unread for the merchant |
 | `CreatedAt` | `timestamptz` | |
 
 **Unique constraint**: `(PostId, MerchantId)` — one thread per merchant per post
