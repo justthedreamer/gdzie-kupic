@@ -18,7 +18,7 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | B | Merchant feed read endpoint (pagination, ordering, filters) | Decided |
 | C | Chat REST contract without real-time (threads, messages, unread, inbox) | Decided |
 | D | Image attachments | Decided |
-| E | Shared API contract (Service ↔ UI) | Open |
+| E | Shared API contract (Service ↔ UI) | Decided |
 | F | Ticket split and sizing | Open |
 
 **Gaps found in [planning.md](../docs/planning.md) for Phase 5** (to be covered by tickets): no merchant feed read endpoint (FR-FEED-1..4), no merchant-side post detail, no buyer-side list of responses and no response counts for the status endpoint, no thread list (inbox) with unread counts (FR-CHAT-8).
@@ -77,6 +77,54 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | D5 | Banning a user sets `IsLocked = true` on all their threads in the ban transaction. Unbanning recomputes the lock (`IsLocked` = any participant still banned). |
 | D6 | Attachments live as long as the thread; retention and clean-up are out of Phase 5. |
 | D7 | A simple bucket reachability health check is added with the attachments ticket. |
+
+### Area E — Shared API contract
+
+| # | Decision |
+|---|---|
+| E1 | The contract below is frozen in this file; DTOs live in `Gdzie.Kupic.API.Contract`; errors use `ProblemDetails` with a machine-readable `code` (`post_not_active`, `thread_locked`, `attachment_too_large`, `unsupported_attachment_type`). The UI branches on `code`, never on message text. |
+| E2 | Setting the response is an idempotent `PUT` (upsert, A1). |
+| E3 | `city` is dropped from the feed item (distance only). `buyerName` is the first name only. |
+| E4 | UI tickets start in parallel on mocks and switch to the real API through the existing `merchantFeedMock` / `buyerHomeMock` flags plus a new `chatMock`; each UI ticket depends on the matching Service endpoints only for the switch. |
+
+---
+
+## API contract (shared between Service and UI tickets)
+
+`ResponseState` = `CantHelp | MayHaveIt | HaveIt | CanOrderIt` (string). Unauthenticated: `401`. Wrong role: `403`.
+
+**Merchant** (role Merchant)
+
+| Method + route | Request | Response |
+|---|---|---|
+| `GET /api/merchant/feed?tab=new\|responded\|all&categoryId&maxDistanceKm&sort=newest\|nearest&cursor&limit` | `limit` default 20, max 50 | `200` `{ items: FeedItem[], nextCursor \| null }` |
+| `GET /api/merchant/feed/summary` | — | `200` `{ newCount, respondedCount }` |
+| `GET /api/merchant/feed/{postId}` | — | `200` `FeedItem & { threadId \| null }` · `404` |
+| `PUT /api/merchant/feed/{postId}/response` | `{ state }` | `200` `{ state, threadId \| null, updatedAt }` · `404` (not notified / banned) · `409` `post_not_active` |
+
+`FeedItem`: `{ id, title, description | null, category: { id, name }, tag: { id, name }, distanceKm, buyerRadiusKm | null, buyerName, isUrgent, urgentDeadline | null, expiresAt, status, createdAt, myResponse: ResponseState | null }`
+
+**Buyer** (role Buyer)
+
+| Method + route | Response |
+|---|---|
+| `GET /api/posts/{id}/status` (existing) | counts become real (A3) |
+| `GET /api/posts/{id}/responses` | `200` `ResponseItem[]` = `{ merchantId, shopName, state, threadId, unreadCount, updatedAt }`, positive responses only (C7) · `404` |
+
+**Chat** (both roles, authorised by thread participation)
+
+| Method + route | Request | Response |
+|---|---|---|
+| `GET /api/chat/threads?cursor&limit` | — | `200` `{ items: ThreadSummary[], nextCursor }` |
+| `GET /api/chat/threads/{id}` | — | `200` `ThreadSummary` · `404` |
+| `GET /api/chat/threads/{id}/messages?before\|after&limit` | `limit` default 30 | `200` `{ items: Message[], hasMore }` (ascending by time) |
+| `POST /api/chat/threads/{id}/messages` | `multipart/form-data`: `body?`, `image?` | `201` `Message` · `400` empty or too long · `403` `thread_locked` · `404` · `413` · `415` |
+| `POST /api/chat/threads/{id}/read` | — | `204` |
+| `GET /api/chat/unread-count` | — | `200` `{ count }` |
+
+`ThreadSummary`: `{ id, post: { id, title, status }, counterpart: { id, displayName }, lastMessage: { preview, createdAt, isMine } | null, unreadCount, isLocked, createdAt }` — `counterpart` is the shop name for a buyer and the buyer's first name for a merchant.
+
+`Message`: `{ id, threadId, senderId, isMine, body | null, attachmentUrl | null, createdAt }`
 
 ---
 
