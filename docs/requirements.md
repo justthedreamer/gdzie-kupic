@@ -132,7 +132,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
   3. Email — additional fallback; opt-in per user in account settings (disabled by default)
 - **FR-NOTIF-3** — Push notifications are sent for: new post matching merchant subscriptions, new chat message, merchant response received by buyer
 - **FR-NOTIF-4** — Invalid or expired push subscription endpoints are removed when delivery fails (`CleanPushSubscriptionsJob`)
-- **FR-NOTIF-5** — Email fallback uses SendGrid; opt-in is per user and stored in account settings
+- **FR-NOTIF-5** — Email fallback is sent through an `IEmailSender` abstraction; opt-in is per user (buyers and merchants alike) and stored in account settings. Until a production deployment exists the only implementation logs the message; the SendGrid implementation is deferred
 
 ---
 
