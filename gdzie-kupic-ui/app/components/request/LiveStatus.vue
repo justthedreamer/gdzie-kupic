@@ -5,9 +5,22 @@ const props = defineProps<{ request: LiveCounts }>()
 
 const breakdown = computed(() => statusBreakdown(props.request))
 
+// With the split (real status) the positive answers get a row each, otherwise one "have" row.
+const positiveRows = computed(() => {
+  const { positive, have } = breakdown.value
+
+  return positive
+    ? [
+        { key: 'have', dot: 'bg-success', count: positive.haveIt },
+        { key: 'may_have', dot: 'bg-success/60', count: positive.mayHaveIt },
+        { key: 'can_order', dot: 'bg-info', count: positive.canOrderIt },
+      ]
+    : [{ key: 'have', dot: 'bg-success', count: have }]
+})
+
 const rows = computed(() => [
   { key: 'checking', dot: 'bg-warning', count: breakdown.value.checking },
-  { key: 'have', dot: 'bg-success', count: breakdown.value.have },
+  ...positiveRows.value,
   { key: 'cannot', dot: 'bg-error', count: breakdown.value.cannot },
   { key: 'none', dot: 'bg-neutral-400', count: breakdown.value.none },
 ])
@@ -37,7 +50,7 @@ const rows = computed(() => [
     </p>
 
     <ul class="mt-4 space-y-2">
-      <li v-for="row in rows" :key="row.key" class="flex items-center gap-2 text-sm">
+      <li v-for="row in rows" :key="row.key" class="flex items-center gap-2 text-sm" data-testid="status-row" :data-key="row.key">
         <span class="size-2.5 rounded-full" :class="row.dot" aria-hidden="true" />
         <span class="flex-1 text-muted">{{ $t(`buyer_home.status.${row.key}`) }}</span>
         <span class="font-semibold text-highlighted">{{ row.count }}</span>

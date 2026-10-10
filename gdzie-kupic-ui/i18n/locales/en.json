@@ -164,6 +164,8 @@
     "status": {
       "checking": "Checking availability",
       "have": "Have it",
+      "may_have": "May have it",
+      "can_order": "Can order it",
       "cannot": "Can't help",
       "none": "No response yet"
     },
@@ -176,7 +178,8 @@
     },
     "chats": {
       "title": "Recent chats",
-      "empty": "No conversations yet."
+      "empty": "No conversations yet. They show up when a merchant answers your request.",
+      "view_all": "All conversations"
     },
     "empty_title": "You have no active requests",
     "empty_text": "Describe what you are looking for and nearby merchants will reply.",
@@ -206,6 +209,11 @@
     "new": "New request",
     "title": "Title",
     "description": "Description",
+    "response_state": {
+      "HaveIt": "Has it",
+      "MayHaveIt": "May have it",
+      "CanOrderIt": "Can order it"
+    },
     "location": "Location",
     "radius_km": "Radius (km)",
     "budget": "Budget",
@@ -296,10 +304,10 @@
       "no_matches": "No merchant nearby matches this request yet.",
       "status_error": "Could not load the status.",
       "status_stale": "Could not refresh the status. Showing the last known data.",
-      "responses_title": "Merchant responses",
-      "responses_placeholder": "Merchant responses will show up here.",
-      "chats_title": "Chats",
-      "chats_placeholder": "Chats with merchants will show up here.",
+      "responses_title": "Merchants who can help",
+      "responses_empty": "Nobody has confirmed they have it yet. Merchants who answer yes will show up here.",
+      "responses_error": "Could not load the merchant responses.",
+      "open_chat": "Message",
       "found": "I found it",
       "close": "Close request",
       "confirm_fulfil_title": "Mark as found?",

@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test'
 import { loginAs, mockApi } from './support/api-mock'
 import { hoursFromNow, postPath, sampleStatus, samplePost } from './support/posts'
 
-// Requests and their status come from the posts API (mocked here); merchant activity and
-// chats stay mocked by the app in dev (`buyerHomeMock`), which is what the dev server serves.
+// Requests and their status come from the posts API (mocked here); merchant activity
+// stays mocked by the app in dev (`buyerHomeMock`), and the recent chats come from the chat mock
+// (`chatMock`), which is what the dev server serves.
 
 const microphone = samplePost({ id: 'req-1', title: 'Szukam mikrofonu Shure SM7B', notifiedCount: 14, createdAt: hoursFromNow(-0.2) })
 const iphone = samplePost({ id: 'req-3', title: 'Szukam używanego iPhone 14 Pro', notifiedCount: 22, createdAt: hoursFromNow(-3) })

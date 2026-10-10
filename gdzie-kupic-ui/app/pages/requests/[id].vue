@@ -27,6 +27,11 @@ const notFound = computed(() => !post.value && parseApiError(loadError.value).st
 const isActive = computed(() => post.value ? isPostActive(post.value) : true)
 
 const { status, error: statusError, loaded: statusLoaded, refresh: refreshStatus } = usePostStatus(id, isActive)
+// The responses follow the status polling (same schedule, same stop).
+const { responses, error: responsesError, loaded: responsesLoaded, refresh: refreshResponses } = usePostResponses(
+  id,
+  () => (statusLoaded.value ? status.value : undefined),
+)
 
 const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }))
 const formatDate = (iso: string) => dateFormat.value.format(new Date(iso))
@@ -259,24 +264,12 @@ async function extend() {
         />
       </div>
 
-      <div class="grid gap-6 lg:grid-cols-2">
-        <UCard>
-          <template #header>
-            <h2 class="text-base font-semibold text-highlighted">
-              {{ $t('request.detail.responses_title') }}
-            </h2>
-          </template>
-          <p class="text-sm text-muted">{{ $t('request.detail.responses_placeholder') }}</p>
-        </UCard>
-        <UCard>
-          <template #header>
-            <h2 class="text-base font-semibold text-highlighted">
-              {{ $t('request.detail.chats_title') }}
-            </h2>
-          </template>
-          <p class="text-sm text-muted">{{ $t('request.detail.chats_placeholder') }}</p>
-        </UCard>
-      </div>
+      <RequestResponses
+        :responses="responses"
+        :loaded="responsesLoaded"
+        :failed="responsesError !== null"
+        @retry="refreshResponses()"
+      />
     </template>
 
     <RequestConfirmDialog

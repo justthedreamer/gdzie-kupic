@@ -41,8 +41,15 @@ describe('statusBreakdown', () => {
   it('derives "no response yet" so the buckets add up to the notified total', () => {
     const breakdown = statusBreakdown(request())
 
-    expect(breakdown).toEqual({ notified: 10, checking: 2, have: 3, cannot: 1, none: 4 })
+    expect(breakdown).toEqual({ notified: 10, checking: 2, have: 3, positive: null, cannot: 1, none: 4 })
     expect(breakdown.checking + breakdown.have + breakdown.cannot + breakdown.none).toBe(breakdown.notified)
+  })
+
+  it('hands over the split of the positive answers when the source has it', () => {
+    const breakdown = statusBreakdown({ ...request(), haveItCount: 1, mayHaveItCount: 1, canOrderItCount: 1 })
+
+    expect(breakdown.positive).toEqual({ haveIt: 1, mayHaveIt: 1, canOrderIt: 1 })
+    expect(breakdown.have).toBe(3)
   })
 
   it('never reports a negative "no response" count when responses exceed the notified total', () => {

@@ -2,6 +2,7 @@ import type {
   NotificationDispatchStatus,
   Post,
   PostListItem,
+  PostResponse,
   PostStatus,
   PostStatusInfo,
 } from '~/composables/api/usePostsApi'
@@ -74,7 +75,7 @@ export function dismissLongLived(storage: DismissStorage | null, postId: string)
   }
 }
 
-/** Live Status counts for a request. Responses stay 0 until Phase 5; "have" groups every positive answer. */
+/** Live Status counts for a request: "have" groups every positive answer, the three kinds come along for the detail view. */
 export function statusToLiveCounts(status: PostStatusInfo, isLive: boolean): LiveCounts {
   return {
     isLive,
@@ -82,7 +83,21 @@ export function statusToLiveCounts(status: PostStatusInfo, isLive: boolean): Liv
     checkingCount: status.checkingCount,
     haveCount: status.haveItCount + status.mayHaveItCount + status.canOrderItCount,
     cannotCount: status.cannotHelpCount,
+    haveItCount: status.haveItCount,
+    mayHaveItCount: status.mayHaveItCount,
+    canOrderItCount: status.canOrderItCount,
   }
+}
+
+/** The merchants that can help, the most recent answer first. */
+export function sortResponses(items: PostResponse[]): PostResponse[] {
+  return [...items].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+}
+
+export const RESPONSE_STATE_COLOR: Record<PostResponse['state'], 'success' | 'warning' | 'info'> = {
+  HaveIt: 'success',
+  MayHaveIt: 'warning',
+  CanOrderIt: 'info',
 }
 
 /** List item -> Buyer home summary. Response counts come from the status endpoint, so they start at 0. */
