@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Storage;
+namespace Gdzie.Kupic.Storage;
 
 using Gdzie.Kupic.Domain.Model.Marketplace;
 
@@ -12,6 +12,11 @@ public interface IPostStorage
 
     /// <summary>Tracked post for modification; call <see cref="SaveChangesAsync"/> afterwards.</summary>
     Task<Post?> FindBuyerPostForUpdateAsync(Guid postId, Guid buyerId, CancellationToken ct = default);
+
+    /// <summary>Tracked post regardless of owner, for background jobs.</summary>
+    Task<Post?> FindForUpdateAsync(Guid postId, CancellationToken ct = default);
+
+    Task<IReadOnlyDictionary<Guid, int>> GetNotifiedCountsAsync(IReadOnlyCollection<Guid> postIds, CancellationToken ct = default);
 
     Task<IReadOnlyList<Post>> ListBuyerPostsAsync(Guid buyerId, bool active, int limit, CancellationToken ct = default);
 

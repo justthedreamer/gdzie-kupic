@@ -8,6 +8,7 @@ using Gdzie.Kupic.Domain;
 using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Marketplace;
+using Gdzie.Kupic.Notifications;
 using Gdzie.Kupic.Storage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -98,6 +99,7 @@ try
         builder.Services.InstallStorageModule(builder.Configuration);
     }
     builder.Services.InstallHangfireModule(builder.Configuration);
+    builder.Services.InstallNotificationsModule();
     builder.Services.InstallLocationModule(builder.Configuration);
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();

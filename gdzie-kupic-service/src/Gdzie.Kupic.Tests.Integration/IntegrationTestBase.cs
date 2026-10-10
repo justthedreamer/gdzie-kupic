@@ -25,6 +25,8 @@ public abstract class IntegrationTestBase
         Client = IntegrationTestSetup.Factory.CreateClient();
         Geocoder = IntegrationTestSetup.Factory.Services.GetRequiredService<FakeGeocodingClient>();
         Geocoder.Reset();
+        IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingJobScheduler>().Reset();
+        IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingNotificationDispatcher>().Reset();
     }
 
     [TearDown]

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -18,9 +18,15 @@ public static class ModuleInstaller
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ExpirePostsJob>();
+        services.AddScoped<OutboxRelayJob>();
+        services.AddScoped<NotifyMerchantsJob>();
+        services.AddScoped<NotifyMerchantsBatchJob>();
 
         if (settings.JobsEnabled)
+        {
             services.AddHostedService<MarketplaceJobsRegistrar>();
+            services.AddHostedService<OutboxRelayHostedService>();
+        }
 
         return services;
     }

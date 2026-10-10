@@ -13,6 +13,9 @@ internal sealed class MerchantSubscriptionConfiguration : IEntityTypeConfigurati
 
         builder.HasIndex(s => s.MerchantId);
 
+        // Reverse lookup used when matching a post to merchants.
+        builder.HasIndex(s => new { s.CategoryId, s.TagId });
+
         builder.HasIndex(s => new { s.MerchantId, s.CategoryId, s.TagId }).IsUnique();
 
         // PostgreSQL treats NULLs as distinct, so category-level subscriptions need their own unique index.

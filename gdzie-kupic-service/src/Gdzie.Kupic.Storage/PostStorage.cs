@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Storage;
+namespace Gdzie.Kupic.Storage;
 
 using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Marketplace;
@@ -24,6 +24,17 @@ internal sealed class PostStorage(AppDbContext db) : IPostStorage
 
     public Task<Post?> FindBuyerPostForUpdateAsync(Guid postId, Guid buyerId, CancellationToken ct = default) =>
         db.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.BuyerId == buyerId, ct);
+
+    public Task<Post?> FindForUpdateAsync(Guid postId, CancellationToken ct = default) =>
+        db.Posts.SingleOrDefaultAsync(p => p.Id == postId, ct);
+
+    public async Task<IReadOnlyDictionary<Guid, int>> GetNotifiedCountsAsync(
+        IReadOnlyCollection<Guid> postIds, CancellationToken ct = default) =>
+        await db.PostNotifications
+            .Where(n => postIds.Contains(n.PostId))
+            .GroupBy(n => n.PostId)
+            .Select(g => new { PostId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.PostId, x => x.Count, ct);
 
     public async Task<IReadOnlyList<Post>> ListBuyerPostsAsync(Guid buyerId, bool active, int limit, CancellationToken ct = default)
     {

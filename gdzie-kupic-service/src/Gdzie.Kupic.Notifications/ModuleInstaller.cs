@@ -1,3 +1,13 @@
-﻿namespace Gdzie.Kupic.Notifications;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-public static class ModuleInstaller;
+namespace Gdzie.Kupic.Notifications;
+
+public static class ModuleInstaller
+{
+    public static IServiceCollection InstallNotificationsModule(this IServiceCollection services)
+    {
+        services.AddScoped<INotificationDispatcher, NoOpNotificationDispatcher>();
+
+        return services;
+    }
+}

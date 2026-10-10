@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Marketplace;
+namespace Gdzie.Kupic.Marketplace;
 
 public sealed class MarketplaceSettings
 {
@@ -13,6 +13,10 @@ public sealed class MarketplaceSettings
 
     /// <summary>Cron expression of the periodic post expiry job.</summary>
     public string ExpirePostsCron { get; set; } = "* * * * *";
+
+    public int OutboxRelayIntervalSeconds { get; set; } = 5;
+
+    public int OutboxRelayBatchSize { get; set; } = 100;
 
     public TimeSpan DefaultPostLifetime => TimeSpan.FromHours(DefaultPostLifetimeHours);
 
