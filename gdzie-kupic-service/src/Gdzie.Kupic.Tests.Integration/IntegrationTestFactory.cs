@@ -46,6 +46,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddScoped<IPostStorage, PostStorage>();
             services.AddScoped<IResponseStorage, ResponseStorage>();
             services.AddScoped<IChatStorage, ChatStorage>();
+            services.AddScoped<IFeedStorage, FeedStorage>();
             services.AddScoped<IMatchingStorage, MatchingStorage>();
             services.AddScoped<IOutboxStorage, OutboxStorage>();
             services.AddSingleton<RecordingJobScheduler>();
