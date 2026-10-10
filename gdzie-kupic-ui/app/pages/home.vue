@@ -26,6 +26,11 @@ const { data, status, error, refresh } = useAsyncData(
 )
 const isLoading = computed(() => (status.value === 'idle' || status.value === 'pending') && !data.value.requests.length)
 
+// A request that ended or was extended leaves or changes in the list: reload it on any of
+// the buyer's events (the status of the chosen request is handled by `usePostStatus`).
+useRealtimeEvent('postStatusChanged', () => void refresh())
+useRealtimeEvent('resync', () => void refresh())
+
 const requests = computed(() => sortNewestFirst(data.value.requests))
 
 const selectedId = ref<string | null>(null)

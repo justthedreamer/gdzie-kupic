@@ -26,6 +26,13 @@ const isLoading = computed(() => (loadState.value === 'idle' || loadState.value 
 const notFound = computed(() => !post.value && parseApiError(loadError.value).status === 404)
 const isActive = computed(() => post.value ? isPostActive(post.value) : true)
 
+// The post itself (status, deadline, long-lived) changes when it ends or is extended: reload it
+// when the server says so, not only the status and the responses (see `usePostStatus`).
+useRealtimeEvent('postStatusChanged', (event) => {
+  if (event.postId === id.value) void refresh()
+})
+useRealtimeEvent('resync', () => void refresh())
+
 const { status, error: statusError, loaded: statusLoaded, refresh: refreshStatus } = usePostStatus(id, isActive)
 // The responses follow the status polling (same schedule, same stop).
 const { responses, error: responsesError, loaded: responsesLoaded, refresh: refreshResponses } = usePostResponses(

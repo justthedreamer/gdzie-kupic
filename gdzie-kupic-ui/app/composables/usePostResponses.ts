@@ -2,9 +2,10 @@ import type { MaybeRefOrGetter } from 'vue'
 import type { PostResponse } from '~/composables/api/usePostsApi'
 
 /**
- * The merchants that can help with one request. It has no timer of its own: it follows
- * the status polling (`refreshOn` changes with every status refresh, see `usePostStatus`),
- * so the list refreshes on the same schedule and stops with it when the page is left or
+ * The merchants that can help with one request. It has no timer or subscription of its own:
+ * it follows the status (`refreshOn` changes with every status refresh, see `usePostStatus`),
+ * so the list refreshes on the same schedule and the same events (`postStatusChanged`,
+ * `resync`, the polling fallback) and stops with it when the page is left or
  * the request ends. A failed refresh keeps the last known list.
  */
 export function usePostResponses(

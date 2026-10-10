@@ -2,16 +2,20 @@ import type { MaybeRefOrGetter } from 'vue'
 import type { PostStatusInfo } from '~/composables/api/usePostsApi'
 
 /**
- * Status of one request, refreshed by polling (5 s while matching is pending,
- * 30 s afterwards) until real-time updates arrive in Phase 6. Polling stops when
- * the component unmounts, and while `enabled` is false (e.g. the request ended)
- * only the initial load runs. A failed refresh keeps the last known status.
+ * Status of one request. It refreshes when the server says it changed (`postStatusChanged`
+ * for this request) and after every (re)connect (`resync`); the counts always come from the
+ * status endpoint, never from the event. Polling (5 s while matching is pending, 30 s
+ * afterwards) is only the fallback and runs while the real-time connection is not up.
+ * Polling stops when the component unmounts, and while `enabled` is false (e.g. the
+ * request ended) only the initial load and the events run. A failed refresh keeps the
+ * last known status.
  */
 export function usePostStatus(
   id: MaybeRefOrGetter<string | null | undefined>,
   enabled: MaybeRefOrGetter<boolean> = true,
 ) {
   const api = usePostsApi()
+  const realtime = useRealtimeStore()
 
   const status = shallowRef<PostStatusInfo | null>(null)
   const error = shallowRef<unknown>(null)
@@ -29,7 +33,13 @@ export function usePostStatus(
     clear()
     if (!toValue(enabled) || !toValue(id)) return
 
-    timer = setTimeout(load, statusPollInterval(status.value?.notificationDispatchStatus))
+    timer = setTimeout(poll, statusPollInterval(status.value?.notificationDispatchStatus))
+  }
+
+  // While connected the events keep the status current: skip the request, keep the timer.
+  function poll() {
+    if (realtime.connected) schedule()
+    else void load()
   }
 
   async function load() {
@@ -68,6 +78,11 @@ export function usePostStatus(
     run++
     clear()
   })
+
+  useRealtimeEvent('postStatusChanged', (event) => {
+    if (event.postId === toValue(id)) void load()
+  })
+  useRealtimeEvent('resync', () => void load())
 
   watch(() => toValue(id), restart)
   watch(() => toValue(enabled), (on) => {
