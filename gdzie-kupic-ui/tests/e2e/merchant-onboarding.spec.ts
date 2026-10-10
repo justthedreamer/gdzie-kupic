@@ -127,7 +127,9 @@ test('onboarding happy path: business, location, subscriptions', async ({ page }
     { categoryId: 'c1' },
     { categoryId: 'c3', tagId: 't3' },
   ])
-  await expect(page.getByText('Sport › Rowery')).toBeVisible()
+  await expect(page.getByRole('switch', { name: 'Rowery' })).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByRole('switch', { name: 'Cała kategoria: Elektronika' })).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByRole('switch', { name: 'Cała kategoria: Sport' })).toHaveAttribute('aria-checked', 'false')
 })
 
 test('a failed subscription can be retried without re-entering data or re-creating the merchant', async ({ page }) => {
@@ -180,11 +182,12 @@ test('a failed subscription can be retried without re-entering data or re-creati
   expect(subscriptionCalls).toBe(2)
 })
 
-test('an onboarded merchant is not forced into onboarding and can remove subscriptions', async ({ page }) => {
+test('an onboarded merchant is not forced into onboarding and can toggle a tag subscription off and on', async ({ page }) => {
   const subscriptions = [
     { id: 's1', categoryId: 'c1', tagId: null },
     { id: 's2', categoryId: 'c3', tagId: 't3' },
   ]
+  const created: Array<Record<string, unknown> | null> = []
 
   await mockApi(page, [
     catalogueHandler,
@@ -198,6 +201,16 @@ test('an onboarded merchant is not forced into onboarding and can remove subscri
         return { status: 204 }
       },
     },
+    {
+      method: 'POST',
+      path: '/api/merchant/subscriptions',
+      respond: ({ body }) => {
+        created.push(body)
+        const sub = { id: 's9', categoryId: String(body?.categoryId), tagId: (body?.tagId as string | undefined) ?? null }
+        subscriptions.push(sub)
+        return { status: 201, json: sub }
+      },
+    },
   ])
 
   await loginAs(page, 'Merchant')
@@ -205,9 +218,113 @@ test('an onboarded merchant is not forced into onboarding and can remove subscri
   await openShellNav(page, 'Ustawienia sklepu')
 
   await expect(page).toHaveURL('/merchant/subscriptions')
-  await expect(page.getByText('Elektronika').first()).toBeVisible()
-  await expect(page.getByText('Sport › Rowery')).toBeVisible()
+  const rowery = page.getByRole('switch', { name: 'Rowery' })
+  await expect(rowery).toHaveAttribute('aria-checked', 'true')
 
-  await page.getByRole('button', { name: 'Usuń subskrypcję: Sport › Rowery' }).click()
-  await expect(page.getByText('Sport › Rowery')).toHaveCount(0)
+  // Tags of a subscribed category show as on.
+  await expect(page.getByRole('switch', { name: 'Smartfony' })).toHaveAttribute('aria-checked', 'true')
+  // Disabled catalogue items that are not subscribed cannot be switched on.
+  await expect(page.getByRole('switch', { name: /^Cała kategoria: Moda/ })).toBeDisabled()
+
+  await rowery.click()
+  await expect(rowery).toHaveAttribute('aria-checked', 'false')
+
+  await rowery.click()
+  await expect(rowery).toHaveAttribute('aria-checked', 'true')
+  expect(created).toEqual([{ categoryId: 'c3', tagId: 't3' }])
+})
+
+test('subscribing to a whole category drops its now-redundant tag subscriptions', async ({ page }) => {
+  const subscriptions = [{ id: 's2', categoryId: 'c3', tagId: 't3' }]
+
+  await mockApi(page, [
+    catalogueHandler,
+    { method: 'GET', path: '/api/merchant/me', respond: () => ({ json: profile }) },
+    { method: 'GET', path: '/api/merchant/subscriptions', respond: () => ({ json: subscriptions }) },
+    {
+      method: 'POST',
+      path: '/api/merchant/subscriptions',
+      respond: ({ body }) => {
+        const sub = { id: 's9', categoryId: String(body?.categoryId), tagId: null }
+        subscriptions.push(sub)
+        return { status: 201, json: sub }
+      },
+    },
+    {
+      method: 'DELETE',
+      path: '/api/merchant/subscriptions/s2',
+      respond: () => {
+        subscriptions.splice(0, 1)
+        return { status: 204 }
+      },
+    },
+  ])
+
+  await loginAs(page, 'Merchant')
+  await openShellNav(page, 'Ustawienia sklepu')
+
+  await page.getByRole('switch', { name: 'Cała kategoria: Sport' }).click()
+
+  await expect(page.getByRole('switch', { name: 'Cała kategoria: Sport' })).toHaveAttribute('aria-checked', 'true')
+  expect(subscriptions).toEqual([{ id: 's9', categoryId: 'c3', tagId: null }])
+})
+
+test('switching one tag off under a whole-category subscription keeps the other active tags', async ({ page }) => {
+  const subscriptions = [{ id: 's1', categoryId: 'c10', tagId: null as string | null }]
+  const created: Array<Record<string, unknown> | null> = []
+
+  await mockApi(page, [
+    {
+      method: 'GET',
+      path: '/api/catalogue/categories',
+      respond: () => ({
+        json: [{
+          id: 'c10',
+          name: 'Dom',
+          isDisabled: false,
+          tags: [
+            { id: 't10', name: 'Młotki', isDisabled: false },
+            { id: 't11', name: 'Wiertarki', isDisabled: false },
+            { id: 't12', name: 'Stare piły', isDisabled: true },
+          ],
+        }],
+      }),
+    },
+    { method: 'GET', path: '/api/merchant/me', respond: () => ({ json: profile }) },
+    { method: 'GET', path: '/api/merchant/subscriptions', respond: () => ({ json: subscriptions }) },
+    {
+      method: 'POST',
+      path: '/api/merchant/subscriptions',
+      respond: ({ body }) => {
+        created.push(body)
+        const sub = { id: `n${created.length}`, categoryId: String(body?.categoryId), tagId: (body?.tagId as string | undefined) ?? null }
+        subscriptions.push(sub)
+        return { status: 201, json: sub }
+      },
+    },
+    {
+      method: 'DELETE',
+      path: '/api/merchant/subscriptions/s1',
+      respond: () => {
+        subscriptions.splice(subscriptions.findIndex(s => s.id === 's1'), 1)
+        return { status: 204 }
+      },
+    },
+  ])
+
+  await loginAs(page, 'Merchant')
+  await openShellNav(page, 'Ustawienia sklepu')
+
+  const wiertarki = page.getByRole('switch', { name: 'Wiertarki' })
+  await expect(wiertarki).toHaveAttribute('aria-checked', 'true')
+  await expect(wiertarki).toBeEnabled()
+
+  await wiertarki.click()
+
+  await expect(wiertarki).toHaveAttribute('aria-checked', 'false')
+  await expect(page.getByRole('switch', { name: 'Młotki' })).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByRole('switch', { name: 'Cała kategoria: Dom' })).toHaveAttribute('aria-checked', 'false')
+  // Disabled tags are not carried over.
+  expect(created).toEqual([{ categoryId: 'c10', tagId: 't10' }])
+  expect(subscriptions).toEqual([{ id: 'n1', categoryId: 'c10', tagId: 't10' }])
 })

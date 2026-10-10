@@ -13,46 +13,95 @@ const merchantApi = useMerchantApi()
 const catalogueApi = useCatalogueApi()
 const merchantStore = useMerchantStore()
 
-const { data: subscriptions, status, error: loadError, refresh } = useAsyncData(
+const { data: subscriptions, status, error: subscriptionsError, refresh } = useAsyncData(
   'merchant-subscriptions',
   () => merchantApi.listSubscriptions(),
   { server: false, default: () => [] as MerchantSubscription[] },
 )
-const { data: categories, refresh: refreshCategories } = useAsyncData(
+const { data: categories, status: categoriesStatus, error: categoriesError, refresh: refreshCategories } = useAsyncData(
   'merchant-catalogue',
   () => catalogueApi.getCategories(),
   { server: false, default: () => [] as CatalogueCategory[] },
 )
-const isLoading = computed(() =>
-  (status.value === 'idle' || status.value === 'pending') && !subscriptions.value.length,
-)
+const loadError = computed(() => subscriptionsError.value ?? categoriesError.value)
 
-// Existing subscriptions may point at categories/tags that were disabled
-// later; the catalogue read endpoint includes those, so names always resolve.
-const rows = computed(() =>
-  subscriptions.value.map((subscription) => {
-    const category = categories.value.find(c => c.id === subscription.categoryId)
-    const tag = category?.tags.find(tg => tg.id === subscription.tagId)
+// Only the first load shows the loading state — a refresh after a toggle must
+// not unmount the toggles (and drop focus) while it is in flight.
+const loaded = ref(false)
+watch([status, categoriesStatus], ([s, c]) => {
+  const settled = (v: string) => v !== 'idle' && v !== 'pending'
+  if (settled(s) && settled(c)) loaded.value = true
+}, { immediate: true })
+const isLoading = computed(() => !loaded.value)
 
-    return {
-      id: subscription.id,
-      categoryName: category?.name ?? '—',
-      tagName: subscription.tagId ? (tag?.name ?? '—') : null,
-      isDisabled: !!category?.isDisabled || !!tag?.isDisabled,
-    }
-  }),
-)
+// The catalogue read endpoint also returns disabled categories/tags, so
+// existing subscriptions to them stay visible and can still be switched off.
 
-// ─── Remove ─────────────────────────────────────────────────────────────────
+// ─── Toggle ─────────────────────────────────────────────────────────────────
+// A toggle subscribes or unsubscribes immediately. While a change for a
+// category is in flight, all of that category's toggles are locked.
 const actionError = ref('')
-const removingId = ref<string | null>(null)
+const pending = ref<Record<string, string>>({}) // categoryId -> key of the toggle in flight
 
-async function remove(id: string) {
-  removingId.value = id
+function isSubscribed(categoryId: string, tagId: string | null) {
+  return !!findSubscription(subscriptions.value, categoryId, tagId)
+}
+
+function isPending(categoryId: string) {
+  return categoryId in pending.value
+}
+
+function isLoadingToggle(categoryId: string, tagId: string | null) {
+  return pending.value[categoryId] === subscriptionKey({ categoryId, tagId })
+}
+
+async function subscribeQuietly(target: SubscriptionTarget) {
+  try {
+    await merchantApi.subscribe(target)
+  }
+  catch (err) {
+    // Already subscribed (e.g. in another tab) — the goal is reached.
+    if (parseApiError(err).status !== 409) throw err
+  }
+}
+
+async function toggle(categoryId: string, tagId: string | null) {
+  if (isPending(categoryId)) return
+
+  pending.value = { ...pending.value, [categoryId]: subscriptionKey({ categoryId, tagId }) }
   actionError.value = ''
 
   try {
-    await merchantApi.unsubscribe(id)
+    const existing = findSubscription(subscriptions.value, categoryId, tagId)
+    const wholeCategory = findSubscription(subscriptions.value, categoryId, null)
+
+    if (tagId !== null && wholeCategory) {
+      // Switching one tag off under a whole-category subscription: replace the
+      // category with subscriptions to all of its other active tags. The new
+      // ones are added first so coverage never lapses.
+      const category = categories.value.find(c => c.id === categoryId)
+      const others = (category?.tags ?? []).filter(tg => tg.id !== tagId && !tg.isDisabled)
+
+      for (const tag of others) {
+        await subscribeQuietly({ categoryId, tagId: tag.id })
+      }
+      await merchantApi.unsubscribe(wholeCategory.id)
+      if (existing) await merchantApi.unsubscribe(existing.id)
+    }
+    else if (existing) {
+      await merchantApi.unsubscribe(existing.id)
+    }
+    else {
+      await subscribeQuietly({ categoryId, tagId })
+
+      // A whole-category subscription already covers every tag, so the
+      // individual tag subscriptions of that category become redundant.
+      if (tagId === null) {
+        for (const redundant of tagSubscriptionsOf(subscriptions.value, categoryId)) {
+          await merchantApi.unsubscribe(redundant.id)
+        }
+      }
+    }
   }
   catch (err) {
     actionError.value = resolveApiError(err, {
@@ -62,31 +111,9 @@ async function remove(id: string) {
     })
   }
   finally {
-    removingId.value = null
-  }
-
-  await refresh()
-}
-
-// ─── Add ────────────────────────────────────────────────────────────────────
-const selection = ref<SubscriptionTarget[]>([])
-const adding = ref(false)
-
-async function addSelected() {
-  if (!selection.value.length) return
-
-  adding.value = true
-  actionError.value = ''
-
-  try {
-    selection.value = await merchantApi.subscribeMany(selection.value)
-    if (selection.value.length) {
-      actionError.value = t('merchant.onboarding.errors.subscriptions')
-    }
     await refresh()
-  }
-  finally {
-    adding.value = false
+    const { [categoryId]: _done, ...rest } = pending.value
+    pending.value = rest
   }
 }
 </script>
@@ -139,47 +166,64 @@ async function addSelected() {
         </UButton>
       </div>
 
-      <p v-else-if="!rows.length" class="text-center py-6 text-muted">
-        {{ $t('merchant.subscriptions.empty') }}
+      <p v-else-if="!categories.length" class="text-center py-6 text-muted">
+        {{ $t('merchant.subscriptions.no_categories') }}
       </p>
 
-      <ul v-else class="space-y-2">
-        <li
-          v-for="row in rows"
-          :key="row.id"
-          class="flex items-center justify-between gap-4 rounded-lg border border-default bg-default p-4"
+      <div v-else class="space-y-3">
+        <fieldset
+          v-for="category in categories"
+          :key="category.id"
+          class="rounded-lg border border-default bg-default p-4 space-y-3"
         >
-          <div class="flex min-w-0 items-center gap-2">
-            <span class="font-medium truncate">
-              {{ row.categoryName }}<template v-if="row.tagName"> › {{ row.tagName }}</template>
-            </span>
-            <UBadge v-if="!row.tagName" variant="subtle" size="sm">
-              {{ $t('merchant.subscriptions.whole_category') }}
-            </UBadge>
-            <UBadge v-if="row.isDisabled" color="neutral" variant="subtle" size="sm">
-              {{ $t('catalogue.disabled') }}
-            </UBadge>
-          </div>
-          <UButton
-            color="error"
-            variant="ghost"
-            icon="i-heroicons-trash"
-            :loading="removingId === row.id"
-            :aria-label="`${$t('merchant.subscriptions.remove')}: ${row.categoryName}${row.tagName ? ` › ${row.tagName}` : ''}`"
-            @click="remove(row.id)"
-          />
-        </li>
-      </ul>
-    </section>
+          <legend class="sr-only">
+            {{ category.name }}
+          </legend>
 
-    <section v-if="categories.length" class="space-y-3">
-      <h2 class="text-lg font-semibold">
-        {{ $t('merchant.subscriptions.add_title') }}
-      </h2>
-      <SubscriptionPicker v-model="selection" :categories="categories" />
-      <UButton :loading="adding" :disabled="!selection.length" @click="addSelected">
-        {{ $t('merchant.subscriptions.add_selected') }}
-      </UButton>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex min-w-0 items-center gap-2">
+              <span class="font-semibold truncate">{{ category.name }}</span>
+              <UBadge v-if="category.isDisabled" color="neutral" variant="subtle" size="sm">
+                {{ $t('catalogue.category_disabled') }}
+              </UBadge>
+            </div>
+            <div class="flex shrink-0 items-center gap-3">
+              <span class="text-sm text-muted">{{ $t('merchant.subscriptions.whole_category') }}</span>
+              <USwitch
+                color="success"
+                :model-value="isSubscribed(category.id, null)"
+                :loading="isLoadingToggle(category.id, null)"
+                :disabled="isPending(category.id) || (category.isDisabled && !isSubscribed(category.id, null))"
+                :aria-label="`${$t('merchant.subscriptions.whole_category')}: ${category.name}`"
+                @update:model-value="toggle(category.id, null)"
+              />
+            </div>
+          </div>
+
+          <ul v-if="category.tags.length" class="divide-y divide-default border-t border-default">
+            <li
+              v-for="tag in category.tags"
+              :key="tag.id"
+              class="flex items-center justify-between gap-4 py-3"
+            >
+              <div class="flex min-w-0 items-center gap-2">
+                <span class="truncate">{{ tag.name }}</span>
+                <UBadge v-if="tag.isDisabled" color="neutral" variant="subtle" size="sm">
+                  {{ $t('catalogue.tag_disabled') }}
+                </UBadge>
+              </div>
+              <USwitch
+                color="success"
+                :model-value="isSubscribed(category.id, null) || isSubscribed(category.id, tag.id)"
+                :loading="isLoadingToggle(category.id, tag.id)"
+                :disabled="isPending(category.id) || ((category.isDisabled || tag.isDisabled) && !isSubscribed(category.id, tag.id))"
+                :aria-label="tag.name"
+                @update:model-value="toggle(category.id, tag.id)"
+              />
+            </li>
+          </ul>
+        </fieldset>
+      </div>
     </section>
   </div>
 </template>

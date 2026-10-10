@@ -406,16 +406,13 @@
       "title": "My business",
       "branch": "Branch",
       "section_title": "Subscriptions",
-      "description": "You receive requests from these categories and tags.",
-      "empty": "You have no subscriptions yet.",
+      "description": "Click a category or tag to turn its subscription on or off. You only receive requests from the items that are on.",
+      "no_categories": "No categories available.",
       "whole_category": "Whole category",
-      "remove": "Remove subscription",
-      "add_title": "Add subscriptions",
-      "add_selected": "Add selected",
       "load_error": "Could not load subscriptions.",
       "errors": {
         "not_found": "Subscription not found — it may have already been removed.",
-        "generic": "Could not remove the subscription. Please try again.",
+        "generic": "Could not change the subscription. Please try again.",
         "unavailable": "The service is currently unavailable. Please try again later."
       }
     }

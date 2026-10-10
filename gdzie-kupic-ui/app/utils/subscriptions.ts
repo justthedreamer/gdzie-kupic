@@ -36,3 +36,21 @@ export function toggleTag(selection: SubscriptionTarget[], categoryId: string, t
 export function subscriptionKey(target: SubscriptionTarget): string {
   return `${target.categoryId}:${target.tagId ?? '*'}`
 }
+
+interface StoredSubscription extends SubscriptionTarget {
+  id: string
+}
+
+/** Finds the stored subscription for a target (`tagId: null` = whole category). */
+export function findSubscription<T extends StoredSubscription>(
+  subscriptions: T[],
+  categoryId: string,
+  tagId: string | null,
+): T | undefined {
+  return subscriptions.find(s => s.categoryId === categoryId && s.tagId === tagId)
+}
+
+/** All tag-level subscriptions within one category. */
+export function tagSubscriptionsOf<T extends StoredSubscription>(subscriptions: T[], categoryId: string): T[] {
+  return subscriptions.filter(s => s.categoryId === categoryId && s.tagId !== null)
+}
