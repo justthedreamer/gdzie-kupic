@@ -65,6 +65,35 @@ internal sealed class PostService(
             : new PostResult<PostView>(new PostView(post, await NotifiedCountAsync(post.Id, ct)), PostError.None);
     }
 
+    public async Task<PostResult<PostStatusView>> GetStatusAsync(Guid buyerId, Guid postId, CancellationToken ct = default)
+    {
+        var post = await posts.FindBuyerPostAsync(postId, buyerId, ct);
+        if (post is null) return new PostResult<PostStatusView>(null, PostError.NotFound, PostNotFoundMessage);
+
+        var notified = await NotifiedCountAsync(post.Id, ct);
+
+        return new PostResult<PostStatusView>(
+            new PostStatusView(post.NotificationDispatchStatus, notified, 0, 0, 0, 0, 0), PostError.None);
+    }
+
+    public async Task<PostResult<PostView>> MakeLongLivedAsync(Guid buyerId, Guid postId, CancellationToken ct = default)
+    {
+        var post = await posts.FindBuyerPostForUpdateAsync(postId, buyerId, ct);
+        if (post is null) return new PostResult<PostView>(null, PostError.NotFound, PostNotFoundMessage);
+
+        var notified = await NotifiedCountAsync(post.Id, ct);
+
+        if (!post.TryMakeLongLived(clock.GetUtcNow(), notified, settings.Value.LongLivedPostLifetime))
+        {
+            return new PostResult<PostView>(null, PostError.Conflict,
+                "Only an active, non-urgent post with finished dispatch and no matching merchants can become long-lived.");
+        }
+
+        await posts.SaveChangesAsync(ct);
+
+        return await GetAsync(buyerId, postId, ct);
+    }
+
     public Task<PostResult<bool>> FulfilAsync(Guid buyerId, Guid postId, CancellationToken ct = default) =>
         EndAsync(buyerId, postId, (post, now) => post.TryFulfil(now), ct);
 
