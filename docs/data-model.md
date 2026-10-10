@@ -124,7 +124,7 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Id` | `uuid` | PK |
 | `BuyerId` | `uuid` | FK → Users |
 | `Coordinates` | `geography(Point, 4326)` | Copied from buyer's selected saved location at post creation time; not a FK |
-| `RadiusKm` | `decimal` | Buyer-defined search radius |
+| `RadiusKm` | `decimal` | Nullable; buyer-defined search radius, null = unlimited |
 | `CategoryId` | `uuid` | FK → Categories |
 | `TagId` | `uuid` | FK → Tags |
 | `Title` | `text` | |
@@ -221,9 +221,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Id` | `uuid` | PK |
 | `Type` | `text` | e.g. `NotifyMerchants`, `NotifyNewMerchant` |
 | `Payload` | `jsonb` | Job-specific data (e.g. `{ "postId": "..." }`) |
-| `Status` | `text` | `Pending`, `Processed` |
 | `CreatedAt` | `timestamptz` | |
-| `ProcessedAt` | `timestamptz` | Nullable |
+| `ProcessedAt` | `timestamptz` | Nullable; null = not yet processed (partial index on unprocessed entries) |
 
 ---
 
