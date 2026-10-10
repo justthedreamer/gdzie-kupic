@@ -15,7 +15,7 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | # | Area | Status |
 |---|---|---|
 | A | Response model and state machine (incl. status-panel counts) | Decided |
-| B | Merchant feed read endpoint (pagination, ordering, filters) | Open |
+| B | Merchant feed read endpoint (pagination, ordering, filters) | Decided |
 | C | Chat REST contract without real-time (threads, messages, unread, inbox) | Open |
 | D | Image attachments | Open |
 | E | Shared API contract (Service ↔ UI) | Open |
@@ -39,6 +39,19 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | A6 | The first positive response creates the `ChatThread` in the same transaction; creation is idempotent thanks to a unique `(PostId, MerchantId)`. |
 | A7 | A response carries only the state — no free-text note (communication goes through chat). |
 | A8 | The buyer is notified when a merchant responds ([FR-NOTIF-3](../docs/requirements.md)). Phase 5 has no real-time or push, so the response service only leaves a `TODO(P6)` at the commit point; the in-app event goes out in Phase 6 (`INotificationChannel`) and Web Push in Phase 7. Tracked in the Phase 6 task list in [planning.md](../docs/planning.md). |
+
+### Area B — Merchant feed read endpoint
+
+| # | Decision |
+|---|---|
+| B1 | The feed is built from the merchant's `PostNotifications` rows joined with `Posts` (`Active`, not expired) and `MerchantResponses` (FR-FEED-1). No re-running of matching on read. |
+| B2 | Cursor pagination: `{ items, nextCursor }`. Cursor is `(isUrgent, createdAt, id)` for `newest` and `(distanceKm, id)` for `nearest`. |
+| B3 | Filters and sorting are server-side: `tab` (`new` / `responded` / `all`), `categoryId`, `maxDistanceKm`, `sort` (`newest` / `nearest`). |
+| B4 | `GET /api/merchant/feed/summary` returns `{ newCount, respondedCount }` (tab badges and navigation badge). |
+| B5 | Each item carries `distanceKm` from the merchant branch (PostGIS) and `buyerRadiusKm`. `budget` is dropped from the contract and the UI feed model. |
+| B6 | `GET /api/merchant/feed/{postId}` returns the post and the merchant's own response; `404` if the merchant was not notified. Closed, fulfilled and expired posts remain viewable but cannot be answered. |
+| B7 | Default order (FR-FEED-3): urgent first, then newest first within each group. |
+| B8 | The buyer is shown by name only; `buyerVerified` is dropped from the contract (no verified status exists in the user model). |
 
 ---
 
