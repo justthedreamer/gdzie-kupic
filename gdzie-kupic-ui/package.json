@@ -15,7 +15,8 @@
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:real": "playwright test -c playwright.real.config.ts"
   },
   "dependencies": {
     "@nuxt/ui": "^4.9.0",
