@@ -239,6 +239,7 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Posts` | `Coordinates` | GIST | Spatial queries (if needed for future buyer proximity features) |
 | `Posts` | `Status, ExpiresAt` | B-tree | Expiry job scan |
 | `Posts` | `BuyerId` | B-tree | Buyer post history |
+| `Outbox` | `CreatedAt` where `ProcessedAt IS NULL` | Partial B-tree | Relay scan of unprocessed entries |
 | `PostNotifications` | `(PostId, MerchantId)` | Unique B-tree | Deduplication |
 | `MerchantResponses` | `(PostId, MerchantId)` | Unique B-tree | One response per merchant per post |
 | `ChatThreads` | `(PostId, MerchantId)` | Unique B-tree | One thread per merchant per post |
