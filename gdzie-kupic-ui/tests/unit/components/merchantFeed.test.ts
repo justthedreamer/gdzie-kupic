@@ -4,11 +4,19 @@ import { flushPromises } from '@vue/test-utils'
 import { useAuthStore } from '~/stores/auth'
 import { useMerchantFeedStore } from '~/stores/merchantFeed'
 import { buildMockMerchantFeed } from '~/mocks/merchantFeed'
+import { unansweredCount, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
 import FeedPage from '~/pages/feed/index.vue'
 import DetailsPage from '~/pages/feed/[id].vue'
 import ResponseButtons from '~/components/merchant/ResponseButtons.vue'
+import { serveFeed } from '../support/merchantFeedServer'
 
-const api = vi.hoisted(() => ({ load: vi.fn(), respond: vi.fn() }))
+const api = vi.hoisted(() => ({
+  list: vi.fn(),
+  summary: vi.fn(),
+  get: vi.fn(),
+  respond: vi.fn(),
+  categories: vi.fn(),
+}))
 
 mockNuxtImport('useMerchantFeedApi', () => () => api)
 
@@ -29,13 +37,44 @@ async function openDetails(id: string) {
 }
 
 const cards = (wrapper: Awaited<ReturnType<typeof openFeed>>) => wrapper.findAll('[data-testid="feed-card"]')
+const tabs = (wrapper: Awaited<ReturnType<typeof openFeed>>) => wrapper.findAll('[role="tab"]')
+
+async function selectTab(wrapper: Awaited<ReturnType<typeof openFeed>>, index: number) {
+  await tabs(wrapper)[index]!.trigger('mousedown', { button: 0 })
+  await flushPromises()
+}
+
+/** A fake backend over the mock data; a response changes what it serves afterwards. */
+let feed: MerchantFeedRequest[]
+
+function arrange(pageSize = 4) {
+  feed = buildMockMerchantFeed()
+  api.list.mockReset().mockImplementation(serveFeed(() => feed, pageSize))
+  api.summary.mockReset().mockImplementation(async () => {
+    const newCount = unansweredCount(feed)
+    return { newCount, respondedCount: feed.length - newCount }
+  })
+  api.get.mockReset().mockImplementation(async (id: string) => {
+    const found = feed.find(item => item.id === id)
+    if (!found) throw Object.assign(new Error('Not found'), { statusCode: 404 })
+    return { ...found, threadId: null }
+  })
+  api.respond.mockReset().mockImplementation(async (id: string, state: MerchantResponse) => {
+    feed = feed.map(item => (item.id === id ? { ...item, myResponse: state } : item))
+    return { state, threadId: null, updatedAt: '2026-01-01T00:00:00Z' }
+  })
+  api.categories.mockReset().mockResolvedValue([])
+}
+
+function signIn() {
+  useAuthStore().setAuth('t', { id: 'm1', email: 'merchant-test@gdziekupic.local', role: 'Merchant' })
+  useMerchantFeedStore().reset()
+}
 
 describe('Merchant feed page', () => {
   beforeEach(() => {
-    useAuthStore().setAuth('t', { id: 'm1', email: 'merchant-test@gdziekupic.local', role: 'Merchant' })
-    useMerchantFeedStore().reset()
-    api.load.mockReset().mockImplementation(async () => buildMockMerchantFeed())
-    api.respond.mockReset().mockResolvedValue(undefined)
+    signIn()
+    arrange()
   })
 
   afterEach(() => {
@@ -46,28 +85,40 @@ describe('Merchant feed page', () => {
     const wrapper = await openFeed()
     const titles = cards(wrapper).map(card => card.find('h2').text())
 
+    expect(api.list).toHaveBeenCalledWith(expect.objectContaining({ tab: 'new', sort: 'newest' }), null)
     expect(titles[0]).toBe('Pilnie: kable XLR 5 m, 4 sztuki')
     expect(titles).not.toContain('Wzmacniacz gitarowy lampowy do 50 W')
-    expect(cards(wrapper).length).toBe(useMerchantFeedStore().requests.filter(r => r.myResponse === null).length)
+    expect(cards(wrapper)).toHaveLength(unansweredCount(feed))
   })
 
-  it('shows the number of unanswered requests on the New tab', async () => {
+  it('shows the counts from the summary on the tabs', async () => {
     const wrapper = await openFeed()
-    const unanswered = useMerchantFeedStore().requests.filter(r => r.myResponse === null).length
+    const newCount = unansweredCount(feed)
 
-    expect(wrapper.find('[role="tab"]').text()).toContain(String(unanswered))
+    expect(tabs(wrapper)[0]!.text()).toContain(String(newCount))
+    expect(tabs(wrapper)[1]!.text()).toContain(String(feed.length - newCount))
+    expect(tabs(wrapper)[2]!.text()).toContain(String(feed.length))
+  })
+
+  it('shows the distance, the buyer\'s first name and the urgency on a card, but no budget or city', async () => {
+    const wrapper = await openFeed()
+    const urgent = cards(wrapper)[0]!
+
+    expect(urgent.text()).toContain('Urgent')
+    expect(urgent.text()).toContain('7.8 km from you')
+    expect(urgent.text()).toContain('Piotr')
+    expect(urgent.text()).not.toMatch(/Kraków|PLN|zł|Verified/)
   })
 
   it('lists answered requests on the Responded tab with their response', async () => {
     const wrapper = await openFeed()
 
-    await wrapper.findAll('[role="tab"]')[1]!.trigger('mousedown', { button: 0 })
-    await flushPromises()
+    await selectTab(wrapper, 1)
 
-    const text = wrapper.text()
-    expect(cards(wrapper).length).toBe(3)
-    expect(text).toContain('Wzmacniacz gitarowy lampowy do 50 W')
-    expect(text).not.toContain('Pilnie: kable XLR')
+    expect(api.list).toHaveBeenLastCalledWith(expect.objectContaining({ tab: 'responded' }), null)
+    expect(cards(wrapper)).toHaveLength(3)
+    expect(wrapper.text()).toContain('Wzmacniacz gitarowy lampowy do 50 W')
+    expect(wrapper.text()).not.toContain('Pilnie: kable XLR')
   })
 
   it('moves a card from New to Responded after a response button is clicked', async () => {
@@ -80,16 +131,49 @@ describe('Merchant feed page', () => {
     await flushPromises()
 
     expect(api.respond).toHaveBeenCalledTimes(1)
-    expect(cards(wrapper).length).toBe(before - 1)
+    expect(cards(wrapper)).toHaveLength(before - 1)
     expect(wrapper.text()).not.toContain(title)
+    expect(tabs(wrapper)[0]!.text()).toContain(String(before - 1))
 
-    await wrapper.findAll('[role="tab"]')[1]!.trigger('mousedown', { button: 0 })
-    await flushPromises()
+    await selectTab(wrapper, 1)
     expect(wrapper.text()).toContain(title)
   })
 
+  it('loads the next page with the "Show more" button until the feed ends', async () => {
+    const wrapper = await openFeed()
+    await selectTab(wrapper, 2)
+    expect(cards(wrapper)).toHaveLength(4)
+
+    await wrapper.find('[data-testid="feed-more"] button').trigger('click')
+    await flushPromises()
+
+    expect(cards(wrapper)).toHaveLength(feed.length)
+    expect(wrapper.find('[data-testid="feed-more"]').exists()).toBe(false)
+    expect(api.list).toHaveBeenLastCalledWith(expect.objectContaining({ tab: 'all' }), '4')
+  })
+
+  it('offers a retry when loading the next page fails and keeps the list', async () => {
+    const wrapper = await openFeed()
+    await selectTab(wrapper, 2)
+    const serve = serveFeed(() => feed, 4)
+    api.list.mockRejectedValueOnce(new Error('boom'))
+
+    await wrapper.find('[data-testid="feed-more"] button').trigger('click')
+    await flushPromises()
+
+    expect(cards(wrapper)).toHaveLength(4)
+    expect(wrapper.find('[data-testid="feed-more"]').text()).toContain('Could not load more requests.')
+
+    api.list.mockImplementation(serve)
+    await wrapper.find('[data-testid="feed-more"] button').trigger('click')
+    await flushPromises()
+
+    expect(cards(wrapper)).toHaveLength(feed.length)
+  })
+
   it('shows an empty state when there are no requests at all', async () => {
-    api.load.mockResolvedValue([])
+    api.list.mockResolvedValue({ items: [], nextCursor: null })
+    api.summary.mockResolvedValue({ newCount: 0, respondedCount: 0 })
     const wrapper = await openFeed()
 
     expect(wrapper.text()).toContain('No requests in your area yet')
@@ -98,40 +182,86 @@ describe('Merchant feed page', () => {
   })
 
   it('explains an empty tab', async () => {
-    api.load.mockImplementation(async () => buildMockMerchantFeed().map(r => ({ ...r, myResponse: 'HaveIt' as const })))
+    api.list.mockResolvedValue({ items: [], nextCursor: null })
+    api.summary.mockResolvedValue({ newCount: 0, respondedCount: 3 })
     const wrapper = await openFeed()
 
     expect(wrapper.text()).toContain('No new requests.')
   })
 
   it('offers a retry when loading fails', async () => {
-    api.load.mockRejectedValue(new Error('boom'))
+    api.list.mockRejectedValue(new Error('boom'))
     const wrapper = await openFeed()
 
     expect(wrapper.text()).toContain('Could not load requests.')
     expect(wrapper.text()).toContain('Try again')
   })
+
+  it('says so and refreshes the list when the post can no longer be answered (409)', async () => {
+    const wrapper = await openFeed()
+    api.respond.mockRejectedValue(Object.assign(new Error('Conflict'), { statusCode: 409 }))
+    const lists = api.list.mock.calls.length
+
+    await cards(wrapper)[0]!.find('button[aria-label="I have it"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('no longer open for responses')
+    expect(api.list.mock.calls.length).toBeGreaterThan(lists)
+  })
+
+  it('shows an error and keeps the card when saving the response fails', async () => {
+    const wrapper = await openFeed()
+    const before = cards(wrapper).length
+    api.respond.mockRejectedValue(new Error('boom'))
+
+    await cards(wrapper)[0]!.find('button[aria-label="I have it"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Could not save your response')
+    expect(cards(wrapper)).toHaveLength(before)
+  })
 })
 
 describe('Merchant request details page', () => {
   beforeEach(() => {
-    useAuthStore().setAuth('t', { id: 'm1', email: 'merchant-test@gdziekupic.local', role: 'Merchant' })
-    useMerchantFeedStore().reset()
-    api.load.mockReset().mockImplementation(async () => buildMockMerchantFeed())
-    api.respond.mockReset().mockResolvedValue(undefined)
+    signIn()
+    arrange()
   })
 
   afterEach(() => {
     mounted.splice(0).forEach(wrapper => wrapper.unmount())
   })
 
-  it('shows the request, its Live Status and an empty response', async () => {
+  it('shows the request, the buyer\'s first name and an empty response', async () => {
     const wrapper = await openDetails('feed-1')
 
     expect(wrapper.find('h1').text()).toBe('Szukam mikrofonu Shure SM7B')
-    expect(wrapper.find('[data-testid="notified-count"]').text()).toBe('20')
+    expect(wrapper.text()).toContain('Marek')
+    expect(wrapper.text()).toContain('3.2 km from you')
+    expect(wrapper.text()).toContain('radius 15 km')
     expect(wrapper.find('[data-testid="current-response"]').text()).toContain('haven\'t responded')
-    expect(wrapper.text()).toContain('Verified')
+    expect(wrapper.text()).not.toMatch(/Verified|PLN|Kraków/)
+  })
+
+  it('fetches a request that is not on a loaded page (a direct link)', async () => {
+    await openDetails('feed-7')
+
+    expect(api.get).toHaveBeenCalledWith('feed-7')
+  })
+
+  it('uses the loaded feed instead of fetching again', async () => {
+    await useMerchantFeedStore().load()
+    const wrapper = await openDetails('feed-1')
+
+    expect(api.get).not.toHaveBeenCalled()
+    expect(wrapper.find('h1').text()).toBe('Szukam mikrofonu Shure SM7B')
+  })
+
+  it('explains an unlimited buyer radius', async () => {
+    feed = feed.map(item => (item.id === 'feed-1' ? { ...item, buyerRadiusKm: null } : item))
+    const wrapper = await openDetails('feed-1')
+
+    expect(wrapper.text()).toContain('no radius limit')
   })
 
   it('records a response and shows it', async () => {
@@ -143,6 +273,28 @@ describe('Merchant request details page', () => {
     expect(api.respond).toHaveBeenCalledWith('feed-1', 'MayHaveIt')
     expect(wrapper.find('[data-testid="current-response"]').text()).toBe('I may have it')
     expect(wrapper.find('button[aria-label="I may have it"]').attributes('aria-pressed')).toBe('true')
+  })
+
+  it('keeps showing a request answered from the loaded New tab', async () => {
+    await useMerchantFeedStore().load()
+    const wrapper = await openDetails('feed-1')
+
+    await wrapper.find('button[aria-label="I have it"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('h1').text()).toBe('Szukam mikrofonu Shure SM7B')
+    expect(wrapper.find('[data-testid="current-response"]').text()).toBe('I have it')
+  })
+
+  it('shows an error when the response cannot be saved', async () => {
+    const wrapper = await openDetails('feed-1')
+    api.respond.mockRejectedValue(Object.assign(new Error('Conflict'), { statusCode: 409 }))
+
+    await wrapper.find('button[aria-label="I may have it"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('no longer open for responses')
+    expect(wrapper.find('[data-testid="current-response"]').text()).toContain('haven\'t responded')
   })
 
   it('shows the existing response of an answered request', async () => {

@@ -1,8 +1,18 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { loginAs, mockApi, openShellNav } from './support/api-mock'
 
 // The Merchant feed runs on mocked data in dev (`merchantFeedMock`), which is
-// what the dev server used by Playwright serves.
+// what the dev server used by Playwright serves. The mock emulates the server:
+// filters, sorting, cursor paging (4 per page) and the summary.
+
+/** Scrolls to the end of the page until the infinite scroll has loaded everything. */
+async function scrollToTheEnd(page: Page, total: number) {
+  const cards = page.getByTestId('feed-card')
+  await expect(async () => {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await expect(cards).toHaveCount(total, { timeout: 1000 })
+  }).toPass()
+}
 
 test.describe('Merchant requests feed', () => {
   test.beforeEach(async ({ page }) => {
@@ -63,7 +73,6 @@ test.describe('Merchant requests feed', () => {
     await page.getByRole('link', { name: title }).click()
     await expect(page).toHaveURL('/feed/feed-2')
     await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
-    await expect(page.getByTestId('notified-count')).toHaveText('12')
     await expect(page.getByTestId('current-response')).toContainText('Nie odpowiedziano')
 
     await page.getByRole('button', { name: 'Mogę mieć' }).click()
@@ -86,12 +95,59 @@ test.describe('Merchant requests feed', () => {
 
     await page.getByRole('tab', { name: /Wszystkie/ }).click()
     const cards = page.getByTestId('feed-card')
-    await expect(cards).toHaveCount(7)
+    await scrollToTheEnd(page, 7)
 
     await page.getByRole('combobox', { name: 'Maksymalna odległość' }).click()
     await page.getByRole('option', { name: '5 km', exact: true }).click()
 
     await expect(cards).toHaveCount(3)
+  })
+
+  test('the category filter is applied by the server', async ({ page, isMobile }) => {
+    if (isMobile) await page.getByRole('button', { name: 'Filtry' }).click()
+
+    await page.getByRole('tab', { name: /Wszystkie/ }).click()
+    await page.getByRole('combobox', { name: 'Kategoria' }).click()
+    await page.getByRole('option', { name: 'Instrumenty', exact: true }).click()
+
+    const cards = page.getByTestId('feed-card')
+    await expect(cards).toHaveCount(2)
+    await expect(cards.getByText('Instrumenty')).toHaveCount(2)
+  })
+
+  test('sorting by distance reloads the list from the nearest request', async ({ page, isMobile }) => {
+    if (isMobile) await page.getByRole('button', { name: 'Filtry' }).click()
+
+    await page.getByRole('tab', { name: /Wszystkie/ }).click()
+    const cards = page.getByTestId('feed-card')
+    await expect(cards.first().getByRole('heading')).toHaveText('Pilnie: kable XLR 5 m, 4 sztuki')
+
+    await page.getByRole('combobox', { name: 'Sortowanie' }).click()
+    await page.getByRole('option', { name: 'Najbliższe' }).click()
+
+    await expect(cards.first().getByRole('heading')).toHaveText('Wzmacniacz gitarowy lampowy do 50 W')
+  })
+
+  test('scrolling to the end loads the next page, without duplicates, and then stops', async ({ page }) => {
+    await page.getByRole('tab', { name: /Wszystkie/ }).click()
+    const cards = page.getByTestId('feed-card')
+    await expect(cards.first()).toBeVisible()
+
+    await scrollToTheEnd(page, 7)
+
+    await expect(page.getByTestId('feed-more')).toHaveCount(0)
+    const titles = await cards.getByRole('heading').allTextContents()
+    expect(new Set(titles).size).toBe(7)
+  })
+
+  test('the navigation badge counts the new requests and follows responses', async ({ page }) => {
+    const badge = page.locator('[data-testid="nav-badge"]:visible')
+    await expect(badge).toHaveText('4')
+
+    await page.getByTestId('feed-card').first().getByRole('button', { name: 'Mam to' }).click()
+
+    await expect(badge).toHaveText('3')
+    await expect(page.getByRole('tab', { name: /Odpowiedziane/ })).toContainText('4')
   })
 
   test('shop settings opens the subscriptions page in the same shell', async ({ page }) => {

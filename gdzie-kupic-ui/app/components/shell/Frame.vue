@@ -9,8 +9,21 @@ const props = defineProps<{ role: UserRole, config: ShellConfig }>()
 
 const authStore = useAuthStore()
 const merchantStore = useMerchantStore()
+const feedStore = useMerchantFeedStore()
 const route = useRoute()
 const { t } = useI18n()
+
+// Counts shown on navigation items, by item key. A merchant sees the number of
+// new requests on "Requests" on every page of the shell.
+const badges = computed<Record<string, number>>(() =>
+  props.role === 'Merchant' ? { feed: feedStore.summary?.newCount ?? 0 } : {},
+)
+
+function loadBadges() {
+  if (props.role === 'Merchant' && authStore.user) void feedStore.loadSummary()
+}
+onMounted(loadBadges)
+watch(() => authStore.user?.id, loadBadges)
 
 // Signing out (or switching to another role) while on one of the role's pages
 // leaves the shell: to the new role's home page, or to the landing page.
@@ -47,7 +60,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
 
 <template>
   <div class="min-h-screen bg-muted lg:flex">
-    <ShellSidebar :config="config" :name="name" :email="email" />
+    <ShellSidebar :config="config" :name="name" :email="email" :badges="badges" />
 
     <div class="flex min-w-0 flex-1 flex-col">
       <header class="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-default bg-default px-3 lg:hidden">
@@ -78,6 +91,6 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
       </main>
     </div>
 
-    <ShellBottomNav :config="config" />
+    <ShellBottomNav :config="config" :badges="badges" />
   </div>
 </template>

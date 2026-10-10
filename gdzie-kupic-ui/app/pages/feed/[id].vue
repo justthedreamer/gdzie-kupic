@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatBudget, formatDistance, RESPONSE_COLOR } from '~/utils/merchantFeed'
+import { formatDistance, RESPONSE_COLOR, type MerchantResponse } from '~/utils/merchantFeed'
 
 definePageMeta({
   layout: 'merchant',
@@ -12,27 +12,56 @@ const route = useRoute()
 const { t, locale } = useI18n()
 
 const feedStore = useMerchantFeedStore()
-onMounted(() => feedStore.load())
 
-const request = computed(() => feedStore.byId(String(route.params.id)))
-const isLoading = computed(() => feedStore.status === 'idle' || feedStore.status === 'pending')
+const id = computed(() => String(route.params.id))
+const request = computed(() => feedStore.byId(id.value))
+const isLoading = ref(true)
+
+// A direct link may point at a request that is not on a loaded page of the feed.
+onMounted(async () => {
+  if (!feedStore.byId(id.value)) {
+    try {
+      await feedStore.fetchOne(id.value)
+    }
+    catch {
+      // Shown as "not found".
+    }
+  }
+  isLoading.value = false
+})
 
 useSeoMeta({ title: () => `${request.value?.title ?? t('merchant_feed.details_title')} | Gdzie Kupić` })
 
-const posted = computed(() => (request.value ? formatRelativeTime(request.value.postedAt, locale.value) : ''))
-const budget = computed(() =>
-  request.value?.budget == null ? null : formatBudget(request.value.budget, locale.value),
-)
-const category = computed(() => [request.value?.category, request.value?.tag].filter(Boolean).join(' · '))
+const posted = computed(() => (request.value ? formatRelativeTime(request.value.createdAt, locale.value) : ''))
+const category = computed(() => (request.value ? `${request.value.category.name} · ${request.value.tag.name}` : ''))
 const deadline = computed(() =>
-  request.value?.deadline
-    ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(request.value.deadline))
+  request.value?.urgentDeadline
+    ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(request.value.urgentDeadline))
     : null,
 )
+const radius = computed(() =>
+  request.value?.buyerRadiusKm == null
+    ? t('merchant_feed.buyer_radius_unlimited')
+    : t('merchant_feed.buyer_radius', { km: request.value.buyerRadiusKm }),
+)
+
+const respondError = ref('')
+
+async function respond(state: MerchantResponse) {
+  respondError.value = ''
+  try {
+    await feedStore.respond(id.value, state)
+  }
+  catch (err) {
+    respondError.value = parseApiError(err).status === 409
+      ? t('merchant_feed.respond_conflict')
+      : t('merchant_feed.respond_error')
+  }
+}
 </script>
 
 <template>
-  <div class="container mx-auto max-w-5xl space-y-6 px-4 py-6 lg:py-8">
+  <div class="container mx-auto max-w-3xl space-y-6 px-4 py-6 lg:py-8">
     <UButton
       to="/feed"
       class="-ml-2.5 hidden lg:inline-flex"
@@ -60,8 +89,7 @@ const deadline = computed(() =>
     </UCard>
 
     <template v-else>
-      <div class="grid gap-6 lg:grid-cols-3">
-        <div class="space-y-6 lg:col-span-2">
+      <div class="space-y-6">
           <UCard>
             <div class="flex flex-wrap items-start justify-between gap-3">
               <h1 class="text-xl font-semibold text-highlighted">
@@ -85,11 +113,8 @@ const deadline = computed(() =>
                 <dt class="text-muted">
                   {{ $t('merchant_feed.buyer') }}
                 </dt>
-                <dd class="flex items-center gap-1.5 font-medium text-highlighted">
+                <dd class="font-medium text-highlighted">
                   {{ request.buyerName }}
-                  <UBadge v-if="request.buyerVerified" color="success" variant="subtle" size="sm" icon="i-heroicons-check-badge">
-                    {{ $t('merchant_feed.verified') }}
-                  </UBadge>
                 </dd>
               </div>
               <div>
@@ -97,15 +122,7 @@ const deadline = computed(() =>
                   {{ $t('request.location') }}
                 </dt>
                 <dd class="font-medium text-highlighted">
-                  {{ request.city }} · {{ $t('merchant_feed.km_from_you', { distance: formatDistance(request.distanceKm, locale) }) }}
-                </dd>
-              </div>
-              <div v-if="budget">
-                <dt class="text-muted">
-                  {{ $t('request.budget') }}
-                </dt>
-                <dd class="font-medium text-highlighted">
-                  {{ $t('merchant_feed.budget_up_to', { amount: budget }) }}
+                  {{ $t('merchant_feed.km_from_you', { distance: formatDistance(request.distanceKm, locale) }) }}
                 </dd>
               </div>
               <div>
@@ -152,14 +169,14 @@ const deadline = computed(() =>
             <div
               class="relative mt-3 flex h-40 items-center justify-center overflow-hidden rounded-lg bg-elevated"
               role="img"
-              :aria-label="$t('merchant_feed.buyer_location_aria', { city: request.city, km: request.buyerRadiusKm })"
+              :aria-label="$t('merchant_feed.buyer_location_aria', { radius })"
             >
               <span class="absolute size-32 rounded-full border-2 border-primary/20 bg-primary/5" />
               <span class="absolute size-20 rounded-full border-2 border-primary/40 bg-primary/10" />
               <UIcon name="i-heroicons-map-pin" class="relative size-8 text-primary" />
             </div>
             <p class="mt-2 text-sm text-muted">
-              {{ request.city }} · {{ $t('merchant_feed.buyer_radius', { km: request.buyerRadiusKm }) }}
+              {{ radius }}
             </p>
           </UCard>
 
@@ -170,11 +187,16 @@ const deadline = computed(() =>
             <p class="mt-1 mb-3 text-sm text-muted" data-testid="current-response">
               {{ request.myResponse ? $t(`merchant_feed.response.${request.myResponse}`) : $t('merchant_feed.no_response_yet') }}
             </p>
-            <MerchantResponseButtons :current="request.myResponse" @select="feedStore.respond(request.id, $event)" />
+            <MerchantResponseButtons :current="request.myResponse" @select="respond" />
+            <UAlert
+              v-if="respondError"
+              class="mt-3"
+              color="error"
+              variant="subtle"
+              icon="i-heroicons-exclamation-circle"
+              :description="respondError"
+            />
           </UCard>
-        </div>
-
-        <RequestLiveStatus :request="request" />
       </div>
     </template>
   </div>

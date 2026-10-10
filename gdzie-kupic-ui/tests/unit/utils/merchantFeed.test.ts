@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
   defaultFeedFilters,
+  FEED_PAGE_SIZE,
   feedCategories,
+  feedQuery,
   filterFeed,
-  formatBudget,
   formatDistance,
   MERCHANT_RESPONSES,
   RESPONSE_COLOR,
@@ -18,22 +19,16 @@ function request(overrides: Partial<MerchantFeedRequest> = {}): MerchantFeedRequ
     id: 'r1',
     title: 'Mikrofon',
     description: null,
-    city: 'Kraków',
+    category: { id: 'c-audio', name: 'Audio' },
+    tag: { id: 't-mic', name: 'Mikrofon' },
     distanceKm: 5,
     buyerRadiusKm: 15,
-    budget: null,
-    category: 'Audio',
-    tag: null,
     buyerName: 'Marek',
-    buyerVerified: true,
-    postedAt: '2026-01-01T10:00:00Z',
     isUrgent: false,
-    deadline: null,
-    isLive: true,
-    notifiedCount: 10,
-    checkingCount: 1,
-    haveCount: 1,
-    cannotCount: 1,
+    urgentDeadline: null,
+    expiresAt: '2026-01-03T10:00:00Z',
+    status: 'Active',
+    createdAt: '2026-01-01T10:00:00Z',
     myResponse: null,
     ...overrides,
   }
@@ -63,15 +58,16 @@ describe('filterFeed tabs', () => {
 })
 
 describe('filterFeed filters', () => {
+  const audio = { id: 'c-audio', name: 'Audio' }
+  const instruments = { id: 'c-instruments', name: 'Instrumenty' }
   const list = [
-    request({ id: 'a', category: 'Audio', distanceKm: 3 }),
-    request({ id: 'b', category: 'Instrumenty', distanceKm: 12 }),
-    request({ id: 'c', category: 'Audio', distanceKm: 30 }),
+    request({ id: 'a', category: audio, distanceKm: 3 }),
+    request({ id: 'b', category: instruments, distanceKm: 12 }),
+    request({ id: 'c', category: audio, distanceKm: 30 }),
   ]
 
-  it('filters by category', () => {
-    expect(ids(filterFeed(list, filters({ category: 'Audio' })))).toEqual(expect.arrayContaining(['a', 'c']))
-    expect(filterFeed(list, filters({ category: 'Audio' }))).toHaveLength(2)
+  it('filters by category id', () => {
+    expect(ids(filterFeed(list, filters({ categoryId: 'c-audio' }))).sort()).toEqual(['a', 'c'])
   })
 
   it('filters by maximum distance, inclusive', () => {
@@ -79,7 +75,7 @@ describe('filterFeed filters', () => {
   })
 
   it('combines category and distance', () => {
-    expect(ids(filterFeed(list, filters({ category: 'Audio', maxDistanceKm: 10 })))).toEqual(['a'])
+    expect(ids(filterFeed(list, filters({ categoryId: 'c-audio', maxDistanceKm: 10 })))).toEqual(['a'])
   })
 
   it('does not mutate the input', () => {
@@ -91,10 +87,10 @@ describe('filterFeed filters', () => {
 
 describe('filterFeed ordering', () => {
   const list = [
-    request({ id: 'old', postedAt: '2026-01-01T08:00:00Z', distanceKm: 1 }),
-    request({ id: 'new', postedAt: '2026-01-01T12:00:00Z', distanceKm: 9 }),
-    request({ id: 'urgent-old', postedAt: '2026-01-01T06:00:00Z', distanceKm: 20, isUrgent: true }),
-    request({ id: 'urgent-new', postedAt: '2026-01-01T09:00:00Z', distanceKm: 15, isUrgent: true }),
+    request({ id: 'old', createdAt: '2026-01-01T08:00:00Z', distanceKm: 1 }),
+    request({ id: 'new', createdAt: '2026-01-01T12:00:00Z', distanceKm: 9 }),
+    request({ id: 'urgent-old', createdAt: '2026-01-01T06:00:00Z', distanceKm: 20, isUrgent: true }),
+    request({ id: 'urgent-new', createdAt: '2026-01-01T09:00:00Z', distanceKm: 15, isUrgent: true }),
   ]
 
   it('"newest" lists urgent requests first, then newest first within each group (FR-FEED-3)', () => {
@@ -121,14 +117,35 @@ describe('feed helpers', () => {
   })
 
   it('lists distinct categories alphabetically', () => {
-    const list = [request({ category: 'Instrumenty' }), request({ category: 'Audio' }), request({ category: 'Audio' })]
-    expect(feedCategories(list)).toEqual(['Audio', 'Instrumenty'])
+    const list = [
+      request({ category: { id: 'c-instruments', name: 'Instrumenty' } }),
+      request({ category: { id: 'c-audio', name: 'Audio' } }),
+      request({ category: { id: 'c-audio', name: 'Audio' } }),
+    ]
+    expect(feedCategories(list)).toEqual([{ id: 'c-audio', name: 'Audio' }, { id: 'c-instruments', name: 'Instrumenty' }])
   })
 
-  it('formats distance and budget per locale', () => {
+  it('formats distance per locale', () => {
     expect(formatDistance(5.24, 'en')).toBe('5.2 km')
     expect(formatDistance(5.24, 'pl')).toBe('5,2 km')
-    expect(formatBudget(2000, 'en')).toContain('2,000')
+  })
+})
+
+describe('feedQuery', () => {
+  it('sends the filters, the cursor and the default page size', () => {
+    const query = feedQuery(filters({ tab: 'responded', categoryId: 'c1', maxDistanceKm: 10, sort: 'nearest' }), 'abc')
+
+    expect(query).toEqual({ tab: 'responded', sort: 'nearest', categoryId: 'c1', maxDistanceKm: 10, cursor: 'abc', limit: FEED_PAGE_SIZE })
+  })
+
+  it('leaves out the filters and the cursor that are not set', () => {
+    const query = feedQuery(defaultFeedFilters(), null)
+
+    expect(query).toEqual({ tab: 'new', sort: 'newest', categoryId: undefined, maxDistanceKm: undefined, cursor: undefined, limit: FEED_PAGE_SIZE })
+  })
+
+  it('passes a custom limit', () => {
+    expect(feedQuery(defaultFeedFilters(), null, 50).limit).toBe(50)
   })
 })
 
@@ -143,13 +160,20 @@ describe('buildMockMerchantFeed', () => {
 
   it('contains an urgent request with a deadline in the future', () => {
     const urgent = feed.find(item => item.isUrgent)
-    expect(urgent?.deadline).not.toBeNull()
-    expect(Date.parse(urgent!.deadline!)).toBeGreaterThan(Date.parse('2026-03-01T12:00:00Z'))
+    expect(urgent?.urgentDeadline).not.toBeNull()
+    expect(Date.parse(urgent!.urgentDeadline!)).toBeGreaterThan(Date.parse('2026-03-01T12:00:00Z'))
   })
 
-  it('keeps the status counts within the notified total', () => {
+  it('has the shape of the API contract: no budget, city, verification or live counts', () => {
     for (const item of feed) {
-      expect(item.checkingCount + item.haveCount + item.cannotCount).toBeLessThanOrEqual(item.notifiedCount)
+      expect(Object.keys(item).sort()).toEqual([
+        'buyerName', 'buyerRadiusKm', 'category', 'createdAt', 'description', 'distanceKm', 'expiresAt', 'id',
+        'isUrgent', 'myResponse', 'status', 'tag', 'title', 'urgentDeadline',
+      ])
     }
+  })
+
+  it('spans more than one mock page so infinite scroll can be tried', () => {
+    expect(feed.length).toBeGreaterThan(4)
   })
 })

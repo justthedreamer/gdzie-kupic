@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatBudget, formatDistance, RESPONSE_COLOR, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
+import { formatDistance, RESPONSE_COLOR, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
 
 const props = defineProps<{ request: MerchantFeedRequest }>()
 
@@ -7,9 +7,8 @@ defineEmits<{ respond: [state: MerchantResponse] }>()
 
 const { locale } = useI18n()
 
-const posted = computed(() => formatRelativeTime(props.request.postedAt, locale.value))
-const budget = computed(() => (props.request.budget === null ? null : formatBudget(props.request.budget, locale.value)))
-const category = computed(() => [props.request.category, props.request.tag].filter(Boolean).join(' · '))
+const posted = computed(() => formatRelativeTime(props.request.createdAt, locale.value))
+const category = computed(() => `${props.request.category.name} · ${props.request.tag.name}`)
 </script>
 
 <template>
@@ -47,11 +46,11 @@ const category = computed(() => [props.request.category, props.request.tag].filt
     <ul class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
       <li class="flex items-center gap-1.5">
         <UIcon name="i-heroicons-map-pin" class="size-4 shrink-0" />
-        {{ request.city }} · {{ formatDistance(request.distanceKm, locale) }}
+        {{ $t('merchant_feed.km_from_you', { distance: formatDistance(request.distanceKm, locale) }) }}
       </li>
-      <li v-if="budget" class="flex items-center gap-1.5">
-        <UIcon name="i-heroicons-banknotes" class="size-4 shrink-0" />
-        {{ $t('merchant_feed.budget_up_to', { amount: budget }) }}
+      <li class="flex items-center gap-1.5">
+        <UIcon name="i-heroicons-user" class="size-4 shrink-0" />
+        {{ request.buyerName }}
       </li>
       <li class="flex items-center gap-1.5">
         <UIcon name="i-heroicons-tag" class="size-4 shrink-0" />

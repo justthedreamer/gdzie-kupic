@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import type { ShellConfig, ShellNavItem } from '~/utils/shellNav'
 
-const props = defineProps<{ config: ShellConfig }>()
+const props = defineProps<{
+  config: ShellConfig
+  /** Counts to show on tabs, by item key. */
+  badges?: Record<string, number>
+}>()
 
 const { t } = useI18n()
 
 function tabs(items: ShellNavItem[]) {
-  return items.map(item => ({ ...item, text: t(item.label) }))
+  return items.map(item => ({ ...item, text: t(item.label), badge: props.badges?.[item.key] ?? 0 }))
 }
 
 const groups = computed(() => [tabs(props.config.tabsLeft), tabs(props.config.tabsRight)])
@@ -40,7 +44,19 @@ const columns = computed(() =>
             class="flex flex-col items-center gap-0.5 py-2 text-xs text-muted"
             active-class="font-semibold text-primary"
           >
-            <UIcon :name="item.icon" class="size-6" />
+            <span class="relative">
+              <UIcon :name="item.icon" class="size-6" />
+              <UBadge
+                v-if="item.badge"
+                color="primary"
+                variant="solid"
+                size="sm"
+                class="absolute -top-1.5 left-3 px-1 py-0 text-[10px]"
+                data-testid="nav-badge"
+              >
+                {{ formatBadgeCount(item.badge) }}
+              </UBadge>
+            </span>
             {{ item.text }}
           </NuxtLink>
 

@@ -6,6 +6,8 @@ const props = defineProps<{
   /** Display name in the user card. */
   name: string
   email: string
+  /** Counts to show next to navigation items, by item key. */
+  badges?: Record<string, number>
 }>()
 
 const authStore = useAuthStore()
@@ -31,7 +33,16 @@ const { t } = useI18n()
             active-class="bg-primary/10 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
           >
             <UIcon :name="item.icon" class="size-5 shrink-0" />
-            {{ t(item.label) }}
+            <span class="flex-1">{{ t(item.label) }}</span>
+            <UBadge
+              v-if="props.badges?.[item.key]"
+              color="primary"
+              variant="solid"
+              size="sm"
+              data-testid="nav-badge"
+            >
+              {{ formatBadgeCount(props.badges[item.key]!) }}
+            </UBadge>
           </NuxtLink>
 
           <button
