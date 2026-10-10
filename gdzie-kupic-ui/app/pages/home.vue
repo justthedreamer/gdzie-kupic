@@ -74,6 +74,8 @@ const name = computed(() => profileStore.firstName ?? displayNameFromEmail(authS
       </UButton>
     </div>
 
+    <PushBanner />
+
     <p v-if="isLoading" class="text-sm text-muted">
       {{ $t('common.loading') }}
     </p>

@@ -238,6 +238,41 @@
     "load_error": "Nie udało się wczytać konta.",
     "save_error": "Nie udało się zapisać zmian. Spróbuj ponownie."
   },
+  "notification_settings": {
+    "title": "Powiadomienia",
+    "subtitle": "Wybierz, jak aplikacja ma Cię informować.",
+    "push": {
+      "title": "Powiadomienia push",
+      "label": "Powiadomienia na tym urządzeniu",
+      "hint": {
+        "loading": "Sprawdzamy, czy to urządzenie obsługuje powiadomienia…",
+        "unsupported": "Ta przeglądarka nie obsługuje powiadomień push. Na iPhonie i iPadzie dodaj aplikację do ekranu głównego i otwórz ją stamtąd.",
+        "not_configured": "Powiadomienia push nie są teraz dostępne. Spróbuj później.",
+        "blocked": "Powiadomienia są zablokowane w przeglądarce. Zezwól na nie w ustawieniach witryny (ikona kłódki obok adresu), a potem odśwież stronę.",
+        "off": "Dostaniesz powiadomienie, nawet gdy aplikacja jest zamknięta. Przeglądarka poprosi o zgodę.",
+        "on": "To urządzenie dostaje powiadomienia."
+      },
+      "error": "Nie udało się zmienić ustawienia. Spróbuj ponownie."
+    },
+    "email": {
+      "title": "E-mail",
+      "label": "Powiadomienia e-mail",
+      "buyer_hint": "Gdy Cię nie ma w aplikacji, wyślemy e-mail o odpowiedziach sprzedawców i nowych wiadomościach.",
+      "merchant_hint": "Będziemy wysyłać regularne podsumowanie nieprzetworzonych zapytań.",
+      "load_error": "Nie udało się wczytać ustawień e-mail.",
+      "save_error": "Nie udało się zapisać ustawienia. Spróbuj ponownie."
+    }
+  },
+  "push_banner": {
+    "title": "Włącz powiadomienia",
+    "text": "Dostaniesz powiadomienie o nowych zapytaniach, odpowiedziach i wiadomościach, nawet gdy aplikacja jest zamknięta.",
+    "enable": "Włącz",
+    "settings": "Więcej opcji",
+    "dismiss": "Zamknij",
+    "error": "Nie udało się włączyć powiadomień.",
+    "install_title": "Powiadomienia na telefonie",
+    "install_text": "Aby dostawać powiadomienia, dodaj aplikację do ekranu głównego (w przeglądarce: Udostępnij, potem „Do ekranu początkowego”) i otwórz ją stamtąd."
+  },
   "request": {
     "new": "Nowe zapytanie",
     "title": "Tytuł",
