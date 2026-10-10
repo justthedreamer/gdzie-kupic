@@ -1,17 +1,15 @@
 import type { UserRole } from '~/stores/auth'
 
-// Data model behind the Buyer home page. Posts, merchant responses and chats
-// get real endpoints in Phases 4–5; until then `useBuyerHomeApi` supplies it.
+// Data model behind the Buyer home page. Requests come from the posts API;
+// merchant activity and chats get real endpoints in Phase 5 and are supplied
+// by `useBuyerHomeApi` until then.
 
 export interface BuyerRequestSummary {
   id: string
   title: string
   description: string | null
-  city: string
-  country: string
-  radiusKm: number
-  /** Optional, in PLN. */
-  budget: number | null
+  /** `null` = unlimited radius. */
+  radiusKm: number | null
   category: string
   tag: string | null
   /** ISO timestamp. */
@@ -47,12 +45,11 @@ export interface BuyerChatPreview {
 }
 
 export interface BuyerHomeData {
-  requests: BuyerRequestSummary[]
   activity: BuyerActivityEvent[]
   chats: BuyerChatPreview[]
 }
 
-export const emptyBuyerHome = (): BuyerHomeData => ({ requests: [], activity: [], chats: [] })
+export const emptyBuyerHome = (): BuyerHomeData => ({ activity: [], chats: [] })
 
 /** Where a user lands after signing in, and what `/` redirects to. */
 export function homePathFor(role: UserRole | undefined): string {

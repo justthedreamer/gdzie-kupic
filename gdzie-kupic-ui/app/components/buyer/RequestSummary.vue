@@ -6,11 +6,6 @@ const props = defineProps<{ request: BuyerRequestSummary }>()
 const { locale } = useI18n()
 
 const posted = computed(() => formatRelativeTime(props.request.postedAt, locale.value))
-const budget = computed(() =>
-  props.request.budget === null
-    ? null
-    : new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 }).format(props.request.budget),
-)
 const category = computed(() => [props.request.category, props.request.tag].filter(Boolean).join(' · '))
 </script>
 
@@ -31,19 +26,11 @@ const category = computed(() => [props.request.category, props.request.tag].filt
 
     <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
       <div class="flex items-center gap-2">
-        <UIcon name="i-heroicons-map-pin" class="size-5 shrink-0 text-muted" />
-        <dt class="sr-only">{{ $t('request.location') }}</dt>
-        <dd>{{ request.city }}, {{ request.country }}</dd>
-      </div>
-      <div class="flex items-center gap-2">
         <UIcon name="i-heroicons-arrows-pointing-out" class="size-5 shrink-0 text-muted" />
         <dt class="sr-only">{{ $t('request.radius_km') }}</dt>
-        <dd>{{ $t('buyer_home.radius', { km: request.radiusKm }) }}</dd>
-      </div>
-      <div v-if="budget" class="flex items-center gap-2">
-        <UIcon name="i-heroicons-banknotes" class="size-5 shrink-0 text-muted" />
-        <dt class="sr-only">{{ $t('request.budget') }}</dt>
-        <dd>{{ budget }}</dd>
+        <dd>
+          {{ request.radiusKm === null ? $t('request.form.radius_unlimited') : $t('buyer_home.radius', { km: request.radiusKm }) }}
+        </dd>
       </div>
       <div class="flex items-center gap-2">
         <UIcon name="i-heroicons-tag" class="size-5 shrink-0 text-muted" />
@@ -53,12 +40,11 @@ const category = computed(() => [props.request.category, props.request.tag].filt
     </dl>
 
     <template #footer>
-      <!-- The request detail page arrives in Phase 4; until then the action is inert. -->
       <UButton
+        :to="`/requests/${request.id}`"
         variant="link"
         color="primary"
         trailing-icon="i-heroicons-arrow-right"
-        disabled
         class="px-0"
       >
         {{ $t('buyer_home.view_details') }}
@@ -66,3 +52,4 @@ const category = computed(() => [props.request.category, props.request.tag].filt
     </template>
   </UCard>
 </template>
+

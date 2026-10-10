@@ -210,6 +210,70 @@
         "generic": "Nie udało się opublikować zapytania. Spróbuj ponownie.",
         "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
       }
+    },
+    "status": {
+      "Active": "Aktywne",
+      "Fulfilled": "Znalezione",
+      "Closed": "Zamknięte",
+      "Expired": "Wygasłe"
+    },
+    "badge": {
+      "urgent": "Pilne",
+      "long_lived": "Długo aktywne"
+    },
+    "remaining": {
+      "left": "Zostało {time}",
+      "day": "{n} d",
+      "hour": "{n} godz.",
+      "minute": "{n} min",
+      "elapsed": "Czas minął"
+    },
+    "list": {
+      "title": "Zapytania",
+      "tab_active": "Aktywne",
+      "tab_ended": "Zakończone",
+      "notified": "Powiadomiono: {count}",
+      "empty_active_title": "Nie masz aktywnych zapytań",
+      "empty_active_text": "Opisz, czego szukasz, a pobliscy sprzedawcy odpiszą.",
+      "empty_ended_title": "Brak zakończonych zapytań",
+      "empty_ended_text": "Tutaj zobaczysz zapytania, które znalazłeś, zamknąłeś lub które wygasły.",
+      "load_error": "Nie udało się wczytać zapytań."
+    },
+    "detail": {
+      "back": "Wszystkie zapytania",
+      "details": "Szczegóły",
+      "created": "Dodano",
+      "expires": "Wygasa",
+      "ended": "Zakończono",
+      "time_left": "Pozostały czas",
+      "load_error": "Nie udało się wczytać zapytania.",
+      "not_found_title": "Nie znaleziono zapytania",
+      "not_found_text": "Zapytanie nie istnieje albo nie należy do Twojego konta.",
+      "matching": "Szukamy sprzedawców…",
+      "matching_hint": "Powiadamiamy sprzedawców w okolicy. Status odświeża się automatycznie.",
+      "no_matches": "Żaden sprzedawca w okolicy jeszcze nie pasuje do tego zapytania.",
+      "status_error": "Nie udało się wczytać statusu.",
+      "status_stale": "Nie udało się odświeżyć statusu. Pokazujemy ostatnie dane.",
+      "responses_title": "Odpowiedzi sprzedawców",
+      "responses_placeholder": "Odpowiedzi sprzedawców pojawią się tutaj.",
+      "chats_title": "Rozmowy",
+      "chats_placeholder": "Rozmowy ze sprzedawcami pojawią się tutaj.",
+      "found": "Znalazłem",
+      "close": "Zamknij zapytanie",
+      "confirm_fulfil_title": "Oznaczyć jako znalezione?",
+      "confirm_fulfil_text": "Zapytanie przejdzie do zakończonych, a sprzedawcy przestaną je widzieć.",
+      "confirm_fulfil_button": "Tak, znalazłem",
+      "confirm_close_title": "Zamknąć zapytanie?",
+      "confirm_close_text": "Zapytanie przejdzie do zakończonych, a sprzedawcy przestaną je widzieć.",
+      "confirm_close_button": "Zamknij zapytanie",
+      "conflict": "To zapytanie nie jest już aktywne, więc nie można go zmienić.",
+      "action_error": "Nie udało się wykonać akcji. Spróbuj ponownie.",
+      "action_unavailable": "Nie można połączyć się z serwerem. Spróbuj ponownie.",
+      "long_lived_title": "Nikogo jeszcze nie znaleźliśmy",
+      "long_lived_text": "Żaden sprzedawca w okolicy nie został powiadomiony. Możesz przedłużyć zapytanie do {days} dni — powiadomimy sprzedawców, którzy pojawią się później.",
+      "long_lived_accept": "Przedłuż do {days} dni",
+      "long_lived_dismiss": "Nie teraz",
+      "long_lived_conflict": "Tego zapytania nie można już przedłużyć."
     }
   },
   "location_input": {
@@ -232,15 +296,14 @@
     "address_found": "Znaleziono adres: {address}",
     "errors": {
       "denied": "Odmówiono dostępu do lokalizacji. Zezwól na dostęp w ustawieniach przeglądarki lub wpisz adres ręcznie.",
-      "unavailable": "Nie można określić Twojej lokalizacji. Wpisz adres ręcznie.",
+      "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później.",
       "timeout": "Upłynął limit czasu pobierania lokalizacji. Spróbuj ponownie lub wpisz adres ręcznie.",
       "unknown": "Nie udało się pobrać lokalizacji. Wpisz adres ręcznie.",
       "unsupported": "Twoja przeglądarka nie obsługuje geolokalizacji. Wpisz adres ręcznie.",
       "postal_code": "Podaj kod pocztowy w formacie 00-000.",
       "address_not_found": "Nie znaleziono podanego adresu. Sprawdź dane i spróbuj ponownie.",
       "geocoding": "Nie udało się wyszukać adresu. Spróbuj ponownie później lub użyj wykrywania automatycznego.",
-      "generic": "Nie udało się wyszukać adresu. Spróbuj ponownie.",
-      "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
+      "generic": "Nie udało się wyszukać adresu. Spróbuj ponownie."
     }
   },
   "catalogue": {

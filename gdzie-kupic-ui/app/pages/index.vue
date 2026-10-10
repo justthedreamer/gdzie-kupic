@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { PostListItem } from '~/composables/api/usePostsApi'
+
 const { t } = useI18n()
 
 useSeoMeta({
@@ -6,39 +8,54 @@ useSeoMeta({
   description: t('home.tagline'),
 })
 
-const recentRequests = [
+const demo = {
+  description: null,
+  latitude: 50.06,
+  longitude: 19.94,
+  status: 'Active',
+  notificationDispatchStatus: 'Dispatched',
+  isUrgent: false,
+  urgentDeadline: null,
+  isLongLived: false,
+} as const
+
+const hoursFromNow = (h: number) => new Date(Date.now() + h * 3600 * 1000).toISOString()
+
+const recentRequests: PostListItem[] = [
   {
+    ...demo,
     id: '1',
     title: 'Szukam mikrofonu Shure SM7B',
-    category: 'Elektronika',
-    city: 'Kraków',
+    category: { id: 'c1', name: 'Elektronika' },
+    tag: { id: 't1', name: 'Mikrofony' },
     radiusKm: 20,
     notifiedCount: 14,
-    offersCount: 3,
-    postedAt: new Date(Date.now() - 3600 * 1000),
+    expiresAt: hoursFromNow(70),
+    createdAt: hoursFromNow(-1),
   },
   {
+    ...demo,
     id: '2',
     title: 'Potrzebuję roweru górskiego dla dziecka 24"',
-    category: 'Sport',
-    city: 'Warszawa',
+    category: { id: 'c2', name: 'Sport' },
+    tag: { id: 't2', name: 'Rowery' },
     radiusKm: 10,
     notifiedCount: 8,
-    offersCount: 1,
-    postedAt: new Date(Date.now() - 7200 * 1000),
+    expiresAt: hoursFromNow(46),
+    createdAt: hoursFromNow(-2),
   },
   {
+    ...demo,
     id: '3',
     title: 'Szukam używanego iPhone 14 Pro',
-    category: 'Telefony',
-    city: 'Wrocław',
+    category: { id: 'c3', name: 'Telefony' },
+    tag: { id: 't3', name: 'Smartfony' },
     radiusKm: 15,
     notifiedCount: 22,
-    offersCount: 5,
-    postedAt: new Date(Date.now() - 10800 * 1000),
+    expiresAt: hoursFromNow(5),
+    createdAt: hoursFromNow(-3),
   },
-]
-</script>
+]</script>
 
 <template>
   <div>
@@ -80,7 +97,7 @@ const recentRequests = [
         <RequestCard
           v-for="req in recentRequests"
           :key="req.id"
-          v-bind="req"
+          :post="req"
         />
       </div>
     </div>

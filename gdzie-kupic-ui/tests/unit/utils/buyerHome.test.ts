@@ -9,17 +9,13 @@ import {
   statusBreakdown,
   type BuyerRequestSummary,
 } from '~/utils/buyerHome'
-import { buildMockBuyerHome } from '~/mocks/buyerHome'
 
 function request(overrides: Partial<BuyerRequestSummary> = {}): BuyerRequestSummary {
   return {
     id: 'r1',
     title: 'Mikrofon',
     description: null,
-    city: 'Kraków',
-    country: 'Polska',
     radiusKm: 10,
-    budget: null,
     category: 'Audio',
     tag: null,
     postedAt: '2026-01-01T10:00:00Z',
@@ -58,13 +54,6 @@ describe('statusBreakdown', () => {
 
   it('counts responded merchants', () => {
     expect(respondedCount(request())).toBe(6)
-  })
-
-  it('adds up for every sample request', () => {
-    for (const sample of buildMockBuyerHome().requests) {
-      const b = statusBreakdown(sample)
-      expect(b.checking + b.have + b.cannot + b.none).toBe(b.notified)
-    }
   })
 })
 

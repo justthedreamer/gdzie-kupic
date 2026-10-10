@@ -1,59 +1,34 @@
 <script setup lang="ts">
-export interface RequestCardProps {
-  id: string
-  title: string
-  category: string
-  city: string
-  radiusKm: number
-  notifiedCount: number
-  offersCount: number
-  postedAt: string | Date
-}
+import type { PostListItem } from '~/composables/api/usePostsApi'
 
-const props = defineProps<RequestCardProps>()
+const props = defineProps<{ post: PostListItem }>()
 
-const formattedDate = computed(() =>
-  new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(
-    new Date(props.postedAt),
-  ),
-)
+const category = computed(() => `${props.post.category.name} · ${props.post.tag.name}`)
 </script>
 
 <template>
   <NuxtLink
-    :to="`/requests/${id}`"
-    class="block rounded-lg border border-default bg-default p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] transition-shadow"
+    :to="`/requests/${post.id}`"
+    class="block rounded-lg border border-default bg-default p-5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-hover)] focus-visible:outline-2 focus-visible:outline-primary"
+    data-testid="request-card"
   >
-    <!-- Header row -->
-    <div class="flex items-start justify-between gap-4">
-      <h3 class="font-semibold text-base leading-snug line-clamp-2 text-highlighted">
-        {{ title }}
-      </h3>
-      <UBadge variant="soft" color="neutral" class="shrink-0">
-        {{ category }}
-      </UBadge>
+    <div class="flex items-start justify-between gap-3">
+      <h2 class="line-clamp-2 text-base font-semibold leading-snug text-highlighted">
+        {{ post.title }}
+      </h2>
+      <RequestBadges :post="post" class="shrink-0 justify-end" />
     </div>
 
-    <!-- Meta row -->
+    <p class="mt-2 text-sm text-muted">
+      {{ category }}
+    </p>
+
     <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
       <span class="flex items-center gap-1">
-        <UIcon name="i-heroicons-map-pin" class="size-4" />
-        {{ city }} · {{ radiusKm }} km
+        <UIcon name="i-heroicons-bell-alert" class="size-4" aria-hidden="true" />
+        {{ $t('request.list.notified', { count: post.notifiedCount }) }}
       </span>
-      <span class="flex items-center gap-1">
-        <UIcon name="i-heroicons-clock" class="size-4" />
-        {{ formattedDate }}
-      </span>
-    </div>
-
-    <!-- Stats row -->
-    <div class="mt-4 flex gap-4 text-sm font-medium">
-      <span class="text-muted">
-        {{ notifiedCount }} powiadomionych
-      </span>
-      <span class="text-success">
-        {{ offersCount }} ofert
-      </span>
+      <RequestRemaining v-if="post.status === 'Active'" :expires-at="post.expiresAt" />
     </div>
   </NuxtLink>
 </template>

@@ -21,6 +21,25 @@ export interface Post {
   createdAt: string
 }
 
+/** GET /api/posts item: the post plus how many merchants were notified. */
+export interface PostListItem extends Post {
+  notifiedCount: number
+}
+
+export type PostScope = 'active' | 'ended'
+
+/** GET /api/posts/{id}/status: derived live; the response counts stay 0 until Phase 5. */
+export interface PostStatusInfo {
+  notificationDispatchStatus: NotificationDispatchStatus
+  notifiedCount: number
+  checkingCount: number
+  haveItCount: number
+  mayHaveItCount: number
+  canOrderItCount: number
+  cannotHelpCount: number
+  isZeroMatch: boolean
+}
+
 export interface CreatePostRequest {
   latitude: number
   longitude: number
@@ -40,5 +59,28 @@ export const usePostsApi = () => {
   return {
     create: (data: CreatePostRequest): Promise<Post> =>
       api.post<Post>('/api/posts', data),
+
+    list: (scope: PostScope): Promise<PostListItem[]> =>
+      api.get<PostListItem[]>('/api/posts', { query: { scope } }),
+
+    get: (id: string): Promise<Post> =>
+      api.get<Post>(`/api/posts/${id}`),
+
+    status: (id: string): Promise<PostStatusInfo> =>
+      api.get<PostStatusInfo>(`/api/posts/${id}/status`),
+
+    /** 204; 409 when the post is no longer active. */
+    fulfil: async (id: string): Promise<void> => {
+      await api.post(`/api/posts/${id}/fulfil`)
+    },
+
+    /** 204; 409 when the post is no longer active. */
+    close: async (id: string): Promise<void> => {
+      await api.post(`/api/posts/${id}/close`)
+    },
+
+    /** Extends the expiry to 14 days; 409 when the post is not eligible. */
+    makeLongLived: (id: string): Promise<Post> =>
+      api.post<Post>(`/api/posts/${id}/long-lived`),
   }
 }
