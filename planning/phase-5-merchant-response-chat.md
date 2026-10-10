@@ -17,7 +17,7 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | A | Response model and state machine (incl. status-panel counts) | Decided |
 | B | Merchant feed read endpoint (pagination, ordering, filters) | Decided |
 | C | Chat REST contract without real-time (threads, messages, unread, inbox) | Decided |
-| D | Image attachments | Open |
+| D | Image attachments | Decided |
 | E | Shared API contract (Service ↔ UI) | Open |
 | F | Ticket split and sizing | Open |
 
@@ -65,6 +65,18 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | C6 | Sending to a locked thread returns `403` `thread_locked` (FR-CHAT-7). Threads stay writable after the post is closed/fulfilled/expired (FR-CHAT-6). Validation: `body` up to 2000 characters, and a message needs a body or an attachment. Rate limiting only if the infrastructure already exists; otherwise out of Phase 5. |
 | C7 | `GET /api/posts/{id}/responses` (buyer) lists merchants with a positive response: shop name, state, `threadId`, `unreadCount`. It feeds the post-detail responses section and the buyer home "recent chats" panel. `CantHelp` merchants appear only in the status counts (A3). |
 | C8 | `IsLocked` is set when a participant is banned (not computed on every read), per the ban-lock ticket in [planning.md](../docs/planning.md). |
+
+### Area D — Image attachments
+
+| # | Decision |
+|---|---|
+| D1 | Upload goes through the API: `POST /api/chat/threads/{id}/messages` accepts `multipart/form-data` (`body`, `image`). The backend validates, stores the object in S3, then creates the message, so message and attachment are atomic. No presigned PUT. |
+| D2 | The bucket is private. Messages carry `attachmentUrl`, a short-lived presigned GET (about 15 min) generated on every read after the participation check. |
+| D3 | JPEG, PNG and WebP only (no GIF/SVG); type verified by magic bytes; one image per message; limit `Chat:MaxAttachmentBytes`, default 5 MB. Errors: `413` `attachment_too_large`, `415` `unsupported_attachment_type`. Client-side resizing is out of Phase 5. |
+| D4 | New `IObjectStorage` (put, presigned GET, delete) implemented on AWSSDK.S3, configured by endpoint, bucket and keys; the same code serves MinIO and AWS (NFR-DEV-2). Key: `chat/{threadId}/{messageId}.{ext}`. Bucket is auto-created in dev. Note: `Gdzie.Kupic.Storage` is the EF/PostgreSQL layer, so the object-storage abstraction is new code. |
+| D5 | Banning a user sets `IsLocked = true` on all their threads in the ban transaction. Unbanning recomputes the lock (`IsLocked` = any participant still banned). |
+| D6 | Attachments live as long as the thread; retention and clean-up are out of Phase 5. |
+| D7 | A simple bucket reachability health check is added with the attachments ticket. |
 
 ---
 
