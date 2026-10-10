@@ -26,6 +26,8 @@ public static class ModuleInstaller
         services.AddScoped<ILocationStorage, LocationStorage>();
         services.AddScoped<IMarketplaceStorage, MarketplaceStorage>();
         services.AddScoped<IPostStorage, PostStorage>();
+        services.AddScoped<IMatchingStorage, MatchingStorage>();
+        services.AddScoped<IOutboxStorage, OutboxStorage>();
     }
 
     public static async Task UseStorageModule(this IHost host, CancellationToken ct = default)

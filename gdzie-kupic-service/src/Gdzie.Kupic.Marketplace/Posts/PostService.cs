@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Marketplace;
+namespace Gdzie.Kupic.Marketplace;
 
 using System.Text.Json;
 using Gdzie.Kupic.Domain.Model.Infrastructure;
@@ -58,8 +58,10 @@ internal sealed class PostService(
     {
         var items = await posts.ListBuyerPostsAsync(buyerId, scope == PostScope.Active, ListLimit, ct);
 
+        var counts = await posts.GetNotifiedCountsAsync(items.Select(p => p.Id).ToList(), ct);
+
         return new PostResult<IReadOnlyList<PostView>>(
-            items.Select(p => new PostView(p, 0)).ToList(), PostError.None);
+            items.Select(p => new PostView(p, counts.GetValueOrDefault(p.Id))).ToList(), PostError.None);
     }
 
     public async Task<PostResult<PostView>> GetAsync(Guid buyerId, Guid postId, CancellationToken ct = default)
@@ -68,7 +70,7 @@ internal sealed class PostService(
 
         return post is null
             ? new PostResult<PostView>(null, PostError.NotFound, PostNotFoundMessage)
-            : new PostResult<PostView>(new PostView(post, 0), PostError.None);
+            : new PostResult<PostView>(new PostView(post, await NotifiedCountAsync(post.Id, ct)), PostError.None);
     }
 
     public Task<PostResult<bool>> FulfilAsync(Guid buyerId, Guid postId, CancellationToken ct = default) =>
@@ -89,6 +91,9 @@ internal sealed class PostService(
         await posts.SaveChangesAsync(ct);
         return new PostResult<bool>(true, PostError.None);
     }
+
+    private async Task<int> NotifiedCountAsync(Guid postId, CancellationToken ct) =>
+        (await posts.GetNotifiedCountsAsync([postId], ct)).GetValueOrDefault(postId);
 
     private async Task<string?> ValidateAsync(
         CreatePostInput input, string title, string? description, DateTimeOffset now, CancellationToken ct)

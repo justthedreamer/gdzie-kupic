@@ -28,6 +28,7 @@
       <ProjectReference Include="..\Gdzie.Kupic.API.Contract\Gdzie.Kupic.API.Contract.csproj" />
       <ProjectReference Include="..\Gdzie.Kupic.Auth\Gdzie.Kupic.Auth.csproj" />
       <ProjectReference Include="..\Gdzie.Kupic.Hangfire\Gdzie.Kupic.Hangfire.csproj" />
+      <ProjectReference Include="..\Gdzie.Kupic.Notifications\Gdzie.Kupic.Notifications.csproj" />
       <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
       <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
       <ProjectReference Include="..\Gdzie.Kupic.Catalogue\Gdzie.Kupic.Catalogue.csproj" />
