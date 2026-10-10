@@ -101,7 +101,7 @@ try
         builder.Services.InstallStorageModule(builder.Configuration);
     }
     builder.Services.InstallHangfireModule(builder.Configuration);
-    builder.Services.InstallNotificationsModule();
+    builder.Services.InstallNotificationsModule(builder.Configuration);
     builder.Services.InstallLocationModule(builder.Configuration);
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();

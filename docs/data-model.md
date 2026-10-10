@@ -183,10 +183,20 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 |---|---|---|
 | `Id` | `uuid` | PK |
 | `UserId` | `uuid` | FK → Users |
-| `Endpoint` | `text` | Web Push endpoint URL |
-| `P256dhKey` | `text` | VAPID public key |
-| `AuthKey` | `text` | VAPID auth secret |
+| `Endpoint` | `varchar(2048)` | Web Push endpoint URL (HTTPS) |
+| `P256dhKey` | `varchar(256)` | Client public key of the subscription (`keys.p256dh`) |
+| `AuthKey` | `varchar(256)` | Client auth secret of the subscription (`keys.auth`) |
 | `CreatedAt` | `timestamptz` | |
+
+**Unique constraint**: `Endpoint` - a device endpoint belongs to one user at a time. Registering an existing endpoint updates its keys and, when it belonged to another user (account switch on the same device), reassigns it to the caller. Index on `UserId`; rows are deleted with the user (cascade).
+
+**API** (buyers and merchants; admin gets `403`):
+
+| Method | Path | Body | Result |
+|---|---|---|---|
+| `GET` | `/api/push/vapid-public-key` | - | `200 { "publicKey" }`; `503` (`code = push_not_configured`) when VAPID is not configured |
+| `PUT` | `/api/push/subscription` | `{ endpoint, keys: { p256dh, auth } }` | `204`, idempotent upsert by endpoint; `400` for an empty, non-HTTPS or over-long (endpoint > 2048, key > 256) value or missing keys |
+| `DELETE` | `/api/push/subscription` | `{ endpoint }` | `204`, removes the caller's own subscription; idempotent |
 
 ---
 

@@ -84,6 +84,9 @@ services:
       Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
       Storage__PublicEndpoint: ${MINIO_PUBLIC_URL:-http://localhost:9000}
       Storage__BucketName: ${MINIO_BUCKET_NAME:-attachments}
+      Vapid__PublicKey: ${VAPID_PUBLIC_KEY:-}
+      Vapid__PrivateKey: ${VAPID_PRIVATE_KEY:-}
+      Vapid__Subject: ${VAPID_SUBJECT:-}
       GoogleMaps__ApiKey: ${GOOGLE_MAPS_API_KEY}
       Seeding__Admin__Email: ${ADMIN_EMAIL}
       Seeding__Admin__Password: ${ADMIN_PASSWORD}

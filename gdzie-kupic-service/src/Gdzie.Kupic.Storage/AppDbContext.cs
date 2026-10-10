@@ -36,6 +36,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     // Notifications
     public DbSet<PostNotification> PostNotifications => Set<PostNotification>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
 
     // Chat
     public DbSet<ChatThread> ChatThreads => Set<ChatThread>();
