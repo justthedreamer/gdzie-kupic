@@ -9,6 +9,7 @@ import type { ShellConfig } from '~/utils/shellNav'
 const props = defineProps<{ role: UserRole, config: ShellConfig }>()
 
 const authStore = useAuthStore()
+const signOut = useSignOut()
 const merchantStore = useMerchantStore()
 const profileStore = useProfileStore()
 const feedStore = useMerchantFeedStore()
@@ -78,7 +79,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
   [{
     label: t('auth.logout'),
     icon: 'i-heroicons-arrow-right-start-on-rectangle',
-    onSelect: () => authStore.clearAuth(),
+    onSelect: () => signOut(),
   }],
 ])
 </script>

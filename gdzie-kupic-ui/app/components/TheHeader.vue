@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const authStore = useAuthStore()
+const signOut = useSignOut()
 const localePath = useLocalePath()
 const { t } = useI18n()
 
@@ -49,7 +50,7 @@ const navLinks = computed(() => {
           <UButton
             variant="ghost"
             size="sm"
-            @click="authStore.clearAuth()"
+            @click="signOut()"
           >
             {{ $t('auth.logout') }}
           </UButton>
