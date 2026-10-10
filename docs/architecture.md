@@ -201,7 +201,11 @@ app.MapRealtimeHubs();
 - The application references files by key/URL; it never stores binary data in PostgreSQL
 - **Local development**: MinIO running as a Docker container, accessed via the same S3 API as production
 - **Production**: AWS S3 or equivalent; storage backend is selected via environment configuration — no code changes required to switch
-- Maximum attachment size is configurable (default 5 MB)
+- Maximum attachment size is configurable (`Chat:MaxAttachmentBytes`, default 5 MB)
+- **Upload path**: the client sends `multipart/form-data` (`body`, `image`) to `POST /api/chat/threads/{id}/messages`. The API checks the size and the type (JPEG, PNG or WebP by magic bytes, one image per message), stores the object under `chat/{threadId}/{messageId}.{ext}` and only then creates the message, so a message never points to a missing object
+- **Private bucket**: messages expose `attachmentUrl`, a presigned GET (about 15 minutes, `Chat:AttachmentUrlLifetimeMinutes`) generated on every read after the thread participation check
+- **Abstraction**: `IObjectStorage` (put, presigned GET, delete) in `Gdzie.Kupic.Chat`, implemented on AWSSDK.S3; endpoint, bucket and credentials come from the `Storage` configuration section. `Storage:PublicEndpoint` is the host browsers use (inside Docker the API talks to `http://minio:9000`, browsers to `http://localhost:9000`)
+- Attachments live as long as the thread; clean-up is out of scope for now
 
 ---
 

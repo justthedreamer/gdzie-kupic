@@ -22,6 +22,14 @@ public sealed class Posts
         int CannotHelpCount,
         bool IsZeroMatch);
 
+    public sealed record ResponseItem(
+        Guid MerchantId,
+        string ShopName,
+        string State,
+        Guid? ThreadId,
+        int UnreadCount,
+        DateTimeOffset UpdatedAt);
+
     public sealed record NamedRef(Guid Id, string Name);
 
     public record PostDto(

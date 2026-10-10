@@ -1,6 +1,7 @@
 namespace Gdzie.Kupic.Marketplace;
 
 using Gdzie.Kupic.Domain.Model.Marketplace;
+using Gdzie.Kupic.Storage;
 
 public enum PostError
 {
@@ -34,7 +35,7 @@ public sealed record CreatePostInput(
 /// <summary>A post (with category and tag loaded) and the number of merchants notified about it.</summary>
 public sealed record PostView(Post Post, int NotifiedCount);
 
-/// <summary>Live dispatch/response summary of a post. Response counts stay 0 until responses exist.</summary>
+/// <summary>Live dispatch/response summary of a post.</summary>
 public sealed record PostStatusView(
     NotificationDispatchStatus NotificationDispatchStatus,
     int NotifiedCount,
@@ -56,6 +57,9 @@ public interface IPostService
     Task<PostResult<PostView>> GetAsync(Guid buyerId, Guid postId, CancellationToken ct = default);
 
     Task<PostResult<PostStatusView>> GetStatusAsync(Guid buyerId, Guid postId, CancellationToken ct = default);
+
+    /// <summary>Merchants with a positive response (CantHelp is excluded), newest update first.</summary>
+    Task<PostResult<IReadOnlyList<PostResponseInfo>>> GetResponsesAsync(Guid buyerId, Guid postId, CancellationToken ct = default);
 
     Task<PostResult<PostView>> MakeLongLivedAsync(Guid buyerId, Guid postId, CancellationToken ct = default);
 

@@ -82,6 +82,7 @@ services:
       Storage__Endpoint: http://minio:9000
       Storage__AccessKey: ${MINIO_ROOT_USER}
       Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Storage__PublicEndpoint: ${MINIO_PUBLIC_URL:-http://localhost:9000}
       Storage__BucketName: ${MINIO_BUCKET_NAME:-attachments}
       GoogleMaps__ApiKey: ${GOOGLE_MAPS_API_KEY}
       Seeding__Admin__Email: ${ADMIN_EMAIL}

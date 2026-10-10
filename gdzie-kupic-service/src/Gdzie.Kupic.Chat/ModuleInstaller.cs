@@ -1,3 +1,22 @@
-﻿namespace Gdzie.Kupic.Chat;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
-public static class ModuleInstaller;
+namespace Gdzie.Kupic.Chat;
+
+public static class ModuleInstaller
+{
+    public static IServiceCollection InstallChatModule(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.TryAddSingleton(TimeProvider.System);
+
+        services.Configure<StorageSettings>(configuration.GetSection(StorageSettings.SectionName));
+        services.Configure<ChatSettings>(configuration.GetSection(ChatSettings.SectionName));
+        services.TryAddSingleton<IObjectStorage, S3ObjectStorage>();
+        services.AddHostedService<ObjectStorageInitializer>();
+
+        services.AddScoped<IChatService, ChatService>();
+
+        return services;
+    }
+}

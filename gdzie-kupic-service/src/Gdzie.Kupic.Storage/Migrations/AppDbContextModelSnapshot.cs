@@ -193,6 +193,70 @@ namespace Gdzie.Kupic.Storage.Migrations
                     b.ToTable("Tags");
                 });
 
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Chat.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AttachmentKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("ThreadId", "CreatedAt");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Chat.ChatThread", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("BuyerLastReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("MerchantLastReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantId");
+
+                    b.HasIndex("PostId", "MerchantId")
+                        .IsUnique();
+
+                    b.ToTable("ChatThreads");
+                });
+
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Infrastructure.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -346,6 +410,38 @@ namespace Gdzie.Kupic.Storage.Migrations
                     b.HasIndex("MerchantId");
 
                     b.ToTable("MerchantBranches");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.MerchantResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantId", "UpdatedAt");
+
+                    b.HasIndex("PostId", "MerchantId")
+                        .IsUnique();
+
+                    b.ToTable("MerchantResponses");
                 });
 
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.MerchantSubscription", b =>
@@ -551,6 +647,42 @@ namespace Gdzie.Kupic.Storage.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Chat.ChatMessage", b =>
+                {
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Auth.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Chat.ChatThread", "Thread")
+                        .WithMany("Messages")
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("Thread");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Chat.ChatThread", b =>
+                {
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Marketplace.Merchant", null)
+                        .WithMany()
+                        .HasForeignKey("MerchantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Marketplace.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Location.SavedLocation", b =>
                 {
                     b.HasOne("Gdzie.Kupic.Domain.Model.Auth.User", null)
@@ -604,6 +736,23 @@ namespace Gdzie.Kupic.Storage.Migrations
                         .HasForeignKey("MerchantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.MerchantResponse", b =>
+                {
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Marketplace.Merchant", null)
+                        .WithMany()
+                        .HasForeignKey("MerchantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Marketplace.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.MerchantSubscription", b =>
@@ -680,6 +829,11 @@ namespace Gdzie.Kupic.Storage.Migrations
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Catalogue.Category", b =>
                 {
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Chat.ChatThread", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.Merchant", b =>

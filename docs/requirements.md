@@ -83,7 +83,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 - **FR-CHAT-1** — One chat thread per merchant per post (`ChatThread` unique on `(PostId, MerchantId)`)
 - **FR-CHAT-2** — A thread is created on the first positive merchant response (`MayHaveIt`, `HaveIt`, `CanOrderIt`)
 - **FR-CHAT-3** — Reopening a post detail after a thread exists shows the existing thread — no duplicate threads
-- **FR-CHAT-4** — Messages support text and image attachments; images are stored in S3-compatible storage by key; maximum attachment size is configurable (default 5 MB)
+- **FR-CHAT-4** — Messages support text and image attachments; images (JPEG, PNG, WebP) are stored in S3-compatible storage by key and served through short-lived presigned URLs; maximum attachment size is configurable (default 5 MB)
 - **FR-CHAT-5** — Message history is persisted and available on reconnect or page reload
 - **FR-CHAT-6** — Chat threads remain open after the post is `Closed`, `Fulfilled`, or `Expired`; buyer and merchant can still coordinate
 - **FR-CHAT-7** — A thread is locked (no new messages from either side) when either participant is banned

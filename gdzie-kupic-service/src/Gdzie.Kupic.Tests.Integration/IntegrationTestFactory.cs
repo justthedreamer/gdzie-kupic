@@ -44,8 +44,13 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddScoped<ILocationStorage, LocationStorage>();
             services.AddScoped<IMarketplaceStorage, MarketplaceStorage>();
             services.AddScoped<IPostStorage, PostStorage>();
+            services.AddScoped<IResponseStorage, ResponseStorage>();
+            services.AddScoped<IChatStorage, ChatStorage>();
+            services.AddScoped<IFeedStorage, FeedStorage>();
             services.AddScoped<IMatchingStorage, MatchingStorage>();
             services.AddScoped<IOutboxStorage, OutboxStorage>();
+            services.AddSingleton<FakeObjectStorage>();
+            services.AddSingleton<Gdzie.Kupic.Chat.IObjectStorage>(sp => sp.GetRequiredService<FakeObjectStorage>());
             services.AddSingleton<RecordingJobScheduler>();
             services.AddSingleton<IJobScheduler>(sp => sp.GetRequiredService<RecordingJobScheduler>());
             services.AddSingleton<RecordingNotificationDispatcher>();

@@ -17,6 +17,8 @@ public static class ModuleInstaller
         services.AddScoped<IMerchantService, MerchantService>();
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IPostService, PostService>();
+        services.AddScoped<IMerchantResponseService, MerchantResponseService>();
+        services.AddScoped<IMerchantFeedService, MerchantFeedService>();
         services.AddScoped<ExpirePostsJob>();
         services.AddScoped<OutboxRelayJob>();
         services.AddScoped<NotifyMerchantsJob>();
