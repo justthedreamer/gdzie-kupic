@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { formatDistance, RESPONSE_COLOR, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
+import { canRespond, formatDistance, RESPONSE_COLOR, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
 
-const props = defineProps<{ request: MerchantFeedRequest }>()
+const props = defineProps<{
+  request: MerchantFeedRequest
+  /** An answer to this request is being saved. */
+  busy?: boolean
+}>()
 
 defineEmits<{ respond: [state: MerchantResponse] }>()
 
@@ -58,6 +62,10 @@ const category = computed(() => `${props.request.category.name} · ${props.reque
       </li>
     </ul>
 
-    <MerchantResponseButtons :current="request.myResponse" @select="$emit('respond', $event)" />
+    <MerchantResponseButtons
+      :current="request.myResponse"
+      :disabled="busy || !canRespond(request)"
+      @select="$emit('respond', $event)"
+    />
   </UCard>
 </template>

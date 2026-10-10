@@ -1,4 +1,5 @@
 import {
+  canRespond,
   FEED_PAGE_SIZE,
   feedCategories,
   feedQuery,
@@ -20,6 +21,22 @@ import {
 // the store behave the same in both modes. The merchant's own answers are kept
 // in memory for the life of the page.
 const mockResponses = new Map<string, MerchantResponse>()
+/** A positive response opens a chat thread, which stays when the merchant later says "can't help". */
+const mockThreads = new Map<string, string>()
+
+/**
+ * Lets a test close posts while the page is open (a race with the buyer):
+ * `sessionStorage['gk:mock-closed-posts'] = JSON.stringify(['feed-1'])`.
+ */
+function mockClosedPosts(): string[] {
+  if (!import.meta.client) return []
+  try {
+    return JSON.parse(sessionStorage.getItem('gk:mock-closed-posts') ?? '[]') as string[]
+  }
+  catch {
+    return []
+  }
+}
 
 /** Small on purpose: the sample data then spans two pages, so infinite scroll can be tried and tested. */
 const MOCK_PAGE_SIZE = 4
@@ -36,10 +53,12 @@ export const useMerchantFeedApi = () => {
 
   async function mockFeed(): Promise<MerchantFeedDetail[]> {
     const { buildMockMerchantFeed } = await import('~/mocks/merchantFeed')
+    const closed = mockClosedPosts()
     return buildMockMerchantFeed().map(request => ({
       ...request,
+      status: closed.includes(request.id) ? 'Closed' as const : request.status,
       myResponse: mockResponses.get(request.id) ?? request.myResponse,
-      threadId: null,
+      threadId: mockThreads.get(request.id) ?? null,
     }))
   }
 
@@ -79,8 +98,13 @@ export const useMerchantFeedApi = () => {
         return api.put<MerchantResponseResult>(`/api/merchant/feed/${id}/response`, { state })
       }
 
+      const found = (await mockFeed()).find(request => request.id === id)
+      if (!found) throw Object.assign(new Error('Not found'), { statusCode: 404 })
+      if (!canRespond(found)) throw Object.assign(new Error('post_not_active'), { statusCode: 409 })
+
       mockResponses.set(id, state)
-      return { state, threadId: null, updatedAt: new Date().toISOString() }
+      if (state !== 'CantHelp') mockThreads.set(id, `thread-${id}`)
+      return { state, threadId: mockThreads.get(id) ?? null, updatedAt: new Date().toISOString() }
     },
 
     /** Options of the category filter. */

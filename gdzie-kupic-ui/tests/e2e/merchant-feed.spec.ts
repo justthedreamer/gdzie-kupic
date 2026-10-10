@@ -90,6 +90,48 @@ test.describe('Merchant requests feed', () => {
     await expect(page.getByText(title)).toHaveCount(0)
   })
 
+  test('a positive response shows the chat thread link, which stays after "can\'t help"', async ({ page }) => {
+    await page.getByRole('link', { name: 'Interfejs audio USB do domowego studia' }).click()
+    await expect(page).toHaveURL('/feed/feed-2')
+    await expect(page.getByTestId('open-thread')).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Mam to' }).click()
+    await expect(page.getByTestId('open-thread')).toHaveAttribute('href', '/chat/thread-feed-2')
+
+    await page.getByRole('button', { name: 'Nie pomogę' }).click()
+    await expect(page.getByTestId('current-response')).toHaveText('Nie pomogę')
+    await expect(page.getByTestId('open-thread')).toHaveAttribute('href', '/chat/thread-feed-2')
+  })
+
+  test('a post that closes during the response shows an error and locks the page', async ({ page }) => {
+    await page.getByRole('link', { name: 'Szukam mikrofonu Shure SM7B' }).click()
+    await expect(page).toHaveURL('/feed/feed-1')
+    await expect(page.getByRole('button', { name: 'Mam to' })).toBeEnabled()
+
+    // The buyer closes the post while the merchant is looking at it.
+    await page.evaluate(() => sessionStorage.setItem('gk:mock-closed-posts', JSON.stringify(['feed-1'])))
+    await page.getByRole('button', { name: 'Mam to' }).click()
+
+    await expect(page.getByText('Na to zapytanie nie można już odpowiadać')).toBeVisible()
+    await expect(page.getByTestId('closed-notice')).toContainText('Zamknięte')
+    await expect(page.getByTestId('current-response')).toContainText('Nie odpowiedziano')
+    for (const name of ['Mam to', 'Mogę mieć', 'Mogę zamówić', 'Nie pomogę']) {
+      await expect(page.getByRole('button', { name })).toBeDisabled()
+    }
+  })
+
+  test('a closed post cannot be answered from the feed or from its details', async ({ page }) => {
+    await page.evaluate(() => sessionStorage.setItem('gk:mock-closed-posts', JSON.stringify(['feed-1'])))
+
+    await page.getByRole('link', { name: 'Szukam mikrofonu Shure SM7B' }).click()
+    await expect(page).toHaveURL('/feed/feed-1')
+    await expect(page.getByTestId('closed-notice')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Mam to' })).toBeDisabled()
+
+    await page.goBack()
+    await expect(page.getByTestId('feed-card').filter({ hasText: 'Szukam mikrofonu Shure SM7B' }).getByRole('button', { name: 'Mam to' })).toBeDisabled()
+  })
+
   test('filters narrow the list', async ({ page, isMobile }) => {
     if (isMobile) await page.getByRole('button', { name: 'Filtry' }).click()
 

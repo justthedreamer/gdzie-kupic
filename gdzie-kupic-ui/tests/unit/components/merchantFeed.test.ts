@@ -46,9 +46,12 @@ async function selectTab(wrapper: Awaited<ReturnType<typeof openFeed>>, index: n
 
 /** A fake backend over the mock data; a response changes what it serves afterwards. */
 let feed: MerchantFeedRequest[]
+/** Chat threads the fake backend has opened, by request id. */
+let threads: Record<string, string>
 
 function arrange(pageSize = 4) {
   feed = buildMockMerchantFeed()
+  threads = {}
   api.list.mockReset().mockImplementation(serveFeed(() => feed, pageSize))
   api.summary.mockReset().mockImplementation(async () => {
     const newCount = unansweredCount(feed)
@@ -57,11 +60,15 @@ function arrange(pageSize = 4) {
   api.get.mockReset().mockImplementation(async (id: string) => {
     const found = feed.find(item => item.id === id)
     if (!found) throw Object.assign(new Error('Not found'), { statusCode: 404 })
-    return { ...found, threadId: null }
+    return { ...found, threadId: threads[id] ?? null }
   })
   api.respond.mockReset().mockImplementation(async (id: string, state: MerchantResponse) => {
+    if (feed.find(item => item.id === id)?.status !== 'Active') {
+      throw Object.assign(new Error('post_not_active'), { statusCode: 409 })
+    }
     feed = feed.map(item => (item.id === id ? { ...item, myResponse: state } : item))
-    return { state, threadId: null, updatedAt: '2026-01-01T00:00:00Z' }
+    if (state !== 'CantHelp') threads[id] = `thread-${id}`
+    return { state, threadId: threads[id] ?? null, updatedAt: '2026-01-01T00:00:00Z' }
   })
   api.categories.mockReset().mockResolvedValue([])
 }
@@ -249,12 +256,14 @@ describe('Merchant request details page', () => {
     expect(api.get).toHaveBeenCalledWith('feed-7')
   })
 
-  it('uses the loaded feed instead of fetching again', async () => {
+  it('shows the loaded request at once and refreshes it from the server', async () => {
     await useMerchantFeedStore().load()
+    feed = feed.map(item => (item.id === 'feed-1' ? { ...item, status: 'Closed' as const } : item))
     const wrapper = await openDetails('feed-1')
 
-    expect(api.get).not.toHaveBeenCalled()
+    expect(api.get).toHaveBeenCalledWith('feed-1')
     expect(wrapper.find('h1').text()).toBe('Szukam mikrofonu Shure SM7B')
+    expect(wrapper.find('[data-testid="closed-notice"]').exists()).toBe(true)
   })
 
   it('explains an unlimited buyer radius', async () => {
@@ -303,6 +312,78 @@ describe('Merchant request details page', () => {
     expect(wrapper.find('[data-testid="current-response"]').text()).toBe('I have it')
   })
 
+  it('offers every response while the post is active and no thread link before answering', async () => {
+    const wrapper = await openDetails('feed-1')
+
+    expect(wrapper.findAll('button[aria-pressed]').every(button => button.attributes('disabled') === undefined)).toBe(true)
+    expect(wrapper.find('[data-testid="closed-notice"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="open-thread"]').exists()).toBe(false)
+  })
+
+  it('links to the chat thread after a positive response, and keeps it after "can\'t help"', async () => {
+    const wrapper = await openDetails('feed-1')
+
+    await wrapper.find('button[aria-label="I have it"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="open-thread"]').attributes('href')).toBe('/chat/thread-feed-1')
+
+    await wrapper.find('button[aria-label="I can\'t help"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="current-response"]').text()).toBe('I can\'t help')
+    expect(wrapper.find('[data-testid="open-thread"]').attributes('href')).toBe('/chat/thread-feed-1')
+  })
+
+  it('shows the thread link of an already answered request', async () => {
+    threads['feed-5'] = 'thread-feed-5'
+    const wrapper = await openDetails('feed-5')
+
+    expect(wrapper.find('[data-testid="open-thread"]').attributes('href')).toBe('/chat/thread-feed-5')
+  })
+
+  it('disables the buttons of a closed post, explains why and keeps the thread link', async () => {
+    feed = feed.map(item => (item.id === 'feed-5' ? { ...item, status: 'Expired' as const } : item))
+    threads['feed-5'] = 'thread-feed-5'
+    const wrapper = await openDetails('feed-5')
+
+    const buttons = wrapper.findAll('button[aria-pressed]')
+    expect(buttons).toHaveLength(4)
+    expect(buttons.every(button => button.attributes('disabled') !== undefined)).toBe(true)
+    expect(wrapper.find('[data-testid="closed-notice"]').text()).toContain('no longer active (Expired)')
+    expect(wrapper.find('[data-testid="current-response"]').text()).toBe('I have it')
+    expect(wrapper.find('[data-testid="open-thread"]').exists()).toBe(true)
+  })
+
+  it('re-synchronises when the post closed during the response (409)', async () => {
+    const wrapper = await openDetails('feed-1')
+    feed = feed.map(item => (item.id === 'feed-1' ? { ...item, status: 'Closed' as const } : item))
+
+    await wrapper.find('button[aria-label="I have it"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('no longer open for responses')
+    expect(wrapper.find('[data-testid="closed-notice"]').exists()).toBe(true)
+    expect(wrapper.findAll('button[aria-pressed]').every(button => button.attributes('disabled') !== undefined)).toBe(true)
+    expect(wrapper.find('[data-testid="current-response"]').text()).toContain('haven\'t responded')
+  })
+
+  it('sends one request per action: the buttons are disabled while saving', async () => {
+    const wrapper = await openDetails('feed-1')
+    let finish!: () => void
+    api.respond.mockReset().mockImplementation(() => new Promise((resolve) => {
+      finish = () => resolve({ state: 'HaveIt', threadId: null, updatedAt: '2026-01-01T00:00:00Z' })
+    }))
+
+    await wrapper.find('button[aria-label="I have it"]').trigger('click')
+    await wrapper.find('button[aria-label="I have it"]').trigger('click')
+    await wrapper.find('button[aria-label="I may have it"]').trigger('click')
+
+    expect(api.respond).toHaveBeenCalledTimes(1)
+    expect(wrapper.findAll('button[aria-pressed]').every(button => button.attributes('disabled') !== undefined)).toBe(true)
+
+    finish()
+    await flushPromises()
+    expect(wrapper.findAll('button[aria-pressed]').every(button => button.attributes('disabled') === undefined)).toBe(true)
+  })
   it('shows a not-found state for an unknown id', async () => {
     const wrapper = await openDetails('does-not-exist')
 
@@ -323,6 +404,11 @@ describe('Merchant response buttons', () => {
     ])
   })
 
+  it('disables every button when asked to', async () => {
+    const wrapper = await mountSuspended(ResponseButtons, { props: { current: null, disabled: true } })
+
+    expect(wrapper.findAll('button').every(button => button.attributes('disabled') !== undefined)).toBe(true)
+  })
   it('emits CanOrderIt and highlights it when current', async () => {
     const wrapper = await mountSuspended(ResponseButtons, { props: { current: 'CanOrderIt' } })
 

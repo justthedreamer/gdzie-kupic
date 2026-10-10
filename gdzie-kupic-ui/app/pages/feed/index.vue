@@ -177,7 +177,7 @@ useInfiniteScroll(sentinel, () => feedStore.loadMore(), { refresh: () => request
       <template v-else-if="requests.length">
         <ul class="space-y-4">
           <li v-for="request in requests" :key="request.id">
-            <MerchantFeedCard :request="request" @respond="respond(request, $event)" />
+            <MerchantFeedCard :request="request" :busy="feedStore.isResponding(request.id)" @respond="respond(request, $event)" />
           </li>
         </ul>
 

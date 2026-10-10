@@ -1,3 +1,4 @@
+import { parseApiError } from '~/utils/apiError'
 import {
   defaultFeedFilters,
   type FeedFilters,
@@ -26,6 +27,10 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
   const opened = ref<MerchantFeedRequest[]>([])
   const loadedFor = ref<string | null>(null)
   const summaryFor = ref<string | null>(null)
+  /** Chat thread per request id (`null` = none yet); known after a detail fetch or a response. */
+  const threadIds = ref<Record<string, string | null>>({})
+  /** Requests with a response in flight. */
+  const responding = ref<string[]>([])
 
   // Bumped whenever the list is replaced; a slower, older response is dropped.
   let generation = 0
@@ -87,6 +92,7 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
       requests.value = []
       nextCursor.value = null
       opened.value = []
+      threadIds.value = {}
       summary.value = null
       categories.value = []
       filters.value = defaultFeedFilters()
@@ -129,17 +135,54 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
     return requests.value.find(request => request.id === id) ?? opened.value.find(request => request.id === id)
   }
 
-  /** Fetches one request that is not on a loaded page (a direct link). Rejects with the API error. */
+  /**
+   * Fetches one request from the server (a direct link, or a refresh of what is
+   * already shown) and brings every cached copy up to date. Rejects with the API error.
+   */
   async function fetchOne(id: string): Promise<MerchantFeedRequest> {
-    const detail = await useMerchantFeedApi().get(id)
-    opened.value = [...opened.value.filter(request => request.id !== id), detail]
-    return detail
+    const { threadId, ...item } = await useMerchantFeedApi().get(id)
+    threadIds.value = { ...threadIds.value, [id]: threadId }
+
+    const copies = [...requests.value, ...opened.value].filter(request => request.id === id)
+    if (copies.length) copies.forEach(copy => Object.assign(copy, item))
+    else opened.value = [...opened.value, item]
+
+    return item
   }
 
-  /** Sets (or changes) the merchant's answer to a request. */
-  async function respond(id: string, state: MerchantResponse): Promise<void> {
-    await useMerchantFeedApi().respond(id, state)
+  /** The chat thread of the merchant's response to a request, once known. */
+  function threadIdOf(id: string): string | null {
+    return threadIds.value[id] ?? null
+  }
 
+  function isResponding(id: string): boolean {
+    return responding.value.includes(id)
+  }
+
+  /**
+   * Sets (or changes) the merchant's answer to a request. A second call for the same
+   * request while one is in flight is ignored. When the post closed in the meantime
+   * (409 `post_not_active`) the cached state is refreshed before the error is rethrown.
+   */
+  async function respond(id: string, state: MerchantResponse): Promise<void> {
+    if (isResponding(id)) return
+
+    responding.value = [...responding.value, id]
+    try {
+      const result = await useMerchantFeedApi().respond(id, state)
+      threadIds.value = { ...threadIds.value, [id]: result.threadId }
+      applyResponse(id, state)
+    }
+    catch (err) {
+      if (parseApiError(err).status === 409) await Promise.allSettled([fetchOne(id), loadSummary(true)])
+      throw err
+    }
+    finally {
+      responding.value = responding.value.filter(other => other !== id)
+    }
+  }
+
+  function applyResponse(id: string, state: MerchantResponse): void {
     const wasUnanswered = byId(id)?.myResponse === null
     for (const request of [...requests.value, ...opened.value]) {
       if (request.id === id) request.myResponse = state
@@ -161,7 +204,6 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
     }
     void loadSummary(true)
   }
-
   function reset() {
     generation++
     requests.value = []
@@ -173,6 +215,8 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
     summary.value = null
     categories.value = []
     opened.value = []
+    threadIds.value = {}
+    responding.value = []
     loadedFor.value = null
     summaryFor.value = null
   }
@@ -192,6 +236,8 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
     loadMore,
     byId,
     fetchOne,
+    threadIdOf,
+    isResponding,
     respond,
     reset,
   }

@@ -308,6 +308,70 @@ describe('merchantFeed store', () => {
       expect(store.byId(target.id)?.myResponse).toBeNull()
       expect(store.summary).toEqual(before)
     })
+
+    it('ignores a second answer to the same request while the first is being saved', async () => {
+      const store = useMerchantFeedStore()
+      await store.load()
+      const target = store.requests[0]!
+      let finish!: () => void
+      api.respond.mockReset().mockImplementation(() => new Promise((resolve) => {
+        finish = () => resolve({ state: 'HaveIt', threadId: null, updatedAt: '2026-01-01T00:00:00Z' })
+      }))
+
+      const first = store.respond(target.id, 'HaveIt')
+      await store.respond(target.id, 'CantHelp')
+
+      expect(api.respond).toHaveBeenCalledTimes(1)
+      expect(store.isResponding(target.id)).toBe(true)
+
+      finish()
+      await first
+      expect(store.isResponding(target.id)).toBe(false)
+      expect(store.byId(target.id)?.myResponse).toBe('HaveIt')
+    })
+
+    it('remembers the chat thread returned with a response', async () => {
+      const store = useMerchantFeedStore()
+      await store.load()
+      const target = store.requests[0]!
+      expect(store.threadIdOf(target.id)).toBeNull()
+
+      api.respond.mockResolvedValue({ state: 'HaveIt', threadId: 'thread-1', updatedAt: '2026-01-01T00:00:00Z' })
+      await store.respond(target.id, 'HaveIt')
+
+      expect(store.threadIdOf(target.id)).toBe('thread-1')
+    })
+
+    it('refreshes the request and the counts when the post is no longer active (409)', async () => {
+      const store = useMerchantFeedStore()
+      await store.load()
+      const target = store.requests[0]!
+      feed = feed.map(item => (item.id === target.id ? { ...item, status: 'Closed' as const } : item))
+      api.respond.mockRejectedValue(Object.assign(new Error('post_not_active'), { statusCode: 409 }))
+      api.summary.mockClear()
+
+      await expect(store.respond(target.id, 'HaveIt')).rejects.toThrow('post_not_active')
+
+      expect(store.byId(target.id)?.status).toBe('Closed')
+      expect(store.byId(target.id)?.myResponse).toBeNull()
+      expect(api.summary).toHaveBeenCalledTimes(1)
+      expect(store.isResponding(target.id)).toBe(false)
+    })
+  })
+
+  describe('refreshing one request', () => {
+    it('updates the copy on the loaded list and remembers the thread', async () => {
+      const store = useMerchantFeedStore()
+      await store.load()
+      const target = store.requests[0]!
+      api.get.mockResolvedValue({ ...target, status: 'Fulfilled', myResponse: 'MayHaveIt', threadId: 'thread-9' })
+
+      await store.fetchOne(target.id)
+
+      expect(store.byId(target.id)).toMatchObject({ status: 'Fulfilled', myResponse: 'MayHaveIt' })
+      expect(store.requests.filter(item => item.id === target.id)).toHaveLength(1)
+      expect(store.threadIdOf(target.id)).toBe('thread-9')
+    })
   })
 
   describe('direct links', () => {
