@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 internal sealed class ChatService(
     IChatStorage chat,
+    ChatEvents events,
     IMarketplaceStorage marketplace,
     IObjectStorage objects,
     IOptions<ChatSettings> settings,
@@ -127,6 +128,8 @@ internal sealed class ChatService(
             await TryDeleteAsync(attachmentKey);
             throw;
         }
+
+        await events.MessageReceivedAsync(threadId, messageId, actor.Side);
 
         return new ChatResult<ChatMessageView>(ToView(message, thread.BuyerId, actor.Side), ChatError.None);
     }

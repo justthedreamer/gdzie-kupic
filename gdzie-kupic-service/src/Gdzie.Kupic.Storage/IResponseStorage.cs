@@ -9,7 +9,8 @@ public enum ResponseSaveStatus
     PostNotActive,
 }
 
-public sealed record ResponseSaveResult(ResponseSaveStatus Status, MerchantResponse? Response = null, Guid? ThreadId = null);
+public sealed record ResponseSaveResult(ResponseSaveStatus Status, MerchantResponse? Response = null, Guid? ThreadId = null,
+    bool ThreadCreated = false, ResponseState? PreviousState = null);
 
 /// <summary>A positive merchant response as the buyer sees it, with the buyer's unread chat messages.</summary>
 public sealed record PostResponseInfo(

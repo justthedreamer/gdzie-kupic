@@ -97,6 +97,8 @@ internal sealed class ResponseStorage(AppDbContext db) : IResponseStorage
         var response = await db.MerchantResponses
             .SingleOrDefaultAsync(r => r.PostId == postId && r.MerchantId == merchantId, ct);
 
+        ResponseState? previousState = response?.State;
+
         if (response is null)
         {
             if (!post.IsOpen(now)) return new ResponseSaveResult(ResponseSaveStatus.PostNotActive);
@@ -114,15 +116,17 @@ internal sealed class ResponseStorage(AppDbContext db) : IResponseStorage
             .Select(t => (Guid?)t.Id)
             .SingleOrDefaultAsync(ct);
 
+        var threadCreated = false;
         if (threadId is null && state.IsPositive())
         {
             var thread = new ChatThread(Guid.NewGuid(), postId, merchantId, false, now);
             db.ChatThreads.Add(thread);
             threadId = thread.Id;
+            threadCreated = true;
         }
 
         await db.SaveChangesAsync(ct);
 
-        return new ResponseSaveResult(ResponseSaveStatus.Saved, response, threadId);
+        return new ResponseSaveResult(ResponseSaveStatus.Saved, response, threadId, threadCreated, previousState);
     }
 }

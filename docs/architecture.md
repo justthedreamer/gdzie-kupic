@@ -60,9 +60,9 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 
 - `API` → `Realtime`, all feature modules
 - `Realtime` → `Marketplace`, `Chat`, `Notifications` (implements their channel interfaces using SignalR; the only module that references `Microsoft.AspNetCore.SignalR`)
-- `Marketplace` → `Location`, `Notifications`, `Hangfire`, `Auth` (Admin subfolder only)
+- `Marketplace` → `Location`, `Notifications`, `Chat` (thread events only), `Hangfire`, `Auth` (Admin subfolder only)
 - `Notifications` → `Hangfire`; defines `INotificationChannel`
-- `Chat` → `Storage`, `Hangfire`; defines `IChatChannel`
+- `Chat` → `Storage`, `Notifications` (in-app `newMessage` notification), `Hangfire`; defines `IChatChannel` and `IChatThreadEvents` (called by other modules after commit)
 - `Location` → external HTTP client only (no module dependencies)
 - `Storage` → no module dependencies
 - `Hangfire` → no module dependencies
