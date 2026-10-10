@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Lib.Net.Http.WebPush" Version="3.3.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
@@ -22,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Hangfire\Gdzie.Kupic.Hangfire.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
   </ItemGroup>
 

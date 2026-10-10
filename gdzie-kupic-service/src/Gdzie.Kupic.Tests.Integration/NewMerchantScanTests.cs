@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Domain.Model.Catalogue;
@@ -98,6 +98,7 @@ public class NewMerchantScanTests : IntegrationTestBase
 
         (await NotifiedPostsAsync(merchantId)).ShouldBe([pending, unlimited, exactTag], ignoreOrder: true);
         Dispatcher.Dispatched.Count.ShouldBe(3);
+        Dispatcher.Dispatched.ShouldAllBe(n => n.Kind == Gdzie.Kupic.Notifications.NotificationKind.NewPost);
     }
 
     [Test]

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using Gdzie.Kupic.Hangfire;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,17 +52,25 @@ public sealed class RecordingJobScheduler(IServiceProvider services) : IJobSched
     }
 }
 
-public sealed class RecordingNotificationDispatcher : Gdzie.Kupic.Notifications.INotificationDispatcher
+/// <summary>Log of every notification handed to the dispatcher; the real dispatcher still runs behind it.</summary>
+public sealed class RecordingNotificationDispatcher
 {
-    private readonly ConcurrentQueue<(Guid PostId, Guid MerchantId)> _dispatched = new();
+    private readonly ConcurrentQueue<Gdzie.Kupic.Notifications.Notification> _dispatched = new();
 
-    public IReadOnlyCollection<(Guid PostId, Guid MerchantId)> Dispatched => _dispatched.ToArray();
+    public IReadOnlyCollection<Gdzie.Kupic.Notifications.Notification> Dispatched => _dispatched.ToArray();
 
-    public Task DispatchAsync(Guid postId, Guid merchantId, CancellationToken ct = default)
-    {
-        _dispatched.Enqueue((postId, merchantId));
-        return Task.CompletedTask;
-    }
+    public void Record(Gdzie.Kupic.Notifications.Notification notification) => _dispatched.Enqueue(notification);
 
     public void Reset() => _dispatched.Clear();
+}
+
+internal sealed class RecordingDispatcherDecorator(
+    Gdzie.Kupic.Notifications.NotificationDispatcher inner,
+    RecordingNotificationDispatcher log) : Gdzie.Kupic.Notifications.INotificationDispatcher
+{
+    public Task DispatchAsync(Gdzie.Kupic.Notifications.Notification notification, CancellationToken ct = default)
+    {
+        log.Record(notification);
+        return inner.DispatchAsync(notification, ct);
+    }
 }

@@ -35,7 +35,7 @@ public class ChatEventsTests
         db.ChatThreads.Add(new Gdzie.Kupic.Domain.Model.Chat.ChatThread(threadId, post.Id, merchantId, false, DateTimeOffset.UtcNow));
         db.MerchantAccounts.Add(new MerchantAccount(Guid.NewGuid(), merchantId, Guid.NewGuid(), DateTimeOffset.UtcNow));
         await db.SaveChangesAsync();
-        var events = new ChatEvents(new ChatStorage(db), new ThrowingChat(), new ThrowingNotifications(), NullLogger<ChatEvents>.Instance);
+        var events = new ChatEvents(new ChatStorage(db), new ThrowingChat(), new ThrowingNotifications(), new Gdzie.Kupic.Notifications.NoOpNotificationDispatcher(), NullLogger<ChatEvents>.Instance);
 
         await Should.NotThrowAsync(() => events.MessageReceivedAsync(threadId, Guid.NewGuid(), ChatSide.Buyer));
         await Should.NotThrowAsync(() => events.MessageReceivedAsync(threadId, Guid.NewGuid(), ChatSide.Merchant));

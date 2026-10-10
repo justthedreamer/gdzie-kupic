@@ -32,7 +32,7 @@ public class PostServiceTests
         _clock = new FixedTimeProvider(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
         _service = new PostService(
             new PostStorage(_db), new ResponseStorage(_db), new CatalogueStorage(_db), Options.Create(new MarketplaceSettings()),
-            new PostFeedEvents(new PostStorage(_db), new NullPostFeedChannel(), NullLogger<PostFeedEvents>.Instance), _clock);
+            new PostFeedEvents(new PostStorage(_db), new NullPostFeedChannel(), new Gdzie.Kupic.Notifications.NoOpNotificationDispatcher(), NullLogger<PostFeedEvents>.Instance), _clock);
 
         _buyerId = Guid.NewGuid();
         _category = new Category(Guid.NewGuid(), "Audio", false, _clock.Now);

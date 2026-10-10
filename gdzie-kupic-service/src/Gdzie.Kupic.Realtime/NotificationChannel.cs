@@ -11,6 +11,7 @@ public sealed class NotificationChannel(IRealtimeSender sender) : INotificationC
         {
             NotificationKind.MerchantResponded => RealtimeEvents.NotificationKinds.MerchantResponded,
             NotificationKind.NewMessage => RealtimeEvents.NotificationKinds.NewMessage,
+            NotificationKind.NewPost => throw new NotSupportedException("The in-app channel does not raise newPost."),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
 

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 /// own user (taken from the validated token) and every event is pushed by the server.
 /// </summary>
 [Authorize]
-public sealed class AppHub : Hub
+public sealed class AppHub(ConnectionPresenceTracker presence) : Hub
 {
     public static string UserGroup(Guid userId) => $"user:{userId}";
 
@@ -22,7 +22,16 @@ public sealed class AppHub : Hub
             return;
         }
 
+        presence.Connected(userId, Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
         await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (Guid.TryParse(Context.User?.FindFirstValue("sub"), out var userId))
+            presence.Disconnected(userId, Context.ConnectionId);
+
+        await base.OnDisconnectedAsync(exception);
     }
 }

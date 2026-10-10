@@ -1,6 +1,5 @@
 namespace Gdzie.Kupic.Marketplace;
 
-using Gdzie.Kupic.Notifications;
 using Gdzie.Kupic.Storage;
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +9,6 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 internal sealed class NotifyNewMerchantJob(
     IMatchingStorage matching,
-    INotificationDispatcher dispatcher,
     PostFeedEvents events,
     TimeProvider clock,
     ILogger<NotifyNewMerchantJob> logger)
@@ -24,7 +22,6 @@ internal sealed class NotifyNewMerchantJob(
 
         foreach (var postId in created)
         {
-            await dispatcher.DispatchAsync(postId, merchantId);
             await events.PostAddedAsync(merchantId, postId);
         }
 

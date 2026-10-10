@@ -38,6 +38,43 @@ internal sealed class NotificationStorage(AppDbContext db) : INotificationStorag
         }
     }
 
+    public async Task<IReadOnlyList<Guid>> FindPushSubscriptionIdsAsync(Guid userId, CancellationToken ct = default) =>
+        await db.PushSubscriptions.AsNoTracking().Where(s => s.UserId == userId).Select(s => s.Id).ToListAsync(ct);
+
+    public async Task<PushSubscriptionInfo?> FindPushSubscriptionAsync(Guid subscriptionId, CancellationToken ct = default)
+    {
+        var s = await db.PushSubscriptions.AsNoTracking().SingleOrDefaultAsync(x => x.Id == subscriptionId, ct);
+
+        return s is null ? null : new PushSubscriptionInfo(s.Id, s.UserId, s.Endpoint, s.Keys.P256dhKey, s.Keys.AuthKey);
+    }
+
+    public async Task<int> RemovePushSubscriptionByEndpointAsync(string endpoint, CancellationToken ct = default)
+    {
+        var rows = await db.PushSubscriptions.Where(s => s.Endpoint == endpoint).ToListAsync(ct);
+        db.PushSubscriptions.RemoveRange(rows);
+        await db.SaveChangesAsync(ct);
+
+        return rows.Count;
+    }
+
+    public async Task MarkPostNotificationSentAsync(
+        Guid postId, Guid userId, NotificationChannel channel, DateTimeOffset now, CancellationToken ct = default)
+    {
+        var merchantIds = db.MerchantAccounts.Where(a => a.UserId == userId).Select(a => a.MerchantId);
+        var rows = await db.PostNotifications
+            .Where(n => n.PostId == postId && merchantIds.Contains(n.MerchantId) && n.SentAt == null)
+            .ToListAsync(ct);
+        if (rows.Count == 0) return;
+
+        foreach (var row in rows)
+        {
+            row.Channel = channel;
+            row.SentAt = now;
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> RemovePushSubscriptionAsync(Guid userId, string endpoint, CancellationToken ct = default)
     {
         var subscription = await db.PushSubscriptions.SingleOrDefaultAsync(s => s.UserId == userId && s.Endpoint == endpoint, ct);

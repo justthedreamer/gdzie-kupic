@@ -1,7 +1,7 @@
-﻿namespace Gdzie.Kupic.Notifications;
+namespace Gdzie.Kupic.Notifications;
 
-/// <summary>Placeholder until real channel delivery exists (Phase 7).</summary>
+/// <summary>Dispatcher that delivers nothing; used where no channel is wanted (e.g. unit tests).</summary>
 internal sealed class NoOpNotificationDispatcher : INotificationDispatcher
 {
-    public Task DispatchAsync(Guid postId, Guid merchantId, CancellationToken ct = default) => Task.CompletedTask;
+    public Task DispatchAsync(Notification notification, CancellationToken ct = default) => Task.CompletedTask;
 }

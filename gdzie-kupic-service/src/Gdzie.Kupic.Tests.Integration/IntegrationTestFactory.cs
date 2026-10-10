@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gdzie.Kupic.Tests.Integration;
@@ -35,6 +36,13 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
 
+        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Vapid:PublicKey"] = "test-public-key",
+            ["Vapid:PrivateKey"] = "test-private-key",
+            ["Vapid:Subject"] = "mailto:test@example.com",
+        }));
+
         builder.ConfigureTestServices(services =>
         {
             services.AddDbContext<AppDbContext>(options =>
@@ -55,7 +63,11 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddSingleton<RecordingJobScheduler>();
             services.AddSingleton<IJobScheduler>(sp => sp.GetRequiredService<RecordingJobScheduler>());
             services.AddSingleton<RecordingNotificationDispatcher>();
-            services.AddScoped<INotificationDispatcher>(sp => sp.GetRequiredService<RecordingNotificationDispatcher>());
+            services.AddScoped<NotificationDispatcher>();
+            services.AddScoped<INotificationDispatcher>(sp => new RecordingDispatcherDecorator(
+                sp.GetRequiredService<NotificationDispatcher>(), sp.GetRequiredService<RecordingNotificationDispatcher>()));
+            services.AddSingleton<RecordingWebPushSender>();
+            services.AddSingleton<IWebPushSender>(sp => sp.GetRequiredService<RecordingWebPushSender>());
             services.AddSingleton<RecordingPostFeedChannel>();
             services.AddSingleton<Gdzie.Kupic.Marketplace.IPostFeedChannel>(sp => sp.GetRequiredService<RecordingPostFeedChannel>());
             services.AddSingleton<RecordingChatChannel>();
