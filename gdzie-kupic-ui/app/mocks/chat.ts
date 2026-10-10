@@ -3,6 +3,7 @@ import { buildMockMerchantFeed } from '~/mocks/merchantFeed'
 import {
   MESSAGES_PAGE_SIZE,
   THREADS_PAGE_SIZE,
+  attachmentProblem,
   type ChatMessage,
   type ChatMessagePage,
   type ChatThreadPage,
@@ -14,8 +15,8 @@ import {
 // threads), so the pages work the same on mock data and on the real API.
 //
 // Two hooks let a test or a manual session play the other side:
-//   sessionStorage['gk:mock-chat-incoming']  = JSON [{ "threadId": "...", "body": "..." }]
-//     -> the counterpart's messages, delivered on the next request;
+//   sessionStorage['gk:mock-chat-incoming']  = JSON [{ "threadId": "...", "body": "...", "attachmentUrl"?: "..." }]
+//     -> the counterpart's messages (with a picture, if given), delivered on the next request;
 //   sessionStorage['gk:mock-chat-fail-send'] = '1'
 //     -> sending fails with a 500 until the key is removed.
 
@@ -176,7 +177,7 @@ export class MockChat {
   private deliverIncoming() {
     if (!import.meta.client) return
 
-    let queued: Array<{ threadId: string, body: string }>
+    let queued: Array<{ threadId: string, body: string | null, attachmentUrl?: string }>
     try {
       queued = JSON.parse(sessionStorage.getItem('gk:mock-chat-incoming') ?? '[]')
       sessionStorage.removeItem('gk:mock-chat-incoming')
@@ -185,23 +186,23 @@ export class MockChat {
       return
     }
 
-    for (const { threadId, body } of queued) {
+    for (const { threadId, body, attachmentUrl } of queued) {
       const thread = this.ensure(threadId)
       if (!thread) continue
 
-      this.append(threadId, body, false)
+      this.append(threadId, body, false, attachmentUrl ?? null)
       thread.unreadCount += 1
     }
   }
 
-  private append(threadId: string, body: string, mine: boolean): ChatMessage {
+  private append(threadId: string, body: string | null, mine: boolean, attachmentUrl: string | null = null): ChatMessage {
     const message: ChatMessage = {
       id: `${threadId}-n${String(++this.sequence).padStart(4, '0')}`,
       threadId,
       senderId: mine ? this.myId : `counterpart-${threadId}`,
       isMine: mine,
       body,
-      attachmentUrl: null,
+      attachmentUrl,
       createdAt: new Date().toISOString(),
     }
     this.messages.get(threadId)!.push(message)
@@ -252,7 +253,7 @@ export class MockChat {
     return { items: all.slice(-limit), hasMore: all.length > limit }
   }
 
-  sendMessage(threadId: string, body: string): ChatMessage {
+  sendMessage(threadId: string, body: string, image: File | null = null): ChatMessage {
     const thread = this.ensure(threadId)
     if (!thread) this.notFound()
 
@@ -263,7 +264,17 @@ export class MockChat {
       throw Object.assign(new Error('thread_locked'), { statusCode: 403, data: { code: 'thread_locked' } })
     }
 
-    return this.append(threadId, body, true)
+    if (image) {
+      const problem = attachmentProblem(image)
+      if (problem === 'too_large') {
+        throw Object.assign(new Error('attachment_too_large'), { statusCode: 413, data: { code: 'attachment_too_large' } })
+      }
+      if (problem) {
+        throw Object.assign(new Error('unsupported_attachment_type'), { statusCode: 415, data: { code: 'unsupported_attachment_type' } })
+      }
+    }
+
+    return this.append(threadId, body || null, true, image ? URL.createObjectURL(image) : null)
   }
 
   markRead(threadId: string): void {

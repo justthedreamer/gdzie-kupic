@@ -1,5 +1,7 @@
 import {
   MESSAGES_PAGE_SIZE,
+  attachmentProblem,
+  attachmentProblemFromStatus,
   mergeMessages,
   mergeThreads,
   messageProblem,
@@ -25,7 +27,11 @@ export interface ChatConversation {
   pending: PendingMessage[]
 }
 
-export type SendResult = 'sent' | 'failed' | 'locked' | 'invalid'
+/**
+ * `too_large` / `unsupported_type`: the image was refused (nothing is kept, the sender
+ * gets text and image back); `locked`: the thread was locked meanwhile (nothing is kept).
+ */
+export type SendResult = 'sent' | 'failed' | 'locked' | 'invalid' | 'too_large' | 'unsupported_type'
 
 function emptyConversation(): ChatConversation {
   return { thread: null, messages: [], hasMore: false, status: 'pending', loadingOlder: false, olderFailed: false, pending: [] }
@@ -293,23 +299,38 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   /**
-   * Sends `text`. The message shows at once as pending; the server's copy replaces it.
-   * A failure leaves it in the thread as "failed" to retry or discard; `locked` means
-   * the thread was locked meanwhile (nothing is kept).
+   * Sends `text` and / or an `image`. The message shows at once as pending; the server's copy
+   * replaces it. A failure leaves it in the thread as "failed" to retry or discard; `locked`
+   * means the thread was locked meanwhile and `too_large` / `unsupported_type` that the
+   * image was refused (nothing is kept in these cases).
    */
-  async function send(threadId: string, text: string): Promise<SendResult> {
-    if (messageProblem(text)) return 'invalid'
+  async function send(threadId: string, text: string, image: File | null = null): Promise<SendResult> {
+    if (messageProblem(text, image !== null)) return 'invalid'
+    if (image) {
+      const problem = attachmentProblem(image)
+      if (problem === 'too_large') return 'too_large'
+      if (problem) return problem === 'unsupported_type' ? 'unsupported_type' : 'invalid'
+    }
 
     const conversation = conversationOf(threadId)
     const pending: PendingMessage = {
       localId: `local-${++localIds}`,
       body: text.trim(),
+      image,
+      previewUrl: image ? URL.createObjectURL(image) : null,
       status: 'sending',
       createdAt: new Date().toISOString(),
     }
     conversation.pending = [...conversation.pending, pending]
 
     return deliver(threadId, pending.localId)
+  }
+
+  /** Removes a pending message and frees its image preview. */
+  function dropPending(conversation: ChatConversation, localId: string) {
+    const dropped = conversation.pending.find(item => item.localId === localId)
+    if (dropped?.previewUrl) URL.revokeObjectURL(dropped.previewUrl)
+    conversation.pending = conversation.pending.filter(item => item.localId !== localId)
   }
 
   async function deliver(threadId: string, localId: string): Promise<SendResult> {
@@ -319,19 +340,27 @@ export const useChatStore = defineStore('chat', () => {
 
     pending.status = 'sending'
     try {
-      const message = await useChatApi().send(threadId, pending.body)
-      conversation.pending = conversation.pending.filter(item => item.localId !== localId)
+      const message = await useChatApi().send(threadId, pending.body, pending.image)
+      dropPending(conversation, localId)
       conversation.messages = mergeMessages(conversation.messages, [message])
       noteLastMessage(threadId, message)
       return 'sent'
     }
     catch (err) {
-      if (parseApiError(err).status === 403) {
-        conversation.pending = conversation.pending.filter(item => item.localId !== localId)
+      const { status: httpStatus } = parseApiError(err)
+
+      if (httpStatus === 403) {
+        dropPending(conversation, localId)
         if (conversation.thread) conversation.thread.isLocked = true
         const listed = threads.value.find(thread => thread.id === threadId)
         if (listed) listed.isLocked = true
         return 'locked'
+      }
+
+      const refused = attachmentProblemFromStatus(httpStatus)
+      if (refused === 'too_large' || refused === 'unsupported_type') {
+        dropPending(conversation, localId)
+        return refused
       }
 
       pending.status = 'failed'
@@ -347,7 +376,22 @@ export const useChatStore = defineStore('chat', () => {
   /** Drops a failed message. */
   function discard(threadId: string, localId: string) {
     const conversation = conversations.value[threadId]
-    if (conversation) conversation.pending = conversation.pending.filter(item => item.localId !== localId)
+    if (conversation) dropPending(conversation, localId)
+  }
+
+  /**
+   * Fetches the latest messages again and replaces the loaded copies: the image URLs the
+   * server hands out expire, so a picture that no longer loads gets a fresh one this way.
+   */
+  async function refreshMessages(threadId: string): Promise<void> {
+    const conversation = conversationOf(threadId)
+    try {
+      const page = await useChatApi().messages(threadId)
+      conversation.messages = mergeMessages(conversation.messages, page.items)
+    }
+    catch {
+      // The picture keeps its fallback with the retry.
+    }
   }
 
   return {
@@ -366,6 +410,7 @@ export const useChatStore = defineStore('chat', () => {
     open,
     loadOlder,
     poll,
+    refreshMessages,
     send,
     retry,
     discard,

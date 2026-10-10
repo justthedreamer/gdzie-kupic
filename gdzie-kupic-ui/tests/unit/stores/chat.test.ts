@@ -4,7 +4,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { useChatStore } from '~/stores/chat'
 import { MockChat } from '~/mocks/chat'
-import { MAX_MESSAGE_LENGTH, MESSAGES_PAGE_SIZE } from '~/utils/chat'
+import { MAX_ATTACHMENT_BYTES, MAX_MESSAGE_LENGTH, MESSAGES_PAGE_SIZE } from '~/utils/chat'
 
 // The store talks to the mock chat "server", which behaves like the real endpoints.
 let server: MockChat
@@ -24,7 +24,7 @@ function wire() {
   api.threads.mockReset().mockImplementation(async (cursor: string | null, limit?: number) => server.listThreads(cursor, limit))
   api.thread.mockReset().mockImplementation(async (id: string) => server.getThread(id))
   api.messages.mockReset().mockImplementation(async (id: string, query?: object) => server.getMessages(id, query))
-  api.send.mockReset().mockImplementation(async (id: string, body: string) => server.sendMessage(id, body))
+  api.send.mockReset().mockImplementation(async (id: string, body: string, image?: File | null) => server.sendMessage(id, body, image))
   api.markRead.mockReset().mockImplementation(async (id: string) => server.markRead(id))
   api.unreadCount.mockReset().mockImplementation(async () => server.unreadCount())
 }
@@ -308,6 +308,132 @@ describe('chat store', () => {
 
       expect(await store.send('thread-locked', 'Halo')).toBe('locked')
       expect(store.conversations['thread-locked']!.messages.at(-1)!.body).not.toBe('Halo')
+    })
+  })
+
+  describe('sending an image', () => {
+    const png = () => new File(['x'], 'a.png', { type: 'image/png' })
+    const revoke = vi.fn()
+
+    beforeEach(() => {
+      revoke.mockReset()
+      URL.createObjectURL = vi.fn(() => 'blob:preview')
+      URL.revokeObjectURL = revoke
+    })
+
+    it('sends an image without text, showing a preview while it is pending', async () => {
+      const store = useChatStore()
+      await store.loadThreads()
+      await store.open('thread-closed')
+      const file = png()
+
+      const sending = store.send('thread-closed', '', file)
+      const conversation = store.conversations['thread-closed']!
+      expect(conversation.pending[0]).toMatchObject({ body: '', image: file, previewUrl: 'blob:preview', status: 'sending' })
+
+      expect(await sending).toBe('sent')
+      expect(api.send).toHaveBeenCalledWith('thread-closed', '', file)
+      expect(conversation.pending).toEqual([])
+      expect(revoke).toHaveBeenCalledWith('blob:preview')
+      expect(conversation.messages.at(-1)).toMatchObject({ body: null, isMine: true })
+      expect(conversation.messages.at(-1)!.attachmentUrl).not.toBeNull()
+      expect(store.threads[0]).toMatchObject({ id: 'thread-closed', lastMessage: { preview: '' } })
+    })
+
+    it('sends text together with the image', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+
+      expect(await store.send('thread-closed', 'Takie?', png())).toBe('sent')
+
+      expect(store.conversations['thread-closed']!.messages.at(-1)).toMatchObject({ body: 'Takie?' })
+    })
+
+    it('still needs a text or an image', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+
+      expect(await store.send('thread-closed', '  ', null)).toBe('invalid')
+      expect(api.send).not.toHaveBeenCalled()
+    })
+
+    it('does not upload a file that breaks the rules', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+
+      expect(await store.send('thread-closed', '', new File(['x'], 'a.gif', { type: 'image/gif' }))).toBe('unsupported_type')
+      const big = new File(['x'], 'big.png', { type: 'image/png' })
+      Object.defineProperty(big, 'size', { value: MAX_ATTACHMENT_BYTES + 1 })
+      expect(await store.send('thread-closed', '', big)).toBe('too_large')
+
+      expect(api.send).not.toHaveBeenCalled()
+      expect(store.conversations['thread-closed']!.pending).toEqual([])
+    })
+
+    it.each([
+      [413, 'too_large'],
+      [415, 'unsupported_type'],
+    ])('hands the image back when the server answers %i, keeping no pending message', async (statusCode, result) => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+      api.send.mockRejectedValueOnce(Object.assign(new Error('refused'), { statusCode }))
+
+      expect(await store.send('thread-closed', 'Takie?', png())).toBe(result)
+
+      expect(store.conversations['thread-closed']!.pending).toEqual([])
+      expect(revoke).toHaveBeenCalledWith('blob:preview')
+    })
+
+    it('keeps a failed image message and sends the same file again on retry', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+      const file = png()
+      api.send.mockRejectedValueOnce(Object.assign(new Error('boom'), { statusCode: 500 }))
+
+      expect(await store.send('thread-closed', '', file)).toBe('failed')
+      const pending = store.conversations['thread-closed']!.pending[0]!
+      expect(pending.status).toBe('failed')
+      expect(revoke).not.toHaveBeenCalled()
+
+      expect(await store.retry('thread-closed', pending.localId)).toBe('sent')
+      expect(api.send).toHaveBeenLastCalledWith('thread-closed', '', file)
+    })
+
+    it('frees the preview of a discarded message', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+      api.send.mockRejectedValueOnce(new Error('boom'))
+      await store.send('thread-closed', '', png())
+
+      store.discard('thread-closed', store.conversations['thread-closed']!.pending[0]!.localId)
+
+      expect(revoke).toHaveBeenCalledWith('blob:preview')
+    })
+  })
+
+  describe('refreshing the pictures', () => {
+    it('replaces the loaded messages with the server\'s fresh copies', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+      const newest = store.conversations['thread-closed']!.messages.at(-1)!
+      api.messages.mockResolvedValueOnce({ items: [{ ...newest, attachmentUrl: 'https://files.test/fresh.png' }], hasMore: true })
+
+      await store.refreshMessages('thread-closed')
+
+      const messages = store.conversations['thread-closed']!.messages
+      expect(messages.at(-1)!.attachmentUrl).toBe('https://files.test/fresh.png')
+      expect(messages.filter(message => message.id === newest.id)).toHaveLength(1)
+    })
+
+    it('keeps what is loaded when the refresh fails', async () => {
+      const store = useChatStore()
+      await store.open('thread-closed')
+      const before = store.conversations['thread-closed']!.messages.length
+      api.messages.mockRejectedValueOnce(new Error('boom'))
+
+      await store.refreshMessages('thread-closed')
+
+      expect(store.conversations['thread-closed']!.messages).toHaveLength(before)
     })
   })
 })
