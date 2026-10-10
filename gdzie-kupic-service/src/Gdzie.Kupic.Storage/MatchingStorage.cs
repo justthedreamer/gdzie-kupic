@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Storage;
+namespace Gdzie.Kupic.Storage;
 
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Domain.Model.Notifications;
@@ -27,20 +27,71 @@ internal sealed class MatchingStorage(AppDbContext db) : IMatchingStorage
             .ToList();
     }
 
-    public async Task<IReadOnlyList<Guid>> AddNotificationsAsync(
-        Guid postId, IReadOnlyCollection<Guid> merchantIds, DateTimeOffset now, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Guid>> FindMatchingOpenPostIdsAsync(Guid merchantId, DateTimeOffset now, CancellationToken ct = default)
+    {
+        if (db.Database.IsNpgsql()) return await FindPostsWithPostGisAsync(merchantId, now, ct);
+
+        var merchant = await db.Merchants
+            .AsNoTracking()
+            .Include(m => m.Branches)
+            .Include(m => m.Accounts)
+            .SingleOrDefaultAsync(m => m.Id == merchantId && m.BanDetails == null, ct);
+        if (merchant is null) return [];
+
+        var subscriptions = await db.MerchantSubscriptions.AsNoTracking().Where(s => s.MerchantId == merchantId).ToListAsync(ct);
+        var ownUserIds = merchant.Accounts.Select(a => a.UserId).ToList();
+        var alreadyNotified = await db.PostNotifications.Where(n => n.MerchantId == merchantId).Select(n => n.PostId).ToListAsync(ct);
+
+        var openPosts = await db.Posts
+            .AsNoTracking()
+            .Where(p => p.Status == PostStatus.Active && p.ExpiresAt > now)
+            .ToListAsync(ct);
+
+        return openPosts
+            .Where(p => !ownUserIds.Contains(p.BuyerId))
+            .Where(p => !alreadyNotified.Contains(p.Id))
+            .Where(p => subscriptions.Any(s => MatchingRule.IsSubscriptionMatch(s, p.CategoryId, p.TagId)))
+            .Where(p => merchant.Branches.Any(b => MatchingRule.IsWithinReach(p.Coordinates, p.RadiusKm, b.Coordinates)))
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => p.Id)
+            .ToList();
+    }
+
+    public Task<IReadOnlyList<Guid>> AddMerchantNotificationsAsync(
+        Guid merchantId, IReadOnlyCollection<Guid> postIds, DateTimeOffset now, CancellationToken ct = default) =>
+        AddNotificationsCoreAsync(
+            postIds,
+            async () => await db.PostNotifications
+                .Where(n => n.MerchantId == merchantId && postIds.Contains(n.PostId))
+                .Select(n => n.PostId)
+                .ToListAsync(ct),
+            postId => new PostNotification(Guid.NewGuid(), postId, merchantId, now),
+            ct);
+
+    public Task<IReadOnlyList<Guid>> AddNotificationsAsync(
+        Guid postId, IReadOnlyCollection<Guid> merchantIds, DateTimeOffset now, CancellationToken ct = default) =>
+        AddNotificationsCoreAsync(
+            merchantIds,
+            async () => await db.PostNotifications
+                .Where(n => n.PostId == postId && merchantIds.Contains(n.MerchantId))
+                .Select(n => n.MerchantId)
+                .ToListAsync(ct),
+            merchantId => new PostNotification(Guid.NewGuid(), postId, merchantId, now),
+            ct);
+
+    private async Task<IReadOnlyList<Guid>> AddNotificationsCoreAsync(
+        IReadOnlyCollection<Guid> keys,
+        Func<Task<List<Guid>>> loadExisting,
+        Func<Guid, PostNotification> create,
+        CancellationToken ct)
     {
         for (var attempt = 0; ; attempt++)
         {
-            var existing = await db.PostNotifications
-                .Where(n => n.PostId == postId && merchantIds.Contains(n.MerchantId))
-                .Select(n => n.MerchantId)
-                .ToListAsync(ct);
-
-            var created = merchantIds.Distinct().Except(existing).ToList();
+            var existing = await loadExisting();
+            var created = keys.Distinct().Except(existing).ToList();
             if (created.Count == 0) return created;
 
-            db.PostNotifications.AddRange(created.Select(id => new PostNotification(Guid.NewGuid(), postId, id, now)));
+            db.PostNotifications.AddRange(created.Select(create));
 
             try
             {
@@ -54,6 +105,35 @@ internal sealed class MatchingStorage(AppDbContext db) : IMatchingStorage
             }
         }
     }
+
+    private async Task<IReadOnlyList<Guid>> FindPostsWithPostGisAsync(Guid merchantId, DateTimeOffset now, CancellationToken ct) =>
+        await db.Database
+            .SqlQuery<Guid>($"""
+                             SELECT p."Id" AS "Value"
+                             FROM "Posts" p
+                             WHERE p."Status" = 'Active'
+                               AND p."ExpiresAt" > {now}
+                               AND EXISTS (
+                                   SELECT 1 FROM "Merchants" m WHERE m."Id" = {merchantId} AND m."BannedAt" IS NULL)
+                               AND NOT EXISTS (
+                                   SELECT 1 FROM "MerchantAccounts" a
+                                   WHERE a."MerchantId" = {merchantId} AND a."UserId" = p."BuyerId")
+                               AND EXISTS (
+                                   SELECT 1 FROM "MerchantSubscriptions" s
+                                   WHERE s."MerchantId" = {merchantId}
+                                     AND s."CategoryId" = p."CategoryId"
+                                     AND (s."TagId" IS NULL OR s."TagId" = p."TagId"))
+                               AND NOT EXISTS (
+                                   SELECT 1 FROM "PostNotifications" n
+                                   WHERE n."PostId" = p."Id" AND n."MerchantId" = {merchantId})
+                               AND (p."RadiusKm" IS NULL OR EXISTS (
+                                   SELECT 1 FROM "MerchantBranches" b
+                                   WHERE b."MerchantId" = {merchantId}
+                                     AND ST_DWithin(b."Coordinates", p."Coordinates",
+                                                    ((p."RadiusKm" + {MatchingRule.ToleranceKm}) * 1000)::double precision)))
+                             ORDER BY p."CreatedAt"
+                             """)
+            .ToListAsync(ct);
 
     private async Task<IReadOnlyList<Guid>> FindWithPostGisAsync(PostMatchCriteria c, CancellationToken ct)
     {

@@ -1,7 +1,5 @@
 namespace Gdzie.Kupic.Marketplace;
 
-using System.Text.Json;
-using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Location;
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Storage;
@@ -43,13 +41,7 @@ internal sealed class PostService(
             Post.CalculateExpiry(now, input.UrgentDeadline, settings.Value.DefaultPostLifetime),
             now);
 
-        var outbox = new OutboxMessage(
-            Guid.NewGuid(),
-            OutboxMessageTypes.NotifyMerchants,
-            JsonSerializer.Serialize(new { postId = post.Id }),
-            now);
-
-        await posts.AddWithOutboxAsync(post, outbox, ct);
+        await posts.AddWithOutboxAsync(post, OutboxMessages.NotifyMerchants(post.Id, now), ct);
 
         return await GetAsync(buyerId, post.Id, ct);
     }

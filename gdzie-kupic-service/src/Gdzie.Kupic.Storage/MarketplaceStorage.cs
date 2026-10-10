@@ -1,5 +1,6 @@
 namespace Gdzie.Kupic.Storage;
 
+using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,7 @@ internal sealed class MarketplaceStorage(AppDbContext db) : IMarketplaceStorage
         Merchant merchant,
         MerchantAccount account,
         MerchantBranch branch,
+        OutboxMessage outboxMessage,
         CancellationToken ct = default)
     {
         if (await db.MerchantAccounts.AnyAsync(a => a.UserId == account.UserId, ct)) return false;
@@ -23,6 +25,7 @@ internal sealed class MarketplaceStorage(AppDbContext db) : IMarketplaceStorage
         db.Merchants.Add(merchant);
         db.MerchantAccounts.Add(account);
         db.MerchantBranches.Add(branch);
+        db.Outbox.Add(outboxMessage);
 
         try
         {
@@ -53,11 +56,12 @@ internal sealed class MarketplaceStorage(AppDbContext db) : IMarketplaceStorage
             .ThenBy(s => s.Id)
             .ToListAsync(ct);
 
-    public async Task<bool> TryAddSubscriptionAsync(MerchantSubscription subscription, CancellationToken ct = default)
+    public async Task<bool> TryAddSubscriptionAsync(MerchantSubscription subscription, OutboxMessage outboxMessage, CancellationToken ct = default)
     {
         if (await SubscriptionExistsAsync(subscription, ct)) return false;
 
         db.MerchantSubscriptions.Add(subscription);
+        db.Outbox.Add(outboxMessage);
 
         try
         {
