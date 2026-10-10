@@ -16,7 +16,7 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 |---|---|---|
 | A | Response model and state machine (incl. status-panel counts) | Decided |
 | B | Merchant feed read endpoint (pagination, ordering, filters) | Decided |
-| C | Chat REST contract without real-time (threads, messages, unread, inbox) | Open |
+| C | Chat REST contract without real-time (threads, messages, unread, inbox) | Decided |
 | D | Image attachments | Open |
 | E | Shared API contract (Service ↔ UI) | Open |
 | F | Ticket split and sizing | Open |
@@ -52,6 +52,19 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 | B6 | `GET /api/merchant/feed/{postId}` returns the post and the merchant's own response; `404` if the merchant was not notified. Closed, fulfilled and expired posts remain viewable but cannot be answered. |
 | B7 | Default order (FR-FEED-3): urgent first, then newest first within each group. |
 | B8 | The buyer is shown by name only; `buyerVerified` is dropped from the contract (no verified status exists in the user model). |
+
+### Area C — Chat REST contract (no real-time)
+
+| # | Decision |
+|---|---|
+| C1 | One endpoint set for both roles, authorised by thread participation: `GET /api/chat/threads` (inbox: `lastMessage`, `unreadCount`, `isLocked`, post and counterpart info), `GET /api/chat/threads/{id}`, `GET /api/chat/threads/{id}/messages`, `POST /api/chat/threads/{id}/messages`, `POST /api/chat/threads/{id}/read`, `GET /api/chat/unread-count`. |
+| C2 | The inbox is filtered by the caller's role from the token: a buyer sees threads of their posts, a merchant sees their own threads. |
+| C3 | Unread tracking via `BuyerLastReadAt` / `MerchantLastReadAt` on `ChatThread`; `unread` = counterpart messages newer than the caller's `LastReadAt`; `POST .../read` sets it to now. No per-message read flag. |
+| C4 | History: cursor `before`, default limit 30, returned in ascending time order; opening a thread loads the latest page, older pages load on scroll up. |
+| C5 | Until Phase 6 the UI polls: `after=<lastMessageId>` every few seconds only while the chat view is open and the tab is active; inbox and badge refresh on entry and about every 30 s. Phase 6 swaps polling for SignalR; the REST contract stays. |
+| C6 | Sending to a locked thread returns `403` `thread_locked` (FR-CHAT-7). Threads stay writable after the post is closed/fulfilled/expired (FR-CHAT-6). Validation: `body` up to 2000 characters, and a message needs a body or an attachment. Rate limiting only if the infrastructure already exists; otherwise out of Phase 5. |
+| C7 | `GET /api/posts/{id}/responses` (buyer) lists merchants with a positive response: shop name, state, `threadId`, `unreadCount`. It feeds the post-detail responses section and the buyer home "recent chats" panel. `CantHelp` merchants appear only in the status counts (A3). |
+| C8 | `IsLocked` is set when a participant is banned (not computed on every read), per the ban-lock ticket in [planning.md](../docs/planning.md). |
 
 ---
 
