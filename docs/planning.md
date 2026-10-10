@@ -83,7 +83,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 - `RealtimeBuilder` infrastructure: `AddHub<TInterface, THub>()` with compile-time constraint; `Program.cs` manifest — **M**
 - `IPostFeedChannel` hub: buyer status panel live count push (per-post channel) + merchant feed new post / post removal push — **L**
-- `IChatChannel` hub: per-thread new message push; `INotificationChannel` hub: in-app event push to buyers and merchants — **M**
+- `IChatChannel` hub: per-thread new message push; `INotificationChannel` hub: in-app event push to buyers and merchants (incl. **TODO from Phase 5:** notify the buyer when a merchant responds, FR-NOTIF-3 — hook left as a `TODO(P6)` in the response service) — **M**
 
 ---
 
