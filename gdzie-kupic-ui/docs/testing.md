@@ -88,6 +88,19 @@ Helpers live in [`tests/e2e/support/api-mock.ts`](../tests/e2e/support/api-mock.
 
 The Playwright config pins `locale: 'pl-PL'`, because the app detects the browser language and the tests assert Polish copy. Use `exact: true` when a name is a prefix of another control (e.g. the `Dev` button).
 
+### Real-API e2e
+
+`tests/e2e-real/` runs the same app against the real backend (no mocks), with the Dev accounts:
+
+```bash
+docker compose up --build -d      # service on http://localhost:5000
+npm run test:e2e:real             # playwright.real.config.ts
+```
+
+- The service must verify the mock tokens: set `JWT_SECRET` to the dev value from `.env.example` (see `docs/local-dev.md` § Mock Accounts).
+- The API allows only the origin `http://localhost:3000`, so the config starts its own dev server there (`reuseExistingServer: false`) with `NUXT_PUBLIC_API_BASE=http://localhost:5000` and the Buyer-home / Merchant-feed mocks off. Stop any other `npm run dev` first.
+- Tests create their own data (unique titles, a saved location when the Buyer has none) and pick a catalogue tag nobody subscribes to for the zero-match case. Matching runs in a Hangfire job, so allow up to a minute.
+
 ### CI behaviour
 
 `playwright.config.ts` sets `retries: 2` and `workers: 1` in CI (detected via `process.env.CI`). Locally it runs in parallel with no retries.
