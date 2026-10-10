@@ -8,7 +8,7 @@ Serves as the basis for the formal FR/NFR technical specification.
 ## 1. Geolocation & Radius Matching
 
 **Buyer locations:**
-- Buyer must add at least one saved location during account creation — required before posting
+- Saved locations are optional — a buyer can create a post with a location entered directly on the post form; the UI offers to save it afterwards
 - Buyer can manage any number of saved locations at any time (e.g. "Home", "Office")
 - Location input: "Find me" uses browser Geolocation API — coordinates arrive from the frontend directly, no geocoding needed
 - Manual address entry: address string is geocoded via the Google Maps Geocoding API (`Gdzie.Kupic.Location`) once and stored as coordinates with a display name

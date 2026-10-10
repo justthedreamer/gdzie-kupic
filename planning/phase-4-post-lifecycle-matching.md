@@ -10,19 +10,19 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 
 ---
 
-## Epic — [Epic] Phase 4: Post Lifecycle & Matching
+## Epic - [Epic]: Phase 4: Post Lifecycle & Matching - [#75](https://github.com/justthedreamer/gdzie-kupic/issues/75)
 
 **Sub-issues:**
 
 | # | Ticket | Size | Depends on | Status |
 |---|---|---|---|---|
-| S1 | [Service]: Hangfire Infrastructure | M | — | Drafted |
-| S2 | [Service]: Post Creation & Lifecycle | L | S1 (for `ExpirePostsJob`) | Drafted |
-| S3 | [Service]: Outbox Relay & Merchant Matching (`NotifyMerchantsJob`) | XL | S1, S2 | Drafted |
-| S4 | [Service]: New Merchant Post Scan (`NotifyNewMerchantJob`) | M | S3 | Drafted |
-| S5 | [Service]: Zero-Match Handling & Post Status Endpoint | M | S2, S3 | Drafted |
-| U1 | [UI]: Post Creation Form | M | contract S2 | Drafted |
-| U2 | [UI]: Request List, Detail, Status Panel & Zero-Match | L | contract S2, S5 | Drafted |
+| S1 | [Service]: Hangfire Infrastructure | M | — | [#76](https://github.com/justthedreamer/gdzie-kupic/issues/76) |
+| S2 | [Service]: Post Creation & Lifecycle | L | S1 (for `ExpirePostsJob`) | [#77](https://github.com/justthedreamer/gdzie-kupic/issues/77) |
+| S3 | [Service]: Outbox Relay & Merchant Matching (`NotifyMerchantsJob`) | XL | S1, S2 | [#78](https://github.com/justthedreamer/gdzie-kupic/issues/78) |
+| S4 | [Service]: New Merchant Post Scan (`NotifyNewMerchantJob`) | M | S3 | [#79](https://github.com/justthedreamer/gdzie-kupic/issues/79) |
+| S5 | [Service]: Zero-Match Handling & Post Status Endpoint | M | S2, S3 | [#80](https://github.com/justthedreamer/gdzie-kupic/issues/80) |
+| U1 | [UI]: Post Creation Form | M | contract S2 | [#81](https://github.com/justthedreamer/gdzie-kupic/issues/81) |
+| U2 | [UI]: Request List, Detail, Status Panel & Zero-Match | L | contract S2, S5 | [#82](https://github.com/justthedreamer/gdzie-kupic/issues/82) |
 
 S1–S5 and U1–U2 map to the Phase 4 tasks in [planning.md](../docs/planning.md); S1 (Hangfire) was split out because the `Gdzie.Kupic.Hangfire` module is still empty. In the UI, a post is called a "request" (`/requests`, "zapytanie"); the API uses `/api/posts`.
 
@@ -49,10 +49,10 @@ S1–S5 and U1–U2 map to the Phase 4 tasks in [planning.md](../docs/planning.m
 
 ---
 
-## Assumptions & open questions (confirm before creating issues)
+## Assumptions & open questions (resolved — approved by the architect)
 
-1. **FR-LOC-1 vs. the creation form:** [FR-LOC-1](../docs/requirements.md) and [design-decisions.md §1](../docs/design-decisions.md) say a saved location is required before posting, while decision 1 lets a buyer create a post with a form-entered location without saving it. Assumed: relax FR-LOC-1 (saved location no longer required) and update both documents when approved.
-2. **Field limits:** title required, max 120 characters; description optional, max 2000 characters. _Proposed — not yet in the docs._
+1. **FR-LOC-1 vs. the creation form:** [FR-LOC-1](../docs/requirements.md) and [design-decisions.md §1](../docs/design-decisions.md) say a saved location is required before posting, while decision 1 lets a buyer create a post with a form-entered location without saving it. Assumed: relax FR-LOC-1 (saved location no longer required) and update both documents when approved. _Done: both documents updated._
+2. **Field limits:** title required, max 120 characters; description optional, max 2000 characters. _Approved; now in FR-POST-1._
 3. **Status endpoint shape:** a separate lightweight status endpoint for polling (not folded into the post detail).
 4. **Buyer post list:** newest first, limit 50, no paging in MVP.
 5. **Out of scope:** real Web Push / email dispatch (Phase 7), merchant responses and chat (Phase 5), real-time (Phase 6), moderation/ban of posts (later phases).

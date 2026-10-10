@@ -23,7 +23,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 
 ### FR-LOCATION — Location & Geocoding
 
-- **FR-LOC-1** — A buyer must add at least one saved location before creating a post
+- **FR-LOC-1** — A buyer may save locations for reuse; a saved location is not required to create a post (a location can be entered directly on the post form and optionally saved afterwards)
 - **FR-LOC-2** — A buyer can manage any number of named saved locations (e.g. "Home", "Office") at any time
 - **FR-LOC-3** — Location input — two methods: (a) "Find me" uses the browser Geolocation API — coordinates arrive directly from the frontend, no geocoding required; (b) manual address entry — geocoded once via the Google Maps Geocoding API (`Gdzie.Kupic.Location` module), result stored as coordinates + display name
 - **FR-LOC-4** — Geocoding happens only when a location is saved; never at post creation time or during matching
@@ -34,7 +34,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 
 ### FR-POST — Post Lifecycle
 
-- **FR-POST-1** — A buyer creates a post by providing a location (picked from saved locations or entered via the location form — browser geolocation or geocoded address), setting a search radius (preset value, custom value greater than 0, or unlimited), choosing a category and exactly one tag (both required), and providing a title, optional description, and urgency flag
+- **FR-POST-1** — A buyer creates a post by providing a location (picked from saved locations or entered via the location form — browser geolocation or geocoded address), setting a search radius (preset value, custom value greater than 0, or unlimited), choosing a category and exactly one tag (both required), and providing a title (required, max 120 characters), optional description (max 2000 characters), and urgency flag
 - **FR-POST-2** — Post creation is a pure database write; no geocoding, no synchronous external calls
 - **FR-POST-3** — Post creation writes the `Post` record and an `Outbox` entry in a single database transaction
 - **FR-POST-4** — Post states: `Active → Fulfilled / Closed / Expired`
