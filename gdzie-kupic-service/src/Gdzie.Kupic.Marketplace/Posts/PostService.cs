@@ -10,6 +10,7 @@ internal sealed class PostService(
     IResponseStorage responses,
     ICatalogueStorage catalogue,
     IOptions<MarketplaceSettings> settings,
+    PostFeedEvents events,
     TimeProvider clock) : IPostService
 {
     public const int MaxTitleLength = 200;
@@ -110,6 +111,7 @@ internal sealed class PostService(
         }
 
         await posts.SaveChangesAsync(ct);
+        await events.PostStatusChangedAsync(postId, buyerId);
 
         return await GetAsync(buyerId, postId, ct);
     }
@@ -130,6 +132,9 @@ internal sealed class PostService(
             return new PostResult<bool>(false, PostError.Conflict, "Only an active, non-expired post can be ended.");
 
         await posts.SaveChangesAsync(ct);
+        await events.PostRemovedAsync(postId);
+        await events.PostStatusChangedAsync(postId, buyerId);
+
         return new PostResult<bool>(true, PostError.None);
     }
 

@@ -27,6 +27,7 @@ public abstract class IntegrationTestBase
         Geocoder.Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingJobScheduler>().Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingNotificationDispatcher>().Reset();
+        IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingPostFeedChannel>().Reset();
     }
 
     [TearDown]

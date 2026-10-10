@@ -6,6 +6,7 @@ using Gdzie.Kupic.Storage;
 internal sealed class MerchantResponseService(
     IMarketplaceStorage marketplace,
     IResponseStorage responses,
+    PostFeedEvents events,
     TimeProvider clock) : IMerchantResponseService
 {
     public async Task<ResponseOutcome> RespondAsync(Guid userId, Guid postId, ResponseState state, CancellationToken ct = default)
@@ -23,7 +24,8 @@ internal sealed class MerchantResponseService(
                 return new ResponseOutcome(ResponseError.PostNotActive);
         }
 
-        // TODO(P6): raise the buyer notification here (FR-NOTIF-3) once the response is committed.
+        await events.PostStatusChangedAsync(postId);
+
         return new ResponseOutcome(ResponseError.None, result.Response!.State, result.ThreadId, result.Response.UpdatedAt);
     }
 }

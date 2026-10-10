@@ -55,9 +55,9 @@ internal sealed class PostStorage(AppDbContext db) : IPostStorage
             .ToListAsync(ct);
     }
 
-    public async Task<int> ExpireOverduePostsAsync(DateTimeOffset now, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Guid>> ExpireOverduePostsAsync(DateTimeOffset now, CancellationToken ct = default)
     {
-        var total = 0;
+        var expired = new List<Guid>();
 
         while (true)
         {
@@ -67,15 +67,27 @@ internal sealed class PostStorage(AppDbContext db) : IPostStorage
                 .Take(ExpireBatchSize)
                 .ToListAsync(ct);
 
-            if (batch.Count == 0) return total;
+            if (batch.Count == 0) return expired;
 
             foreach (var post in batch) post.TryExpire(now);
 
             await db.SaveChangesAsync(ct);
-            total += batch.Count;
+            expired.AddRange(batch.Select(p => p.Id));
             db.ChangeTracker.Clear();
         }
     }
+
+    public async Task<Guid?> FindOwnerIdAsync(Guid postId, CancellationToken ct = default) =>
+        await db.Posts.AsNoTracking().Where(p => p.Id == postId).Select(p => (Guid?)p.BuyerId).SingleOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<Guid>> FindNotifiedUserIdsAsync(Guid postId, CancellationToken ct = default) =>
+        await (from n in db.PostNotifications
+               join a in db.MerchantAccounts on n.MerchantId equals a.MerchantId
+               where n.PostId == postId
+               select a.UserId).Distinct().ToListAsync(ct);
+
+    public async Task<IReadOnlyList<Guid>> FindMerchantUserIdsAsync(Guid merchantId, CancellationToken ct = default) =>
+        await db.MerchantAccounts.AsNoTracking().Where(a => a.MerchantId == merchantId).Select(a => a.UserId).ToListAsync(ct);
 
     public Task SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
 }

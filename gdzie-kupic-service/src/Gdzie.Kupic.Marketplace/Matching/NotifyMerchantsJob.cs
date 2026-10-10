@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Marketplace;
+namespace Gdzie.Kupic.Marketplace;
 
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Hangfire;
@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 internal sealed class NotifyMerchantsJob(
     IPostStorage posts,
     IMatchingStorage matching,
+    PostFeedEvents events,
     IJobScheduler scheduler,
     TimeProvider clock,
     ILogger<NotifyMerchantsJob> logger)
@@ -40,6 +41,7 @@ internal sealed class NotifyMerchantsJob(
 
         post.MarkDispatched(clock.GetUtcNow());
         await posts.SaveChangesAsync();
+        await events.PostStatusChangedAsync(post.Id, post.BuyerId);
 
         logger.LogInformation("Post {PostId} matched {MerchantCount} merchants", postId, merchantIds.Count);
     }
