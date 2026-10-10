@@ -3,6 +3,7 @@ using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Marketplace;
 using Gdzie.Kupic.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Shouldly;
 
@@ -30,7 +31,8 @@ public class PostServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _clock = new FixedTimeProvider(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
         _service = new PostService(
-            new PostStorage(_db), new ResponseStorage(_db), new CatalogueStorage(_db), Options.Create(new MarketplaceSettings()), _clock);
+            new PostStorage(_db), new ResponseStorage(_db), new CatalogueStorage(_db), Options.Create(new MarketplaceSettings()),
+            new PostFeedEvents(new PostStorage(_db), new NullPostFeedChannel(), NullLogger<PostFeedEvents>.Instance), _clock);
 
         _buyerId = Guid.NewGuid();
         _category = new Category(Guid.NewGuid(), "Audio", false, _clock.Now);
@@ -193,9 +195,9 @@ public class PostServiceTests
         var storage = new PostStorage(_db);
         _db.ChangeTracker.Clear();
 
-        (await storage.ExpireOverduePostsAsync(_clock.Now)).ShouldBe(0);
-        (await storage.ExpireOverduePostsAsync(post.ExpiresAt)).ShouldBe(1);
-        (await storage.ExpireOverduePostsAsync(post.ExpiresAt)).ShouldBe(0);
+        (await storage.ExpireOverduePostsAsync(_clock.Now)).ShouldBeEmpty();
+        (await storage.ExpireOverduePostsAsync(post.ExpiresAt)).ShouldBe([post.Id]);
+        (await storage.ExpireOverduePostsAsync(post.ExpiresAt)).ShouldBeEmpty();
 
         (await _db.Posts.SingleAsync()).Status.ShouldBe(PostStatus.Expired);
     }

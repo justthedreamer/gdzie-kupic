@@ -55,6 +55,8 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddSingleton<IJobScheduler>(sp => sp.GetRequiredService<RecordingJobScheduler>());
             services.AddSingleton<RecordingNotificationDispatcher>();
             services.AddScoped<INotificationDispatcher>(sp => sp.GetRequiredService<RecordingNotificationDispatcher>());
+            services.AddSingleton<RecordingPostFeedChannel>();
+            services.AddSingleton<Gdzie.Kupic.Marketplace.IPostFeedChannel>(sp => sp.GetRequiredService<RecordingPostFeedChannel>());
             services.AddSingleton<FakeGeocodingClient>();
             services.AddScoped<IGoogleGeocodingHttpClient>(sp => sp.GetRequiredService<FakeGeocodingClient>());
         });

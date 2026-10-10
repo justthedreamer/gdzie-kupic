@@ -20,8 +20,16 @@ public interface IPostStorage
 
     Task<IReadOnlyList<Post>> ListBuyerPostsAsync(Guid buyerId, bool active, int limit, CancellationToken ct = default);
 
-    /// <summary>Moves overdue Active posts to Expired; returns how many were changed.</summary>
-    Task<int> ExpireOverduePostsAsync(DateTimeOffset now, CancellationToken ct = default);
+    /// <summary>Moves overdue Active posts to Expired; returns the ids of the posts that were changed.</summary>
+    Task<IReadOnlyList<Guid>> ExpireOverduePostsAsync(DateTimeOffset now, CancellationToken ct = default);
+
+    Task<Guid?> FindOwnerIdAsync(Guid postId, CancellationToken ct = default);
+
+    /// <summary>User ids of every account of every merchant that has a notification row for the post.</summary>
+    Task<IReadOnlyList<Guid>> FindNotifiedUserIdsAsync(Guid postId, CancellationToken ct = default);
+
+    /// <summary>User ids of every account of the merchant.</summary>
+    Task<IReadOnlyList<Guid>> FindMerchantUserIdsAsync(Guid merchantId, CancellationToken ct = default);
 
     Task SaveChangesAsync(CancellationToken ct = default);
 }

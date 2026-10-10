@@ -107,7 +107,8 @@ try
     builder.Services.InstallCatalogueModule();
     builder.Services.InstallMarketplaceModule(builder.Configuration);
     builder.Services.InstallChatModule(builder.Configuration);
-    builder.Services.AddRealtimeModule(realtime => { });
+    builder.Services.AddRealtimeModule(realtime => realtime
+        .AddChannel<IPostFeedChannel, PostFeedChannel>());
     builder.Services.AddHealthChecks().AddCheck<Gdzie.Kupic.Service.API.ObjectStorageHealthCheck>("object-storage");
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
