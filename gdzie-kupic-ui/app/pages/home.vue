@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BuyerRequestSummary } from '~/utils/buyerHome'
+
 definePageMeta({
   layout: 'buyer',
   middleware: ['auth', 'role'],
@@ -11,20 +13,34 @@ useSeoMeta({ title: () => `${t('buyer_home.title')} | Gdzie Kupić` })
 
 const authStore = useAuthStore()
 const buyerHomeApi = useBuyerHomeApi()
+const postsApi = usePostsApi()
 
 const { data, status, error, refresh } = useAsyncData(
   'buyer-home',
-  () => buyerHomeApi.load(),
-  { server: false, default: () => emptyBuyerHome() },
+  async () => {
+    const [posts, extras] = await Promise.all([postsApi.list('active'), buyerHomeApi.load()])
+
+    return { requests: posts.map(postToSummary), ...extras }
+  },
+  { server: false, default: () => ({ requests: [] as BuyerRequestSummary[], ...emptyBuyerHome() }) },
 )
 const isLoading = computed(() => (status.value === 'idle' || status.value === 'pending') && !data.value.requests.length)
 
 const requests = computed(() => sortNewestFirst(data.value.requests))
 
 const selectedId = ref<string | null>(null)
-const selected = computed(() =>
+const chosen = computed(() =>
   requests.value.find(request => request.id === selectedId.value) ?? pickDefaultRequest(requests.value),
 )
+
+// The list only carries the notified count; the status endpoint has the full picture.
+const { status: liveStatus } = usePostStatus(() => chosen.value?.id)
+const selected = computed(() => {
+  const base = chosen.value
+  if (!base) return null
+
+  return liveStatus.value ? { ...base, ...statusToLiveCounts(liveStatus.value, base.isLive) } : base
+})
 
 const activity = computed(() =>
   data.value.activity

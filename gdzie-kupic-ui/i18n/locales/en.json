@@ -210,6 +210,70 @@
         "generic": "Could not publish the request. Please try again.",
         "unavailable": "The service is currently unavailable. Please try again later."
       }
+    },
+    "status": {
+      "Active": "Active",
+      "Fulfilled": "Found",
+      "Closed": "Closed",
+      "Expired": "Expired"
+    },
+    "badge": {
+      "urgent": "Urgent",
+      "long_lived": "Long-lived"
+    },
+    "remaining": {
+      "left": "{time} left",
+      "day": "{n} d",
+      "hour": "{n} h",
+      "minute": "{n} min",
+      "elapsed": "Time is up"
+    },
+    "list": {
+      "title": "Requests",
+      "tab_active": "Active",
+      "tab_ended": "Ended",
+      "notified": "Notified: {count}",
+      "empty_active_title": "You have no active requests",
+      "empty_active_text": "Describe what you are looking for and nearby merchants will reply.",
+      "empty_ended_title": "No ended requests",
+      "empty_ended_text": "Requests you found, closed or that expired show up here.",
+      "load_error": "Could not load requests."
+    },
+    "detail": {
+      "back": "All requests",
+      "details": "Details",
+      "created": "Posted",
+      "expires": "Expires",
+      "ended": "Ended",
+      "time_left": "Time left",
+      "load_error": "Could not load the request.",
+      "not_found_title": "Request not found",
+      "not_found_text": "The request does not exist or does not belong to your account.",
+      "matching": "Looking for merchants…",
+      "matching_hint": "We are notifying merchants nearby. The status refreshes automatically.",
+      "no_matches": "No merchant nearby matches this request yet.",
+      "status_error": "Could not load the status.",
+      "status_stale": "Could not refresh the status. Showing the last known data.",
+      "responses_title": "Merchant responses",
+      "responses_placeholder": "Merchant responses will show up here.",
+      "chats_title": "Chats",
+      "chats_placeholder": "Chats with merchants will show up here.",
+      "found": "I found it",
+      "close": "Close request",
+      "confirm_fulfil_title": "Mark as found?",
+      "confirm_fulfil_text": "The request moves to ended and merchants stop seeing it.",
+      "confirm_fulfil_button": "Yes, I found it",
+      "confirm_close_title": "Close the request?",
+      "confirm_close_text": "The request moves to ended and merchants stop seeing it.",
+      "confirm_close_button": "Close request",
+      "conflict": "This request is no longer active, so it cannot be changed.",
+      "action_error": "The action failed. Please try again.",
+      "action_unavailable": "Cannot reach the server. Please try again.",
+      "long_lived_title": "We have not found anyone yet",
+      "long_lived_text": "No merchant nearby was notified. You can extend the request to {days} days — merchants who join later will be notified.",
+      "long_lived_accept": "Extend to {days} days",
+      "long_lived_dismiss": "Not now",
+      "long_lived_conflict": "This request can no longer be extended."
     }
   },
   "location_input": {
@@ -232,15 +296,14 @@
     "address_found": "Address found: {address}",
     "errors": {
       "denied": "Location access was denied. Allow it in your browser settings or type an address instead.",
-      "unavailable": "Your location could not be determined. Type an address instead.",
+      "unavailable": "The service is currently unavailable. Try again later.",
       "timeout": "Getting your location timed out. Try again or type an address instead.",
       "unknown": "Could not get your location. Type an address instead.",
       "unsupported": "Your browser does not support geolocation. Type an address instead.",
       "postal_code": "Enter the postal code as 00-000.",
       "address_not_found": "The address could not be found. Check the details and try again.",
       "geocoding": "Could not look up the address. Try again later or use automatic detection.",
-      "generic": "Could not look up the address. Try again.",
-      "unavailable": "The service is currently unavailable. Try again later."
+      "generic": "Could not look up the address. Try again."
     }
   },
   "catalogue": {

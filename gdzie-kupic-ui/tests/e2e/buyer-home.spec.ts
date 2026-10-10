@@ -1,11 +1,24 @@
 import { test, expect } from '@playwright/test'
-import { loginAs } from './support/api-mock'
+import { loginAs, mockApi } from './support/api-mock'
+import { hoursFromNow, postPath, sampleStatus, samplePost } from './support/posts'
 
-// The Buyer home runs on mocked data in dev (`buyerHomeMock`), which is what
-// the dev server used by Playwright serves.
+// Requests and their status come from the posts API (mocked here); merchant activity and
+// chats stay mocked by the app in dev (`buyerHomeMock`), which is what the dev server serves.
+
+const microphone = samplePost({ id: 'req-1', title: 'Szukam mikrofonu Shure SM7B', notifiedCount: 14, createdAt: hoursFromNow(-0.2) })
+const iphone = samplePost({ id: 'req-3', title: 'Szukam używanego iPhone 14 Pro', notifiedCount: 22, createdAt: hoursFromNow(-3) })
+const notified: Record<string, number> = { 'req-1': 14, 'req-3': 22 }
 
 test.describe('Buyer home', () => {
   test.beforeEach(async ({ page }) => {
+    await mockApi(page, [
+      { method: 'GET', path: '/api/posts', respond: () => ({ json: [microphone, iphone] }) },
+      {
+        method: 'GET',
+        path: postPath('/status'),
+        respond: req => ({ json: sampleStatus({ notifiedCount: notified[req.url.pathname.split('/')[3] ?? ''] ?? 0 }) }),
+      },
+    ])
     await loginAs(page, 'Buyer')
     await expect(page).toHaveURL('/home')
   })
