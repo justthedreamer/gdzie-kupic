@@ -35,6 +35,11 @@ export interface ShellConfig {
 
 export const BUYER_NEW_REQUEST_PATH = '/requests/new'
 
+/** Text of a navigation badge: the count, capped at "99+". */
+export function formatBadgeCount(count: number): string {
+  return count > 99 ? '99+' : String(count)
+}
+
 // ─── Buyer ──────────────────────────────────────────────────────────────────
 const buyerHome: ShellNavItem = { key: 'home', icon: 'i-heroicons-home', label: 'buyer_nav.home', to: '/home' }
 const buyerRequests: ShellNavItem = { key: 'requests', icon: 'i-heroicons-clipboard-document-list', label: 'nav.requests', to: '/requests' }

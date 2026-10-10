@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  DISTANCE_OPTIONS_KM,
-  feedCategories,
-  filterFeed,
-  unansweredCount,
-  type FeedSort,
-  type FeedTab,
-} from '~/utils/merchantFeed'
+import { DISTANCE_OPTIONS_KM, type FeedSort, type FeedTab, type MerchantFeedRequest, type MerchantResponse } from '~/utils/merchantFeed'
 
 definePageMeta({
   layout: 'merchant',
@@ -21,28 +14,46 @@ useSeoMeta({ title: () => `${t('merchant_feed.title')} | Gdzie Kupić` })
 const feedStore = useMerchantFeedStore()
 onMounted(() => feedStore.load())
 
+const requests = computed(() => feedStore.requests)
 const isLoading = computed(() => feedStore.status === 'idle' || feedStore.status === 'pending')
 const hasError = computed(() => feedStore.status === 'error')
+// Nothing at all for this merchant (not just an empty tab): the summary counts every tab.
+const hasNothing = computed(() => feedStore.summary !== null && feedStore.summary.newCount + feedStore.summary.respondedCount === 0)
 
 // ─── Filters ────────────────────────────────────────────────────────────────
+// The server filters and sorts: every change reloads the feed from its first page.
 const ALL = '__all__'
-const tab = ref<FeedTab>('new')
-const category = ref<string>(ALL)
-const distance = ref<number>(0)
-const sort = ref<FeedSort>('newest')
 const filtersOpen = ref(false)
 
-const requests = computed(() => feedStore.requests)
+const tab = computed<FeedTab>({
+  get: () => feedStore.filters.tab,
+  set: (value) => { void feedStore.setFilters({ tab: value }) },
+})
+const category = computed<string>({
+  get: () => feedStore.filters.categoryId ?? ALL,
+  set: (value) => { void feedStore.setFilters({ categoryId: value === ALL ? null : value }) },
+})
+const distance = computed<number>({
+  get: () => feedStore.filters.maxDistanceKm ?? 0,
+  set: (value) => { void feedStore.setFilters({ maxDistanceKm: value === 0 ? null : value }) },
+})
+const sort = computed<FeedSort>({
+  get: () => feedStore.filters.sort,
+  set: (value) => { void feedStore.setFilters({ sort: value }) },
+})
 
-const tabs = computed(() => [
-  { label: t('merchant_feed.tabs.new'), value: 'new', badge: unansweredCount(requests.value) },
-  { label: t('merchant_feed.tabs.responded'), value: 'responded' },
-  { label: t('merchant_feed.tabs.all'), value: 'all' },
-])
+const tabs = computed(() => {
+  const summary = feedStore.summary
+  return [
+    { label: t('merchant_feed.tabs.new'), value: 'new', badge: summary?.newCount },
+    { label: t('merchant_feed.tabs.responded'), value: 'responded', badge: summary?.respondedCount },
+    { label: t('merchant_feed.tabs.all'), value: 'all', badge: summary ? summary.newCount + summary.respondedCount : undefined },
+  ]
+})
 
 const categoryItems = computed(() => [
   { label: t('merchant_feed.filters.all_categories'), value: ALL },
-  ...feedCategories(requests.value).map(name => ({ label: name, value: name })),
+  ...feedStore.categories.map(({ id, name }) => ({ label: name, value: id })),
 ])
 const distanceItems = computed(() => [
   { label: t('merchant_feed.filters.any_distance'), value: 0 },
@@ -53,14 +64,29 @@ const sortItems = computed(() => [
   { label: t('merchant_feed.filters.nearest'), value: 'nearest' },
 ])
 
-const visible = computed(() =>
-  filterFeed(requests.value, {
-    tab: tab.value,
-    category: category.value === ALL ? null : category.value,
-    maxDistanceKm: distance.value === 0 ? null : distance.value,
-    sort: sort.value,
-  }),
-)
+// ─── Responding ─────────────────────────────────────────────────────────────
+const respondError = ref('')
+
+async function respond(request: MerchantFeedRequest, state: MerchantResponse) {
+  respondError.value = ''
+  try {
+    await feedStore.respond(request.id, state)
+  }
+  catch (err) {
+    if (parseApiError(err).status === 409) {
+      // The post closed or expired in the meantime: show what is still open.
+      respondError.value = t('merchant_feed.respond_conflict')
+      await feedStore.load(true)
+    }
+    else {
+      respondError.value = t('merchant_feed.respond_error')
+    }
+  }
+}
+
+// ─── Infinite scroll ────────────────────────────────────────────────────────
+const sentinel = ref<HTMLElement | null>(null)
+useInfiniteScroll(sentinel, () => feedStore.loadMore(), { refresh: () => requests.value.length })
 </script>
 
 <template>
@@ -95,23 +121,7 @@ const visible = computed(() =>
       </div>
     </div>
 
-    <p v-if="isLoading && !requests.length" class="text-sm text-muted">
-      {{ $t('common.loading') }}
-    </p>
-
-    <div v-else-if="hasError" class="space-y-3">
-      <UAlert
-        color="error"
-        variant="subtle"
-        icon="i-heroicons-exclamation-circle"
-        :description="$t('merchant_feed.load_error')"
-      />
-      <UButton variant="outline" icon="i-heroicons-arrow-path" @click="feedStore.load(true)">
-        {{ $t('common.retry') }}
-      </UButton>
-    </div>
-
-    <UCard v-else-if="!requests.length">
+    <UCard v-if="hasNothing && !hasError">
       <div class="space-y-3 py-8 text-center">
         <UIcon name="i-heroicons-inbox" class="size-10 text-muted" />
         <p class="font-medium text-highlighted">
@@ -140,11 +150,57 @@ const visible = computed(() =>
         <USelect v-model="sort" :items="sortItems" :aria-label="$t('merchant_feed.filters.sort')" />
       </div>
 
-      <ul v-if="visible.length" class="space-y-4">
-        <li v-for="request in visible" :key="request.id">
-          <MerchantFeedCard :request="request" @respond="feedStore.respond(request.id, $event)" />
-        </li>
-      </ul>
+      <UAlert
+        v-if="respondError"
+        color="error"
+        variant="subtle"
+        icon="i-heroicons-exclamation-circle"
+        :description="respondError"
+      />
+
+      <p v-if="isLoading && !requests.length" class="text-sm text-muted">
+        {{ $t('common.loading') }}
+      </p>
+
+      <div v-else-if="hasError" class="space-y-3">
+        <UAlert
+          color="error"
+          variant="subtle"
+          icon="i-heroicons-exclamation-circle"
+          :description="$t('merchant_feed.load_error')"
+        />
+        <UButton variant="outline" icon="i-heroicons-arrow-path" @click="feedStore.load(true)">
+          {{ $t('common.retry') }}
+        </UButton>
+      </div>
+
+      <template v-else-if="requests.length">
+        <ul class="space-y-4">
+          <li v-for="request in requests" :key="request.id">
+            <MerchantFeedCard :request="request" @respond="respond(request, $event)" />
+          </li>
+        </ul>
+
+        <!-- The sentinel loads the next page when it scrolls into view; the button is the manual way (and the retry). -->
+        <div
+          v-if="feedStore.nextCursor"
+          ref="sentinel"
+          class="flex flex-col items-center gap-2 py-2"
+          data-testid="feed-more"
+        >
+          <p v-if="feedStore.loadMoreFailed" class="text-sm text-error">
+            {{ $t('merchant_feed.load_more_error') }}
+          </p>
+          <UButton
+            color="neutral"
+            variant="outline"
+            :loading="feedStore.loadingMore"
+            @click="feedStore.loadMore()"
+          >
+            {{ feedStore.loadMoreFailed ? $t('common.retry') : $t('merchant_feed.load_more') }}
+          </UButton>
+        </div>
+      </template>
 
       <UCard v-else>
         <p class="py-6 text-center text-sm text-muted">
