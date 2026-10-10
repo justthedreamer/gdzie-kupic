@@ -1,3 +1,5 @@
+import { CHAT_PATH } from '~/utils/chat'
+
 // Navigation of the role-specific app shells (sidebar on desktop, bottom tabs +
 // overflow menu on mobile). An item without `to` has no page yet and is
 // rendered disabled.
@@ -43,7 +45,7 @@ export function formatBadgeCount(count: number): string {
 // ─── Buyer ──────────────────────────────────────────────────────────────────
 const buyerHome: ShellNavItem = { key: 'home', icon: 'i-heroicons-home', label: 'buyer_nav.home', to: '/home' }
 const buyerRequests: ShellNavItem = { key: 'requests', icon: 'i-heroicons-clipboard-document-list', label: 'nav.requests', to: '/requests' }
-const buyerChats: ShellNavItem = { key: 'chats', icon: 'i-heroicons-chat-bubble-left-right', label: 'buyer_nav.chats' }
+const buyerChats: ShellNavItem = { key: 'chats', icon: 'i-heroicons-chat-bubble-left-right', label: 'buyer_nav.chats', to: CHAT_PATH }
 const savedSearches: ShellNavItem = { key: 'saved_searches', icon: 'i-heroicons-bookmark', label: 'buyer_nav.saved_searches' }
 const savedLocations: ShellNavItem = { key: 'saved_locations', icon: 'i-heroicons-map-pin', label: 'nav.saved_locations', to: '/saved-locations' }
 const buyerProfile: ShellNavItem = { key: 'profile', icon: 'i-heroicons-user', label: 'buyer_nav.profile' }
@@ -64,7 +66,7 @@ export const MERCHANT_FEED_PATH = '/feed'
 
 const feed: ShellNavItem = { key: 'feed', icon: 'i-heroicons-inbox-stack', label: 'merchant_nav.feed', to: MERCHANT_FEED_PATH }
 const responses: ShellNavItem = { key: 'responses', icon: 'i-heroicons-check-circle', label: 'merchant_nav.responses' }
-const merchantChats: ShellNavItem = { key: 'chats', icon: 'i-heroicons-chat-bubble-left-right', label: 'merchant_nav.chats' }
+const merchantChats: ShellNavItem = { key: 'chats', icon: 'i-heroicons-chat-bubble-left-right', label: 'merchant_nav.chats', to: CHAT_PATH }
 const merchantProfile: ShellNavItem = { key: 'profile', icon: 'i-heroicons-user', label: 'merchant_nav.profile' }
 const shopSettings: ShellNavItem = { key: 'shop_settings', icon: 'i-heroicons-building-storefront', label: 'merchant_nav.shop_settings', to: '/merchant/subscriptions' }
 const notifications: ShellNavItem = { key: 'notifications', icon: 'i-heroicons-bell', label: 'merchant_nav.notifications' }

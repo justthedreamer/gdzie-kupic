@@ -8,7 +8,7 @@ export default defineNuxtConfig({
 
   $development: {
     runtimeConfig: {
-      public: { buyerHomeMock: true, merchantFeedMock: true },
+      public: { buyerHomeMock: true, merchantFeedMock: true, chatMock: true },
     },
   },
 
@@ -89,6 +89,10 @@ export default defineNuxtConfig({
       // Same for the Merchant Requests Feed (and request details). Override
       // with NUXT_PUBLIC_MERCHANT_FEED_MOCK. See docs/api.md.
       merchantFeedMock: false,
+
+      // Same for the chat (inbox, threads, unread badge). Override with
+      // NUXT_PUBLIC_CHAT_MOCK. See docs/api.md.
+      chatMock: false,
 
       // Pre-generated, non-expiring JWTs for the seeded test accounts — see
       // docs/local-dev.md § Mock Accounts & Pre-Generated Tokens. Used by the

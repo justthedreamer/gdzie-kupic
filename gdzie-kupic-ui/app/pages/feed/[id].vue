@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { canRespond, formatDistance, RESPONSE_COLOR, threadPath, type MerchantResponse } from '~/utils/merchantFeed'
+import { threadPath } from '~/utils/chat'
+import { canRespond, formatDistance, RESPONSE_COLOR, type MerchantResponse } from '~/utils/merchantFeed'
 
 definePageMeta({
   layout: 'merchant',

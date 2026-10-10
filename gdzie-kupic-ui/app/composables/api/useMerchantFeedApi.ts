@@ -22,7 +22,7 @@ import {
 // in memory for the life of the page.
 const mockResponses = new Map<string, MerchantResponse>()
 /** A positive response opens a chat thread, which stays when the merchant later says "can't help". */
-const mockThreads = new Map<string, string>()
+const mockThreads = new Map<string, string>([['feed-4', 'thread-feed-4'], ['feed-5', 'thread-feed-5']])
 
 /**
  * Lets a test close posts while the page is open (a race with the buyer):

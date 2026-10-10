@@ -21,9 +21,6 @@ export const RESPONSE_COLOR = {
 /** A merchant can answer (and change the answer) only while the post is active. */
 export const canRespond = (request: { status: PostStatus }): boolean => request.status === 'Active'
 
-/** The chat thread opened by a positive response; the thread view itself comes with the chat tickets. */
-export const threadPath = (threadId: string): string => `/chat/${threadId}`
-
 export interface NamedRef {
   id: string
   name: string
