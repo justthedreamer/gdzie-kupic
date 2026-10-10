@@ -14,6 +14,7 @@ COPY src/Gdzie.Kupic.Hangfire/Gdzie.Kupic.Hangfire.csproj           Gdzie.Kupic.
 COPY src/Gdzie.Kupic.Notifications/Gdzie.Kupic.Notifications.csproj     Gdzie.Kupic.Notifications/
 COPY src/Gdzie.Kupic.Location/Gdzie.Kupic.Location.csproj           Gdzie.Kupic.Location/
 COPY src/Gdzie.Kupic.Marketplace/Gdzie.Kupic.Marketplace.csproj         Gdzie.Kupic.Marketplace/
+COPY src/Gdzie.Kupic.Chat/Gdzie.Kupic.Chat.csproj                       Gdzie.Kupic.Chat/
 COPY src/Gdzie.Kupic.Storage/Gdzie.Kupic.Storage.csproj             Gdzie.Kupic.Storage/
 
 RUN dotnet restore Gdzie.Kupic.API/Gdzie.Kupic.API.csproj
