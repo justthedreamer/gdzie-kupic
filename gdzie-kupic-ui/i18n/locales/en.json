@@ -65,6 +65,9 @@
     "load_more_error": "Could not load more requests.",
     "respond_error": "Could not save your response. Try again.",
     "respond_conflict": "This request is no longer open for responses. The list has been refreshed.",
+    "respond_conflict_page": "This request is no longer open for responses. The page has been refreshed.",
+    "closed_notice": "This request is no longer active ({status}), so the response cannot be changed.",
+    "open_thread": "Open conversation",
     "response": {
       "HaveIt": "I have it",
       "MayHaveIt": "I may have it",

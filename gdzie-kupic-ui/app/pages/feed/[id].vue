@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatDistance, RESPONSE_COLOR, type MerchantResponse } from '~/utils/merchantFeed'
+import { canRespond, formatDistance, RESPONSE_COLOR, threadPath, type MerchantResponse } from '~/utils/merchantFeed'
 
 definePageMeta({
   layout: 'merchant',
@@ -16,16 +16,19 @@ const feedStore = useMerchantFeedStore()
 const id = computed(() => String(route.params.id))
 const request = computed(() => feedStore.byId(id.value))
 const isLoading = ref(true)
+const isOpen = computed(() => (request.value ? canRespond(request.value) : false))
+const threadId = computed(() => feedStore.threadIdOf(id.value))
+const isSaving = computed(() => feedStore.isResponding(id.value))
 
-// A direct link may point at a request that is not on a loaded page of the feed.
+// Always asks the server: the copy on the loaded feed page lacks the chat thread
+// and may be out of date (the post may have closed meanwhile). A direct link
+// may also point at a request that is not on a loaded page at all.
 onMounted(async () => {
-  if (!feedStore.byId(id.value)) {
-    try {
-      await feedStore.fetchOne(id.value)
-    }
-    catch {
-      // Shown as "not found".
-    }
+  try {
+    await feedStore.fetchOne(id.value)
+  }
+  catch {
+    // Shown as "not found" when there is no cached copy either.
   }
   isLoading.value = false
 })
@@ -54,7 +57,7 @@ async function respond(state: MerchantResponse) {
   }
   catch (err) {
     respondError.value = parseApiError(err).status === 409
-      ? t('merchant_feed.respond_conflict')
+      ? t('merchant_feed.respond_conflict_page')
       : t('merchant_feed.respond_error')
   }
 }
@@ -187,7 +190,26 @@ async function respond(state: MerchantResponse) {
             <p class="mt-1 mb-3 text-sm text-muted" data-testid="current-response">
               {{ request.myResponse ? $t(`merchant_feed.response.${request.myResponse}`) : $t('merchant_feed.no_response_yet') }}
             </p>
-            <MerchantResponseButtons :current="request.myResponse" @select="respond" />
+            <MerchantResponseButtons :current="request.myResponse" :disabled="!isOpen || isSaving" @select="respond" />
+            <UAlert
+              v-if="!isOpen"
+              class="mt-3"
+              color="neutral"
+              variant="subtle"
+              icon="i-heroicons-lock-closed"
+              data-testid="closed-notice"
+              :description="$t('merchant_feed.closed_notice', { status: $t(`request.status.${request.status}`) })"
+            />
+            <UButton
+              v-if="threadId"
+              class="mt-3"
+              :to="threadPath(threadId)"
+              variant="soft"
+              icon="i-heroicons-chat-bubble-left-right"
+              data-testid="open-thread"
+            >
+              {{ $t('merchant_feed.open_thread') }}
+            </UButton>
             <UAlert
               v-if="respondError"
               class="mt-3"

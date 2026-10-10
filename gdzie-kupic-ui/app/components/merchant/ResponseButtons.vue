@@ -4,6 +4,8 @@ import { MERCHANT_RESPONSES, RESPONSE_COLOR, type MerchantResponse } from '~/uti
 defineProps<{
   /** The merchant's current answer, highlighted. */
   current: MerchantResponse | null
+  /** The post is closed or an answer is being saved. */
+  disabled?: boolean
 }>()
 
 defineEmits<{ select: [state: MerchantResponse] }>()
@@ -26,6 +28,7 @@ const ICONS: Record<MerchantResponse, string> = {
       :icon="ICONS[state]"
       :aria-label="$t(`merchant_feed.response.${state}`)"
       :aria-pressed="current === state"
+      :disabled="disabled"
       @click="$emit('select', state)"
     >
       <span class="hidden sm:inline">{{ $t(`merchant_feed.response.${state}`) }}</span>

@@ -65,6 +65,9 @@
     "load_more_error": "Nie udało się załadować kolejnych zapytań.",
     "respond_error": "Nie udało się zapisać odpowiedzi. Spróbuj ponownie.",
     "respond_conflict": "Na to zapytanie nie można już odpowiadać. Lista została odświeżona.",
+    "respond_conflict_page": "Na to zapytanie nie można już odpowiadać. Stan strony został odświeżony.",
+    "closed_notice": "To zapytanie nie jest już aktywne ({status}), więc nie można zmienić odpowiedzi.",
+    "open_thread": "Otwórz rozmowę",
     "response": {
       "HaveIt": "Mam to",
       "MayHaveIt": "Mogę mieć",
