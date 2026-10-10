@@ -20,6 +20,5 @@ public sealed class User(
     public ICollection<RefreshToken> RefreshTokens { get; init; } = [];
     public ICollection<PasswordResetToken> PasswordResetTokens { get; init; } = [];
     public ICollection<ExternalLogin> ExternalLogins { get; init; } = [];
-
-    // TODO: Re-add PushSubscriptions navigation once the Notifications module is configured (Phase 3+).
+    public ICollection<Notifications.PushSubscription> PushSubscriptions { get; init; } = [];
 }

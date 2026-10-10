@@ -31,6 +31,7 @@ public static class ModuleInstaller
         services.AddScoped<IFeedStorage, FeedStorage>();
         services.AddScoped<IMatchingStorage, MatchingStorage>();
         services.AddScoped<IOutboxStorage, OutboxStorage>();
+        services.AddScoped<INotificationStorage, NotificationStorage>();
     }
 
     public static async Task UseStorageModule(this IHost host, CancellationToken ct = default)
