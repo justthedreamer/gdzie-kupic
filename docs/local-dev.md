@@ -101,6 +101,7 @@ Copy to `.env` and fill in real values before starting the stack.
 | `MINIO_PUBLIC_URL` | `http://localhost:9000` | URL under which browsers reach MinIO; presigned attachment URLs are signed for it |
 | `SEQ_API_KEY` | *(empty)* | Seq ingestion API key; leave empty to accept all |
 | `APP_BASE_URL` | `http://localhost:3000` | Address of the web app, used for the links in e-mails (`App__BaseUrl`). E-mails are only logged until a provider is added |
+| `Digest__Enabled` / `Digest__Cron` / `Digest__TimeZone` | `true` / `0 9 * * *` / `Europe/Warsaw` | Schedule of the merchant digest e-mail (5-field cron evaluated in the time zone; twice a day e.g. `0 9,18 * * *`). Not in `.env`; set them as service environment variables if needed. An unknown time zone falls back to UTC with an error in the log |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | *(empty)* | VAPID identity for Web Push (e.g. `npx web-push generate-vapid-keys`; subject like `mailto:admin@example.com`). When empty Web Push is disabled: the service starts with a warning and `GET /api/push/vapid-public-key` answers `503` |
 | `JWT_SECRET` | *(required)* | Token signing secret, â‰¥ 32 characters |
 | `JWT_EXPIRY_DAYS` | `7` | Access token lifetime |

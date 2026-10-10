@@ -14,6 +14,10 @@ public sealed class RecordingJobScheduler(IServiceProvider services) : IJobSched
     private readonly ConcurrentQueue<(Type JobType, LambdaExpression Expression)> _pending = new();
     private readonly ConcurrentQueue<Type> _history = new();
 
+    private readonly ConcurrentDictionary<string, (string Cron, TimeZoneInfo? TimeZone)> _recurring = new();
+
+    public IReadOnlyDictionary<string, (string Cron, TimeZoneInfo? TimeZone)> Recurring => _recurring;
+
     public IReadOnlyCollection<Type> Enqueued => _history.ToArray();
 
     public int CountOf<TJob>() => _history.Count(t => t == typeof(TJob));
@@ -27,9 +31,9 @@ public sealed class RecordingJobScheduler(IServiceProvider services) : IJobSched
 
     public string Schedule<TJob>(Expression<Func<TJob, Task>> job, TimeSpan delay) => Enqueue(job);
 
-    public void AddOrUpdateRecurring<TJob>(string recurringJobId, Expression<Func<TJob, Task>> job, string cronExpression)
-    {
-    }
+    public void AddOrUpdateRecurring<TJob>(
+        string recurringJobId, Expression<Func<TJob, Task>> job, string cronExpression, TimeZoneInfo? timeZone = null) =>
+        _recurring[recurringJobId] = (cronExpression, timeZone);
 
     public void RemoveRecurring(string recurringJobId)
     {

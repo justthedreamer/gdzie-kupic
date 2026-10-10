@@ -38,6 +38,22 @@ internal sealed class NotificationStorage(AppDbContext db) : INotificationStorag
         }
     }
 
+    public async Task<IReadOnlyList<DigestRecipient>> FindDigestRecipientsAsync(CancellationToken ct = default) =>
+        await (from a in db.MerchantAccounts.AsNoTracking()
+               join u in db.Users.AsNoTracking() on a.UserId equals u.Id
+               join m in db.Merchants.AsNoTracking() on a.MerchantId equals m.Id
+               where u.EmailNotificationsEnabled && u.BanDetails == null && m.BanDetails == null
+               select new DigestRecipient(u.Id, m.Id, u.Email, u.FirstName)).ToListAsync(ct);
+
+    public Task<bool> WasDigestSentAsync(Guid userId, DateTimeOffset slot, CancellationToken ct = default) =>
+        db.DigestDeliveries.AnyAsync(d => d.UserId == userId && d.Slot == slot, ct);
+
+    public async Task RecordDigestSentAsync(Guid userId, DateTimeOffset slot, DateTimeOffset now, CancellationToken ct = default)
+    {
+        db.DigestDeliveries.Add(new DigestDelivery(Guid.NewGuid(), userId, slot, now));
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool?> GetEmailEnabledAsync(Guid userId, CancellationToken ct = default) =>
         await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => (bool?)u.EmailNotificationsEnabled).SingleOrDefaultAsync(ct);
 

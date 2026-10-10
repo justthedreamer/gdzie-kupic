@@ -179,6 +179,16 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 
 **Unique constraint**: `(PostId, MerchantId)` — deduplication guard
 
+### `DigestDeliveries`
+| Column | Type | Notes |
+|---|---|---|
+| `Id` | `uuid` | PK |
+| `UserId` | `uuid` | FK → Users (cascade) |
+| `Slot` | `timestamptz` | UTC time of the schedule slot (latest cron occurrence) the digest belongs to |
+| `SentAt` | `timestamptz` | |
+
+**Unique constraint**: `(UserId, Slot)` - a re-run or retry within a slot sends no second merchant digest to the user.
+
 ### `PushSubscriptions`
 | Column | Type | Notes |
 |---|---|---|

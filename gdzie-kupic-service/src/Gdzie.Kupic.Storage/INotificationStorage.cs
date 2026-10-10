@@ -4,8 +4,17 @@ public sealed record PushSubscriptionInfo(Guid Id, Guid UserId, string Endpoint,
 
 public sealed record EmailRecipient(Guid UserId, string Email, string? FirstName, Domain.Model.Role Role, bool EmailEnabled, bool Banned);
 
+public sealed record DigestRecipient(Guid UserId, Guid MerchantId, string Email, string? FirstName);
+
 public interface INotificationStorage
 {
+    /// <summary>User accounts of merchants that opted in to e-mail, skipping banned users and banned merchants.</summary>
+    Task<IReadOnlyList<DigestRecipient>> FindDigestRecipientsAsync(CancellationToken ct = default);
+
+    Task<bool> WasDigestSentAsync(Guid userId, DateTimeOffset slot, CancellationToken ct = default);
+
+    Task RecordDigestSentAsync(Guid userId, DateTimeOffset slot, DateTimeOffset now, CancellationToken ct = default);
+
     Task<bool?> GetEmailEnabledAsync(Guid userId, CancellationToken ct = default);
 
     Task<bool> SetEmailEnabledAsync(Guid userId, bool enabled, CancellationToken ct = default);

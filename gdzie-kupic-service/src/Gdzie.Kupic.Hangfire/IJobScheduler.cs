@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 namespace Gdzie.Kupic.Hangfire;
 
@@ -13,7 +13,9 @@ public interface IJobScheduler
 
     string Schedule<TJob>(Expression<Func<TJob, Task>> job, TimeSpan delay);
 
-    void AddOrUpdateRecurring<TJob>(string recurringJobId, Expression<Func<TJob, Task>> job, string cronExpression);
+    /// <param name="timeZone">The zone the cron expression is evaluated in; UTC when null.</param>
+    void AddOrUpdateRecurring<TJob>(
+        string recurringJobId, Expression<Func<TJob, Task>> job, string cronExpression, TimeZoneInfo? timeZone = null);
 
     void RemoveRecurring(string recurringJobId);
 }
