@@ -238,6 +238,41 @@
     "load_error": "Could not load the account.",
     "save_error": "Could not save the changes. Try again."
   },
+  "notification_settings": {
+    "title": "Notifications",
+    "subtitle": "Choose how the app keeps you informed.",
+    "push": {
+      "title": "Push notifications",
+      "label": "Notifications on this device",
+      "hint": {
+        "loading": "Checking whether this device supports notifications…",
+        "unsupported": "This browser does not support push notifications. On iPhone and iPad add the app to the home screen and open it from there.",
+        "not_configured": "Push notifications are not available right now. Try again later.",
+        "blocked": "Notifications are blocked in the browser. Allow them in the site settings (the lock icon next to the address), then reload the page.",
+        "off": "You get a notification even when the app is closed. The browser will ask for permission.",
+        "on": "This device gets notifications."
+      },
+      "error": "Could not change the setting. Try again."
+    },
+    "email": {
+      "title": "E-mail",
+      "label": "E-mail notifications",
+      "buyer_hint": "When you are away from the app we will e-mail you about merchant responses and new messages.",
+      "merchant_hint": "We will send you a regular summary of unprocessed requests.",
+      "load_error": "Could not load the e-mail settings.",
+      "save_error": "Could not save the setting. Try again."
+    }
+  },
+  "push_banner": {
+    "title": "Turn on notifications",
+    "text": "Get notified about new requests, responses and messages, even when the app is closed.",
+    "enable": "Turn on",
+    "settings": "More options",
+    "dismiss": "Dismiss",
+    "error": "Could not turn notifications on.",
+    "install_title": "Notifications on your phone",
+    "install_text": "To get notifications, add the app to the home screen (in the browser: Share, then \"Add to Home Screen\") and open it from there."
+  },
   "request": {
     "new": "New request",
     "title": "Title",
