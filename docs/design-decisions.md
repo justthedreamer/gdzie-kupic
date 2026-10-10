@@ -41,7 +41,7 @@ Serves as the basis for the formal FR/NFR technical specification.
 - Buyer sees live counts update as merchants respond: notified / checking / has it / can't help
 - Counts are always derived from persisted state - not from in-memory counters
 - On page reload or reconnect, the buyer receives current counts immediately from the server
-- Real-time updates delivered via SignalR; buyer joins a channel scoped to their post
+- Real-time updates delivered via SignalR over one hub; each user is in a personal `user:{id}` group and the client refetches the data over REST after a thin identifier-only event
 - Status panel is visible to the post owner only - merchants do not see the counts
 
 **Post submission loading states:**
@@ -82,7 +82,7 @@ Serves as the basis for the formal FR/NFR technical specification.
 - A chat thread opens when a merchant transitions to `May Have It`, `Have It`, or `Can Order It`
 - One thread per merchant per post - reopening the same post shows the existing thread
 - Messages are persisted; history is available on reconnect or page reload
-- Real-time delivery via SignalR (same connection as the status panel)
+- Real-time delivery via SignalR (same connection and hub as every other event)
 - Thread stays open after post is closed or fulfilled - buyer and merchant may still need to coordinate
 - Image attachments supported in chat; maximum size is configurable (default 5 MB)
 - Unread message counts shown in merchant and buyer inboxes

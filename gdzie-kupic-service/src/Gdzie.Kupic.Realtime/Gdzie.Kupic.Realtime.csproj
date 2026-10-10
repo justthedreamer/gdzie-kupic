@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,5 +6,18 @@
     <Nullable>enable</Nullable>
     <LangVersion>13</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gdzie.Kupic.Tests.Unit" />
+    <InternalsVisibleTo Include="Gdzie.Kupic.Tests.Integration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gdzie.Kupic.API.Contract\Gdzie.Kupic.API.Contract.csproj" />
+  </ItemGroup>
 
 </Project>
