@@ -1,5 +1,6 @@
 namespace Gdzie.Kupic.Marketplace;
 
+using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Storage;
@@ -42,7 +43,7 @@ internal sealed class MerchantService(
         var merchantBranch = new MerchantBranch(
             Guid.NewGuid(), merchant.Id, branchName, resolved.Coordinates!, phone, website, resolved.AddressDisplayName, now);
 
-        if (!await storage.TryAddOnboardingAsync(merchant, account, merchantBranch, ct))
+        if (!await storage.TryAddOnboardingAsync(merchant, account, merchantBranch, OutboxMessages.NotifyNewMerchant(merchant.Id, now), ct))
             return Fail(MerchantError.AlreadyOnboarded, "This account has already completed onboarding.");
 
         // Detached copy for the response, independent of change-tracker fixup.

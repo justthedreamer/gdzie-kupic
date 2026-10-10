@@ -21,6 +21,7 @@ public static class ModuleInstaller
         services.AddScoped<OutboxRelayJob>();
         services.AddScoped<NotifyMerchantsJob>();
         services.AddScoped<NotifyMerchantsBatchJob>();
+        services.AddScoped<NotifyNewMerchantJob>();
 
         if (settings.JobsEnabled)
         {

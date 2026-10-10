@@ -1,4 +1,4 @@
-﻿namespace Gdzie.Kupic.Marketplace;
+namespace Gdzie.Kupic.Marketplace;
 
 using System.Text.Json;
 using Gdzie.Kupic.Domain.Model.Infrastructure;
@@ -34,6 +34,10 @@ internal sealed class OutboxRelayJob(
             case OutboxMessageTypes.NotifyMerchants:
                 var postId = payload.RootElement.GetProperty("postId").GetGuid();
                 scheduler.Enqueue<NotifyMerchantsJob>(job => job.RunAsync(postId));
+                break;
+            case OutboxMessageTypes.NotifyNewMerchant:
+                var merchantId = payload.RootElement.GetProperty("merchantId").GetGuid();
+                scheduler.Enqueue<NotifyNewMerchantJob>(job => job.RunAsync(merchantId));
                 break;
             default:
                 logger.LogError("Unknown outbox message type {Type} for entry {OutboxId}", message.Type, message.Id);
