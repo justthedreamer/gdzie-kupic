@@ -12,8 +12,8 @@ Serves as the basis for the formal FR/NFR technical specification.
 - Buyer can manage any number of saved locations at any time (e.g. "Home", "Office")
 - Location input: "Find me" uses browser Geolocation API — coordinates arrive from the frontend directly, no geocoding needed
 - Manual address entry: address string is geocoded via the Google Maps Geocoding API (`Gdzie.Kupic.Location`) once and stored as coordinates with a display name
-- Post creation: buyer selects from their saved locations — pure DB write, no external calls at post creation time
-- Buyer sets a search radius on their post — only the buyer defines how far to search
+- Post creation: buyer picks a saved location or uses the location form (geolocation / geocoded address); coordinates are copied into the post — pure DB write, no external calls at post creation time; after using the form the UI offers to save the location under a name
+- Buyer sets a search radius on their post (preset values or a custom value greater than 0, or unlimited = no spatial predicate) — only the buyer defines how far to search
 
 **Merchant location:**
 - Merchant location is stored in `MerchantBranches` — each branch holds `Coordinates` (`GEOGRAPHY(Point, 4326)`) along with contact details and a display name

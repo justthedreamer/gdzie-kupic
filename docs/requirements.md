@@ -34,16 +34,16 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 
 ### FR-POST — Post Lifecycle
 
-- **FR-POST-1** — A buyer creates a post by selecting a saved location, setting a search radius, choosing a category and tag (both required), and providing a title, optional description, and urgency flag
+- **FR-POST-1** — A buyer creates a post by providing a location (picked from saved locations or entered via the location form — browser geolocation or geocoded address), setting a search radius (preset value, custom value greater than 0, or unlimited), choosing a category and exactly one tag (both required), and providing a title, optional description, and urgency flag
 - **FR-POST-2** — Post creation is a pure database write; no geocoding, no synchronous external calls
 - **FR-POST-3** — Post creation writes the `Post` record and an `Outbox` entry in a single database transaction
 - **FR-POST-4** — Post states: `Active → Fulfilled / Closed / Expired`
   - `Fulfilled` — buyer found what they needed through the platform
   - `Closed` — buyer cancelled or found it elsewhere
   - `Expired` — post reached its expiry deadline without manual closure
-- **FR-POST-5** — Posts auto-expire after 72 hours (default, configurable)
-- **FR-POST-6** — Urgent posts: buyer sets an urgency flag and specifies a deadline date; the post expires at that deadline instead of the default duration; urgency is displayed to merchants on the post card
-- **FR-POST-7** — Long-lived posts: buyer can opt in via the zero-match popup to extend expiry to 14 days (configurable)
+- **FR-POST-5** — Posts auto-expire after 72 hours (default, configurable); `ExpirePostsJob` runs periodically (~1 minute, configurable) and operations that depend on an `Active` post (responses, closing, long-lived opt-in) additionally verify `ExpiresAt`
+- **FR-POST-6** — Urgent posts: buyer sets an urgency flag and specifies a deadline date and time (at least 1 hour and at most 72 hours ahead); the post expires at that deadline instead of the default duration; urgency is displayed to merchants on the post card
+- **FR-POST-7** — Long-lived posts: buyer can opt in via the zero-match popup to extend expiry to 14 days (configurable); allowed only for non-urgent posts that are `Active`, `Dispatched` and have zero matched merchants
 - **FR-POST-8** — Buyer can transition their post to `Fulfilled` or `Closed` at any time while it is `Active`
 - **FR-POST-9** — When a post transitions out of `Active`, all merchant response state changes are locked
 - **FR-POST-10** — A `Post` carries `NotificationDispatchStatus`: `Pending` (default) → `Dispatched` (set by `NotifyMerchantsJob` on completion)
@@ -52,8 +52,8 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 
 ### FR-MATCH — Merchant Matching & Notification Dispatch
 
-- **FR-MATCH-1** — On post creation, an `OutboxRelayJob` (scheduled every ~5 seconds) picks up the `Outbox` entry and enqueues `NotifyMerchantsJob`
-- **FR-MATCH-2** — `NotifyMerchantsJob` queries `MerchantBranches` via PostGIS: matches branches whose `Coordinates` fall within the post's radius + 3 km tolerance buffer AND whose `Merchant` is subscribed to the post's category or tag
+- **FR-MATCH-1** — On post creation, the outbox relay (a hosted background service polling every ~5 seconds, not a Hangfire recurring job) picks up the `Outbox` entry and enqueues `NotifyMerchantsJob`
+- **FR-MATCH-2** — `NotifyMerchantsJob` queries `MerchantBranches` via PostGIS: matches branches whose `Coordinates` fall within the post's radius + 3 km tolerance buffer AND whose `Merchant` is subscribed to the post's category or tag; a post with unlimited radius (null) applies no spatial predicate and matches every merchant with a matching subscription
 - **FR-MATCH-3** — A category-level `MerchantSubscription` (null `TagId`) matches all posts in that category regardless of tag; a tag-level subscription matches only the exact tag
 - **FR-MATCH-4** — For each matched merchant: write a `PostNotification` record, then dispatch Web Push or email fallback
 - **FR-MATCH-5** — `PostNotification` has a unique constraint on `(PostId, MerchantId)`; all dispatch jobs use `INSERT … ON CONFLICT DO NOTHING` — a merchant can never receive two notifications for the same post
@@ -144,7 +144,7 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 - **NFR-PERF-2** — PostGIS GIST spatial index on `SavedLocations.Coordinates` for future buyer proximity features
 - **NFR-PERF-3** — Account status (`Active` / `Banned`) lookup is cached per-request with a ~1 minute TTL to limit database load under concurrent traffic
 - **NFR-PERF-3a** — Category and tag taxonomy is cached in-memory (`IMemoryCache`); cache is invalidated on any admin write (create, rename, soft-disable); TTL fallback of 5 minutes; taxonomy is read on almost every request (post creation, feed load, subscriptions) and written only by admin
-- **NFR-PERF-4** — Outbox relay polling interval: ~5 seconds (configurable); Hangfire polling interval: 1–2 seconds for near-real-time notification dispatch
+- **NFR-PERF-4** — Outbox relay polling interval: ~5 seconds (configurable; hosted background service, because Hangfire recurring jobs have a 1-minute minimum resolution); Hangfire polling interval: 1–2 seconds for near-real-time notification dispatch
 - **NFR-PERF-5** — Hangfire worker count: `ProcessorCount × 5` (configurable)
 
 ---

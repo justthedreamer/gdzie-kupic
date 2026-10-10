@@ -87,7 +87,7 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 - **Spatial data**: `MerchantBranches.Coordinates` stored as `GEOGRAPHY(Point, 4326)`; spatial index required for radius match queries on post creation
 - **Buyer saved locations**: stored in PostgreSQL as a collection of named coordinate points per buyer account; geocoded once on save, reused on post creation
 - **Background jobs**: Hangfire job store persisted to the same PostgreSQL instance
-- **Outbox table**: `Outbox` records are written in the same transaction as the triggering domain write; processed by `OutboxRelayJob` and never deleted — retained for audit
+- **Outbox table**: `Outbox` records are written in the same transaction as the triggering domain write; processed by the outbox relay and never deleted — retained for audit
 - **File storage**: chat image attachments stored in an S3-compatible object store; application code uses the S3 API exclusively — storage backend is swappable via configuration
 
 ---
@@ -141,11 +141,15 @@ app.MapRealtimeHubs();
 ## 7. Background Jobs
 
 - **Runtime**: Hangfire, hosted in-process within `gdzie-kupic-service`
-- **Job store**: PostgreSQL (same instance as application data)
+- **Job store**: PostgreSQL (same instance as application data, dedicated `hangfire` schema)
+- **Abstraction**: the `Hangfire` module exposes a job scheduling interface (enqueue / schedule / recurring); other modules never reference Hangfire directly
+- **Dashboard**: enabled in the Development environment only; job failures are logged (Seq) with `jobId`, `postId`, `correlationId`
+- **Tests**: the Hangfire server is disabled in the `Testing` environment; job classes are invoked directly
 
 **Outbox pattern for reliable job dispatch:**
 - Post creation writes a `Post` record and an `Outbox` entry (`type: NotifyMerchants`, `payload: postId`) in a single database transaction
-- An outbox relay job (scheduled every ~5 seconds via Hangfire) picks up unprocessed outbox entries, enqueues the corresponding fan-out job, and marks the entry as processed
+- The outbox relay is a hosted background service (`PeriodicTimer`, ~5 seconds, configurable) — not a Hangfire recurring job, since recurring jobs are cron-based with a 1-minute minimum resolution. It reads unprocessed entries in batches (`SELECT … FOR UPDATE SKIP LOCKED` inside a transaction), enqueues the corresponding fan-out job in Hangfire, and sets `ProcessedAt`
+- Enqueue and `ProcessedAt` are not one atomic operation, so delivery is at-least-once; fan-out jobs are idempotent
 - This guarantees that a persisted post always results in merchant notification dispatch, even if the application crashes between post creation and job enqueue
 - Fan-out jobs are idempotent — safe to retry on failure
 
@@ -153,10 +157,10 @@ app.MapRealtimeHubs();
 
 | Job | Trigger | Description |
 |---|---|---|
-| `OutboxRelayJob` | Scheduled (~5s interval) | Picks up unprocessed outbox entries and enqueues downstream jobs |
+| Outbox relay (hosted service, not a Hangfire job) | Polling (~5s interval) | Picks up unprocessed outbox entries and enqueues downstream jobs |
 | `NotifyMerchantsJob` | Enqueued by outbox relay on post creation | Queries matched merchants via PostGIS, writes `PostNotification` records, dispatches Web Push / email, updates post `NotificationDispatchStatus` to `Dispatched` |
 | `NotifyNewMerchantJob` | Enqueued on merchant registration completion | Scans active posts matching the new merchant's location and subscriptions; dispatches notifications for matches not already in `PostNotification` |
-| `ExpirePostsJob` | Scheduled (periodic) | Transitions posts past their expiry deadline to `Expired` state |
+| `ExpirePostsJob` | Scheduled (periodic, ~1 min, configurable) | Transitions posts past their expiry deadline to `Expired` state |
 | `CleanPushSubscriptionsJob` | Triggered on delivery failure | Removes invalid or expired push subscription endpoints |
 
 **Deduplication:**

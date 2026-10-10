@@ -123,8 +123,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 |---|---|---|
 | `Id` | `uuid` | PK |
 | `BuyerId` | `uuid` | FK → Users |
-| `Coordinates` | `geography(Point, 4326)` | Copied from buyer's selected saved location at post creation time; not a FK |
-| `RadiusKm` | `decimal` | Buyer-defined search radius |
+| `Coordinates` | `geography(Point, 4326)` | Copied at post creation time from the location chosen by the buyer (saved location or location form); not a FK |
+| `RadiusKm` | `decimal` | Nullable; buyer-defined search radius (> 0); null = unlimited (no spatial predicate in matching) |
 | `CategoryId` | `uuid` | FK → Categories |
 | `TagId` | `uuid` | FK → Tags |
 | `Title` | `text` | |
@@ -221,9 +221,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Id` | `uuid` | PK |
 | `Type` | `text` | e.g. `NotifyMerchants`, `NotifyNewMerchant` |
 | `Payload` | `jsonb` | Job-specific data (e.g. `{ "postId": "..." }`) |
-| `Status` | `text` | `Pending`, `Processed` |
 | `CreatedAt` | `timestamptz` | |
-| `ProcessedAt` | `timestamptz` | Nullable |
+| `ProcessedAt` | `timestamptz` | Nullable; null = not yet processed by the relay; rows are never deleted |
 
 ---
 
@@ -239,6 +238,7 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Posts` | `Coordinates` | GIST | Spatial queries (if needed for future buyer proximity features) |
 | `Posts` | `Status, ExpiresAt` | B-tree | Expiry job scan |
 | `Posts` | `BuyerId` | B-tree | Buyer post history |
+| `Outbox` | `CreatedAt` where `ProcessedAt IS NULL` | Partial B-tree | Relay scan of unprocessed entries |
 | `PostNotifications` | `(PostId, MerchantId)` | Unique B-tree | Deduplication |
 | `MerchantResponses` | `(PostId, MerchantId)` | Unique B-tree | One response per merchant per post |
 | `ChatThreads` | `(PostId, MerchantId)` | Unique B-tree | One thread per merchant per post |

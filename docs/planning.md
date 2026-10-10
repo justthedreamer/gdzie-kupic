@@ -63,8 +63,9 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 ### Phase 4 — Post Lifecycle & Matching
 
+- Hangfire infrastructure (`Gdzie.Kupic.Hangfire`): PostgreSQL job store (`hangfire` schema), job scheduling abstraction, server/worker configuration, job logging, dev-only dashboard — **M**
 - Post creation endpoint: write `Post` + `Outbox` entry in single transaction; buyer close + fulfil transitions; `ExpirePostsJob` — **L**
-- `OutboxRelayJob` + `NotifyMerchantsJob`: PostGIS radius + subscription query, `PostNotification` dedup, fan-out batching (50/batch), `NotificationDispatchStatus` → `Dispatched` — **XL**
+- Outbox relay (hosted service) + `NotifyMerchantsJob`: PostGIS radius + subscription query, `PostNotification` dedup, fan-out batching (50/batch), `NotificationDispatchStatus` → `Dispatched` — **XL**
 - `NotifyNewMerchantJob`: on merchant registration, scan active posts, dispatch for unnotified matches — **M**
 - Zero-match handling: long-lived post opt-in flag; status panel data endpoint (notified / checking / response state counts) — **M**
 
