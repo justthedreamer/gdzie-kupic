@@ -13,6 +13,7 @@ All tables live in a single PostgreSQL database used by `gdzie-kupic-service`.
 | `Id` | `uuid` | PK |
 | `Email` | `text` | Unique, not null |
 | `PasswordHash` | `text` | Bcrypt; nullable - OAuth-only accounts have no password |
+| `FirstName` | `varchar(50)` | Nullable; the only personal name other users see (a Merchant sees the Buyer's first name in the feed and chat, falling back to "Kupujący" when empty). Letters, spaces, hyphens and apostrophes only. Collected at sign-up (optional), prefilled from Google (`given_name`) when the account has none, editable via `PUT /api/account/profile`. No surname is stored |
 | `Role` | `text` | `Buyer`, `Merchant`, `Admin` |
 | `Status` | `text` | `Active`, `Banned` |
 | `CreatedAt` | `timestamptz` | |

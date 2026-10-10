@@ -10,6 +10,7 @@ const props = defineProps<{ role: UserRole, config: ShellConfig }>()
 
 const authStore = useAuthStore()
 const merchantStore = useMerchantStore()
+const profileStore = useProfileStore()
 const feedStore = useMerchantFeedStore()
 const chatStore = useChatStore()
 const route = useRoute()
@@ -32,6 +33,10 @@ onMounted(loadBadges)
 watch(() => authStore.user?.id, loadBadges)
 usePolling(loadBadges, INBOX_REFRESH_MS)
 
+// The user's own first name, for the user card (and the buyer greeting).
+onMounted(() => profileStore.load())
+watch(() => authStore.user?.id, () => profileStore.load())
+
 // Signing out (or switching to another role) while on one of the role's pages
 // leaves the shell: to the new role's home page, or to the landing page.
 watch(
@@ -46,7 +51,9 @@ const showBack = computed(() => route.path !== props.config.homePath)
 
 const email = computed(() => authStore.user?.email ?? '')
 const name = computed(() =>
-  (props.role === 'Merchant' ? merchantStore.profile?.name : undefined) ?? displayNameFromEmail(email.value),
+  (props.role === 'Merchant' ? merchantStore.profile?.name : undefined)
+  ?? profileStore.firstName
+  ?? displayNameFromEmail(email.value),
 )
 
 const menuItems = computed<DropdownMenuItem[][]>(() => [

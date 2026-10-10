@@ -59,6 +59,58 @@ public class AuthControllerTests : IntegrationTestBase
     }
 
     [Test]
+    public async Task SignUp_WithFirstName_StoresIt_AndShowsItInTheProfile()
+    {
+        var response = await Client.PostAsJsonAsync("/auth/sign-up", new SignUp.Request
+        {
+            Email = "buyer@example.com",
+            Password = "password123",
+            Role = nameof(Role.Buyer),
+            FirstName = " Anna ",
+        });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var tokens = (await ReadAsAsync<SignUp.Response>(response))!;
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+
+        var profile = (await ReadAsAsync<Gdzie.Kupic.Service.API.Contract.Account.Profile.Response>(
+            await Client.GetAsync("/api/account/profile")))!;
+        profile.FirstName.ShouldBe("Anna");
+        profile.Email.ShouldBe("buyer@example.com");
+    }
+
+    [Test]
+    public async Task SignUp_WithAnInvalidFirstName_IsRejected_AndCreatesNoUser()
+    {
+        var response = await Client.PostAsJsonAsync("/auth/sign-up", new SignUp.Request
+        {
+            Email = "buyer@example.com",
+            Password = "password123",
+            Role = nameof(Role.Buyer),
+            FirstName = "Anna1",
+        });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        using var scope = IntegrationTestSetup.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.Users.AnyAsync(u => u.Email == "buyer@example.com")).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SignUp_WithoutFirstName_StillWorks()
+    {
+        var response = await Client.PostAsJsonAsync("/auth/sign-up", new SignUp.Request
+        {
+            Email = "buyer@example.com",
+            Password = "password123",
+            Role = nameof(Role.Buyer),
+        });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Test]
     public async Task ValidToken_ForNonExistentUser_ReturnsUnauthorized()
     {
         using var scope = IntegrationTestSetup.Factory.Services.CreateScope();

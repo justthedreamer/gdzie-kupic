@@ -26,7 +26,8 @@ public sealed record ChatThreadInfo(
     int UnreadCount,
     bool IsLocked,
     DateTimeOffset CreatedAt,
-    DateTimeOffset LastActivityAt);
+    DateTimeOffset LastActivityAt,
+    string? BuyerFirstName = null);
 
 public sealed record ChatThreadCursor(DateTimeOffset LastActivityAt, Guid ThreadId);
 

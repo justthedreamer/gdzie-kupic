@@ -46,7 +46,7 @@ public class AuthService(
         return new SignInResult(accessToken, refreshToken, expiresAt, InvalidCredentialsError: null);
     }
 
-    public async Task<SignUpResult> SignUpAsync(string requestEmail, string requestPassword, Role role)
+    public async Task<SignUpResult> SignUpAsync(string requestEmail, string requestPassword, Role role, string? firstName = null)
     {
         if (requestPassword.Length < MinimumPasswordLength)
         {
@@ -56,6 +56,18 @@ public class AuthService(
                 ExpiresAt: default,
                 EmailAlreadyExistsError: null,
                 ValidationError: $"Password must be at least {MinimumPasswordLength} characters.");
+        }
+
+        var (name, nameError) = FirstName.Normalize(firstName);
+
+        if (nameError is not null)
+        {
+            return new SignUpResult(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                ExpiresAt: default,
+                EmailAlreadyExistsError: null,
+                ValidationError: nameError);
         }
 
         var emailExists = await authStorage.UserEmailExistsAsync(requestEmail);
@@ -71,7 +83,10 @@ public class AuthService(
         }
 
         var passwordHash = passwordHasher.Hash(requestPassword);
-        var user = new User(Guid.NewGuid(), requestEmail, passwordHash, role, DateTimeOffset.UtcNow);
+        var user = new User(Guid.NewGuid(), requestEmail, passwordHash, role, DateTimeOffset.UtcNow)
+        {
+            FirstName = name,
+        };
 
         await authStorage.AddUserAsync(user);
 
@@ -157,8 +172,12 @@ public class AuthService(
         return (accessToken, refreshToken, expiresAt);
     }
 
-    public async Task<GoogleSignInResult> GoogleSignInAsync(string providerKey, string email, Role role)
+    public async Task<GoogleSignInResult> GoogleSignInAsync(string providerKey, string email, Role role, string? firstName = null)
     {
+        // A name Google reports that does not meet our rules is ignored rather than failing the sign-in.
+        var (googleName, googleNameError) = FirstName.Normalize(firstName);
+        if (googleNameError is not null) googleName = null;
+
         var user = await authStorage.FindUserByExternalLoginAsync(GoogleProvider, providerKey);
 
         if (user is null)
@@ -167,7 +186,10 @@ public class AuthService(
 
             if (user is null)
             {
-                user = new User(Guid.NewGuid(), email, passwordHash: null, role, DateTimeOffset.UtcNow);
+                user = new User(Guid.NewGuid(), email, passwordHash: null, role, DateTimeOffset.UtcNow)
+                {
+                    FirstName = googleName,
+                };
                 await authStorage.AddUserAsync(user);
             }
 
@@ -188,8 +210,38 @@ public class AuthService(
                 AccountBannedError: "This account has been banned.");
         }
 
+        // Only fills a gap: a name already on the account is never overwritten.
+        if (user.FirstName is null && googleName is not null)
+        {
+            user.FirstName = googleName;
+            await authStorage.UpdateUserAsync(user);
+        }
+
         var (accessToken, refreshToken, expiresAt) = await IssueTokensAsync(user);
 
         return new GoogleSignInResult(accessToken, refreshToken, expiresAt);
+    }
+
+    public async Task<ProfileResult?> GetProfileAsync(Guid userId)
+    {
+        var user = await authStorage.FindUserByIdAsync(userId);
+
+        return user is null ? null : new ProfileResult(user.Email, user.FirstName, user.Role);
+    }
+
+    public async Task<UpdateProfileResult> UpdateFirstNameAsync(Guid userId, string? firstName)
+    {
+        var (name, nameError) = FirstName.Normalize(firstName);
+
+        if (nameError is not null) return new UpdateProfileResult(null, nameError);
+
+        var user = await authStorage.FindUserByIdAsync(userId);
+
+        if (user is null) return new UpdateProfileResult(null, null, NotFound: true);
+
+        user.FirstName = name;
+        await authStorage.UpdateUserAsync(user);
+
+        return new UpdateProfileResult(new ProfileResult(user.Email, user.FirstName, user.Role), null);
     }
 }

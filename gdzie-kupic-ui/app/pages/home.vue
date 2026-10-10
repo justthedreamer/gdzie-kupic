@@ -49,7 +49,8 @@ const activity = computed(() =>
     .slice(0, 5),
 )
 
-const name = computed(() => displayNameFromEmail(authStore.user?.email))
+const profileStore = useProfileStore()
+const name = computed(() => profileStore.firstName ?? displayNameFromEmail(authStore.user?.email))
 </script>
 
 <template>

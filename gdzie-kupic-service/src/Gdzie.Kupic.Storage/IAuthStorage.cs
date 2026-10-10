@@ -10,6 +10,11 @@ public interface IAuthStorage
 
     Task AddUserAsync(User user, CancellationToken ct = default);
 
+    Task<User?> FindUserByIdAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Persists changes made to a user loaded through this storage.</summary>
+    Task UpdateUserAsync(User user, CancellationToken ct = default);
+
     Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default);
 
     Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken ct = default);
