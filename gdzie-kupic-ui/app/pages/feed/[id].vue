@@ -21,6 +21,10 @@ const isOpen = computed(() => (request.value ? canRespond(request.value) : false
 const threadId = computed(() => feedStore.threadIdOf(id.value))
 const isSaving = computed(() => feedStore.isResponding(id.value))
 
+// A `postRemoved` event is not replayed after a reconnect: ask the server whether this post
+// has ended meanwhile (the shell reacts to the event itself, see `shell/Frame.vue`).
+useRealtimeEvent('resync', () => void feedStore.fetchOne(id.value).catch(() => undefined))
+
 // Always asks the server: the copy on the loaded feed page lacks the chat thread
 // and may be out of date (the post may have closed meanwhile). A direct link
 // may also point at a request that is not on a loaded page at all.
