@@ -5,8 +5,10 @@ using System.Text;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Catalogue;
 using Gdzie.Kupic.Domain;
+using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Marketplace;
+using Gdzie.Kupic.Notifications;
 using Gdzie.Kupic.Storage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -96,10 +98,12 @@ try
     {
         builder.Services.InstallStorageModule(builder.Configuration);
     }
+    builder.Services.InstallHangfireModule(builder.Configuration);
+    builder.Services.InstallNotificationsModule();
     builder.Services.InstallLocationModule(builder.Configuration);
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();
-    builder.Services.InstallMarketplaceModule();
+    builder.Services.InstallMarketplaceModule(builder.Configuration);
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");
@@ -191,6 +195,8 @@ try
         var traceId       = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
         var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault() ?? traceId;
 
+        JobCorrelation.Current = correlationId;
+
         using (LogContext.PushProperty("TraceId", traceId))
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
@@ -202,6 +208,7 @@ try
     app.UseSerilogRequestLogging();
 
     app.UseCors("Frontend");
+    app.UseHangfireModule(app.Environment);
 
     app.UseAuthentication();
     app.UseAuthorization();

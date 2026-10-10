@@ -81,6 +81,7 @@ docker compose down -v
 | MinIO web console | `9001` | `http://localhost:9001` |
 | Seq | `5341` | `http://localhost:5341` |
 | gdzie-kupic-service | `5000` | `http://localhost:5000` |
+| Hangfire dashboard (Development only) | `5000` | `http://localhost:5000/hangfire` |
 
 ---
 
@@ -114,6 +115,15 @@ Copy to `.env` and fill in real values before starting the stack.
 
 Open [http://localhost:5341](http://localhost:5341) in your browser.
 All .NET services ship structured logs via Serilog to this instance.
+
+### Access the Hangfire dashboard (background jobs)
+
+Open [http://localhost:5000/hangfire](http://localhost:5000/hangfire). The dashboard is mapped only when
+`ASPNETCORE_ENVIRONMENT=Development` and is not exposed in any other environment. Hangfire runs in-process in
+`gk-service` and keeps its job queue in the application database, in the dedicated `hangfire` schema (created
+automatically on first start), so queued jobs survive restarts. Worker count (default `ProcessorCount x 5`) and
+polling interval are configurable via the `Hangfire` configuration section (e.g. `Hangfire__WorkerCount`,
+`Hangfire__PollingIntervalSeconds`). In the `Testing` environment no job server runs.
 
 ### Access the API documentation (Swagger UI)
 

@@ -123,8 +123,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 |---|---|---|
 | `Id` | `uuid` | PK |
 | `BuyerId` | `uuid` | FK → Users |
-| `Coordinates` | `geography(Point, 4326)` | Copied at post creation time from the location chosen by the buyer (saved location or location form); not a FK |
-| `RadiusKm` | `decimal` | Nullable; buyer-defined search radius (> 0); null = unlimited (no spatial predicate in matching) |
+| `Coordinates` | `geography(Point, 4326)` | Copied from buyer's selected saved location at post creation time; not a FK |
+| `RadiusKm` | `decimal` | Nullable; buyer-defined search radius, null = unlimited |
 | `CategoryId` | `uuid` | FK → Categories |
 | `TagId` | `uuid` | FK → Tags |
 | `Title` | `text` | |
@@ -171,9 +171,9 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Id` | `uuid` | PK |
 | `PostId` | `uuid` | FK → Posts |
 | `MerchantId` | `uuid` | FK → Merchants |
-| `CreatedAt` | `timestamptz` | When the merchant was matched and the record written |
-| `Channel` | `text` | Nullable; `WebPush`, `Email`; set when the notification is actually dispatched (Phase 7) |
-| `SentAt` | `timestamptz` | Nullable; set when the notification is actually dispatched (Phase 7) |
+| `CreatedAt` | `timestamptz` | When the match was recorded |
+| `Channel` | `text` | Nullable; `WebPush`, `Email` - empty until delivery (Phase 7) |
+| `SentAt` | `timestamptz` | Nullable; empty until delivery (Phase 7) |
 
 **Unique constraint**: `(PostId, MerchantId)` — deduplication guard
 
@@ -223,7 +223,7 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Type` | `text` | e.g. `NotifyMerchants`, `NotifyNewMerchant` |
 | `Payload` | `jsonb` | Job-specific data (e.g. `{ "postId": "..." }`) |
 | `CreatedAt` | `timestamptz` | |
-| `ProcessedAt` | `timestamptz` | Nullable; null = not yet processed by the relay; rows are never deleted |
+| `ProcessedAt` | `timestamptz` | Nullable; null = not yet processed (partial index on unprocessed entries) |
 
 ---
 
@@ -245,4 +245,4 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `ChatThreads` | `(PostId, MerchantId)` | Unique B-tree | One thread per merchant per post |
 | `RefreshTokens` | `UserId` | B-tree | Token lookup on refresh |
 | `MerchantSubscriptions` | `MerchantId` | B-tree | Subscription lookup during matching |
-| `MerchantSubscriptions` | `(CategoryId, TagId)` | B-tree | Subscription lookup by post category / tag during matching |
+| `MerchantSubscriptions` | `(CategoryId, TagId)` | B-tree | Reverse lookup of merchants by post category/tag |

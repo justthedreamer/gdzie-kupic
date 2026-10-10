@@ -1,4 +1,6 @@
+using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location.Google;
+using Gdzie.Kupic.Notifications;
 using Gdzie.Kupic.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -41,6 +43,13 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddScoped<ICatalogueStorage, CatalogueStorage>();
             services.AddScoped<ILocationStorage, LocationStorage>();
             services.AddScoped<IMarketplaceStorage, MarketplaceStorage>();
+            services.AddScoped<IPostStorage, PostStorage>();
+            services.AddScoped<IMatchingStorage, MatchingStorage>();
+            services.AddScoped<IOutboxStorage, OutboxStorage>();
+            services.AddSingleton<RecordingJobScheduler>();
+            services.AddSingleton<IJobScheduler>(sp => sp.GetRequiredService<RecordingJobScheduler>());
+            services.AddSingleton<RecordingNotificationDispatcher>();
+            services.AddScoped<INotificationDispatcher>(sp => sp.GetRequiredService<RecordingNotificationDispatcher>());
             services.AddSingleton<FakeGeocodingClient>();
             services.AddScoped<IGoogleGeocodingHttpClient>(sp => sp.GetRequiredService<FakeGeocodingClient>());
         });

@@ -1,5 +1,6 @@
 namespace Gdzie.Kupic.Marketplace;
 
+using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Storage;
 
@@ -36,7 +37,7 @@ internal sealed class SubscriptionService(
 
         var subscription = new MerchantSubscription(Guid.NewGuid(), merchantId.Value, categoryId, tagId, DateTimeOffset.UtcNow);
 
-        return await marketplace.TryAddSubscriptionAsync(subscription, ct)
+        return await marketplace.TryAddSubscriptionAsync(subscription, OutboxMessages.NotifyNewMerchant(merchantId.Value, subscription.CreatedAt), ct)
             ? new SubscriptionResult<MerchantSubscription>(subscription, SubscriptionError.None)
             : Fail<MerchantSubscription>(SubscriptionError.Duplicate, "The merchant is already subscribed to this category/tag.");
     }

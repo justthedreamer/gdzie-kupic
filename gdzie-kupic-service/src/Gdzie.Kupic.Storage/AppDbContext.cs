@@ -4,8 +4,10 @@ namespace Gdzie.Kupic.Storage;
 
 using Gdzie.Kupic.Domain.Model.Auth;
 using Gdzie.Kupic.Domain.Model.Catalogue;
+using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Location;
 using Gdzie.Kupic.Domain.Model.Marketplace;
+using Gdzie.Kupic.Domain.Model.Notifications;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options)
     : DbContext(options)
@@ -28,6 +30,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<MerchantAccount> MerchantAccounts => Set<MerchantAccount>();
     public DbSet<MerchantBranch> MerchantBranches => Set<MerchantBranch>();
     public DbSet<MerchantSubscription> MerchantSubscriptions => Set<MerchantSubscription>();
+    public DbSet<Post> Posts => Set<Post>();
+
+    // Notifications
+    public DbSet<PostNotification> PostNotifications => Set<PostNotification>();
+
+    // Infrastructure
+    public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

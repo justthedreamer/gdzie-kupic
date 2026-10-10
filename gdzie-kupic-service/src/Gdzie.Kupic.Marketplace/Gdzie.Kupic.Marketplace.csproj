@@ -15,10 +15,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Gdzie.Kupic.Domain\Gdzie.Kupic.Domain.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Hangfire\Gdzie.Kupic.Hangfire.csproj" />
+    <ProjectReference Include="..\Gdzie.Kupic.Notifications\Gdzie.Kupic.Notifications.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Location\Gdzie.Kupic.Location.csproj" />
     <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
   </ItemGroup>

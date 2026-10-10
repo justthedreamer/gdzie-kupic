@@ -193,6 +193,35 @@ namespace Gdzie.Kupic.Storage.Migrations
                     b.ToTable("Tags");
                 });
 
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Infrastructure.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Outbox_Unprocessed")
+                        .HasFilter("\"ProcessedAt\" IS NULL");
+
+                    b.ToTable("Outbox", (string)null);
+                });
+
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Location.SavedLocation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -339,11 +368,11 @@ namespace Gdzie.Kupic.Storage.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
                     b.HasIndex("MerchantId");
 
                     b.HasIndex("TagId");
+
+                    b.HasIndex("CategoryId", "TagId");
 
                     b.HasIndex("MerchantId", "CategoryId")
                         .IsUnique()
@@ -354,6 +383,106 @@ namespace Gdzie.Kupic.Storage.Migrations
                         .IsUnique();
 
                     b.ToTable("MerchantSubscriptions");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.Post", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BuyerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Point>("Coordinates")
+                        .IsRequired()
+                        .HasColumnType("geography (point, 4326)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsLongLived")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NotificationDispatchStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("RadiusKm")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UrgentDeadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("Coordinates");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Coordinates"), "gist");
+
+                    b.HasIndex("TagId");
+
+                    b.HasIndex("Status", "ExpiresAt");
+
+                    b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Notifications.PostNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Channel")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantId");
+
+                    b.HasIndex("PostId", "MerchantId")
+                        .IsUnique();
+
+                    b.ToTable("PostNotifications");
                 });
 
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Auth.ExternalLogin", b =>
@@ -495,6 +624,48 @@ namespace Gdzie.Kupic.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Marketplace.Post", b =>
+                {
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Auth.User", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Catalogue.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Catalogue.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Notifications.PostNotification", b =>
+                {
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Marketplace.Merchant", null)
+                        .WithMany()
+                        .HasForeignKey("MerchantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gdzie.Kupic.Domain.Model.Marketplace.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Gdzie.Kupic.Domain.Model.Auth.User", b =>
