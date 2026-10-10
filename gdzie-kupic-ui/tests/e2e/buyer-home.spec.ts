@@ -66,7 +66,7 @@ test.describe('Buyer home', () => {
     else {
       const sidebar = page.getByRole('navigation', { name: 'Nawigacja główna' })
       await expect(sidebar.getByRole('link', { name: 'Pulpit' })).toBeVisible()
-      await expect(sidebar.getByRole('button', { name: /Czaty/ })).toBeDisabled()
+      await expect(sidebar.getByRole('link', { name: /Czaty/ })).toHaveAttribute('href', '/chat')
     }
   })
 

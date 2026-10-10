@@ -84,7 +84,7 @@ Helpers live in [`tests/e2e/support/api-mock.ts`](../tests/e2e/support/api-mock.
 - `waitForHydration(page)` — wait before the first click; interacting before Vue hydrates is a silent no-op.
 - `loginAs(page, role)` signs in through the Dev account switcher. Buyers land on `/home`, Merchants on `/feed`, Admins on `/admin/catalogue`. A Merchant whose `GET /api/merchant/me` is unmocked (or 404) is redirected on to onboarding. Auth state is client-only (not persisted), so afterwards navigate with the nav links, never `page.goto()` to a protected page.
 - `openShellNav(page, label)` opens an entry of the Buyer/Merchant shell: the sidebar link on desktop, the header `Menu` overflow on mobile. Logout follows the same split (sidebar button vs. `Menu` item).
-- The Buyer home and the Merchant feed run on built-in sample data in dev (`buyerHomeMock`, `merchantFeedMock`), which is what Playwright's dev server serves. Nuxt UI tabs (`role="tab"`, reka-ui) switch on `mousedown`, not `click`, in unit tests.
+- The Buyer home and the Merchant feed run on built-in sample data in dev (`buyerHomeMock`, `merchantFeedMock`, `chatMock`), which is what Playwright's dev server serves. Nuxt UI tabs (`role="tab"`, reka-ui) switch on `mousedown`, not `click`, in unit tests.
 
 The Playwright config pins `locale: 'pl-PL'`, because the app detects the browser language and the tests assert Polish copy. Use `exact: true` when a name is a prefix of another control (e.g. the `Dev` button).
 
@@ -98,8 +98,8 @@ npm run test:e2e:real             # playwright.real.config.ts
 ```
 
 - The service must verify the mock tokens: set `JWT_SECRET` to the dev value from `.env.example` (see `docs/local-dev.md` § Mock Accounts).
-- The API allows only the origin `http://localhost:3000`, so the config starts its own dev server there (`reuseExistingServer: false`) with `NUXT_PUBLIC_API_BASE=http://localhost:5000` and the Buyer-home / Merchant-feed mocks off. Stop any other `npm run dev` first.
-- Tests create their own data (unique titles, a saved location when the Buyer has none) and pick a catalogue tag nobody subscribes to for the zero-match case. Matching runs in a Hangfire job, so allow up to a minute.
+- The API allows only the origin `http://localhost:3000`, so the config starts its own dev server there (`reuseExistingServer: false`) with `NUXT_PUBLIC_API_BASE=http://localhost:5000` and the Buyer-home / Merchant-feed / chat mocks off. Stop any other `npm run dev` first.
+- Tests create their own data (unique titles, a saved location when the Buyer has none) and pick a catalogue tag nobody subscribes to for the zero-match case. Matching runs in a Hangfire job, so allow up to a minute. `chat.real.spec.ts` drives the whole loop: the Buyer posts a request near the Dev Merchant's branch, the Merchant answers "Mam to" through the API, and both sides then talk (the Merchant's side over the API, the Buyer's in the UI).
 
 ### CI behaviour
 

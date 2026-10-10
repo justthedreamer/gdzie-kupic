@@ -183,7 +183,7 @@ test.describe('Merchant requests feed', () => {
   })
 
   test('the navigation badge counts the new requests and follows responses', async ({ page }) => {
-    const badge = page.locator('[data-testid="nav-badge"]:visible')
+    const badge = page.locator('a[href="/feed"]:visible').getByTestId('nav-badge')
     await expect(badge).toHaveText('4')
 
     await page.getByTestId('feed-card').first().getByRole('button', { name: 'Mam to' }).click()

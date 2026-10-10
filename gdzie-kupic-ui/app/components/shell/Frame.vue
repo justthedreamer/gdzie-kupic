@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { UserRole } from '~/stores/auth'
+import { INBOX_REFRESH_MS } from '~/utils/chat'
 import type { ShellConfig } from '~/utils/shellNav'
 
 // App shell for authenticated pages of one role: sidebar on desktop, top bar +
@@ -10,20 +11,26 @@ const props = defineProps<{ role: UserRole, config: ShellConfig }>()
 const authStore = useAuthStore()
 const merchantStore = useMerchantStore()
 const feedStore = useMerchantFeedStore()
+const chatStore = useChatStore()
 const route = useRoute()
 const { t } = useI18n()
 
 // Counts shown on navigation items, by item key. A merchant sees the number of
-// new requests on "Requests" on every page of the shell.
-const badges = computed<Record<string, number>>(() =>
-  props.role === 'Merchant' ? { feed: feedStore.summary?.newCount ?? 0 } : {},
-)
+// new requests on "Requests", both roles the unread messages on "Chats", on every
+// page of the shell.
+const badges = computed<Record<string, number>>(() => ({
+  ...(props.role === 'Merchant' ? { feed: feedStore.summary?.newCount ?? 0 } : {}),
+  chats: chatStore.unread ?? 0,
+}))
 
 function loadBadges() {
-  if (props.role === 'Merchant' && authStore.user) void feedStore.loadSummary()
+  if (!authStore.user) return
+  if (props.role === 'Merchant') void feedStore.loadSummary()
+  if (props.role !== 'Admin') void chatStore.loadUnread()
 }
 onMounted(loadBadges)
 watch(() => authStore.user?.id, loadBadges)
+usePolling(loadBadges, INBOX_REFRESH_MS)
 
 // Signing out (or switching to another role) while on one of the role's pages
 // leaves the shell: to the new role's home page, or to the landing page.

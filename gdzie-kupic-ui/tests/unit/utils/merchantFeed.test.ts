@@ -9,7 +9,6 @@ import {
   formatDistance,
   MERCHANT_RESPONSES,
   RESPONSE_COLOR,
-  threadPath,
   unansweredCount,
   type FeedFilters,
   type MerchantFeedRequest,
@@ -108,10 +107,6 @@ describe('feed helpers', () => {
   it('lets a merchant answer only an active post', () => {
     expect(canRespond({ status: 'Active' })).toBe(true)
     expect(['Fulfilled', 'Closed', 'Expired'].some(status => canRespond({ status: status as never }))).toBe(false)
-  })
-
-  it('builds the chat thread path', () => {
-    expect(threadPath('t-1')).toBe('/chat/t-1')
   })
 
   it('counts unanswered requests', () => {
