@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Catalogue;
+using Gdzie.Kupic.Chat;
 using Gdzie.Kupic.Domain;
 using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location;
@@ -104,6 +105,7 @@ try
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();
     builder.Services.InstallMarketplaceModule(builder.Configuration);
+    builder.Services.InstallChatModule();
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");

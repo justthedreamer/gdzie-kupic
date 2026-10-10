@@ -32,6 +32,7 @@
         <ProjectReference Include="..\Gdzie.Kupic.Storage\Gdzie.Kupic.Storage.csproj" />
         <ProjectReference Include="..\Gdzie.Kupic.Catalogue\Gdzie.Kupic.Catalogue.csproj" />
         <ProjectReference Include="..\Gdzie.Kupic.Marketplace\Gdzie.Kupic.Marketplace.csproj" />
+        <ProjectReference Include="..\Gdzie.Kupic.Chat\Gdzie.Kupic.Chat.csproj" />
     </ItemGroup>
 
 </Project>

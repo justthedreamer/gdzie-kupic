@@ -27,6 +27,7 @@ public static class ModuleInstaller
         services.AddScoped<IMarketplaceStorage, MarketplaceStorage>();
         services.AddScoped<IPostStorage, PostStorage>();
         services.AddScoped<IResponseStorage, ResponseStorage>();
+        services.AddScoped<IChatStorage, ChatStorage>();
         services.AddScoped<IMatchingStorage, MatchingStorage>();
         services.AddScoped<IOutboxStorage, OutboxStorage>();
     }
