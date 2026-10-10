@@ -1,4 +1,4 @@
-﻿using Gdzie.Kupic.Domain.Model.Catalogue;
+using Gdzie.Kupic.Domain.Model.Catalogue;
 using Gdzie.Kupic.Domain.Model.Marketplace;
 using Gdzie.Kupic.Marketplace;
 using Gdzie.Kupic.Storage;
@@ -30,7 +30,7 @@ public class PostServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _clock = new FixedTimeProvider(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
         _service = new PostService(
-            new PostStorage(_db), new CatalogueStorage(_db), Options.Create(new MarketplaceSettings()), _clock);
+            new PostStorage(_db), new ResponseStorage(_db), new CatalogueStorage(_db), Options.Create(new MarketplaceSettings()), _clock);
 
         _buyerId = Guid.NewGuid();
         _category = new Category(Guid.NewGuid(), "Audio", false, _clock.Now);
