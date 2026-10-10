@@ -78,6 +78,19 @@ public class PostsController(IPostService postService) : ControllerBase
             s.MayHaveItCount, s.CanOrderItCount, s.CannotHelpCount, s.IsZeroMatch));
     }
 
+    [HttpGet("{id:guid}/responses")]
+    [ProducesResponseType<IReadOnlyList<Posts.ResponseItem>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetResponses(Guid id, CancellationToken ct)
+    {
+        var result = await postService.GetResponsesAsync(User.GetUserId(), id, ct);
+        if (!result.IsSuccess) return ToProblem(result);
+
+        return Ok(result.Value!
+            .Select(r => new Posts.ResponseItem(r.MerchantId, r.ShopName, r.State.ToString(), r.ThreadId, r.UnreadCount, r.UpdatedAt))
+            .ToList());
+    }
+
     [HttpPost("{id:guid}/long-lived")]
     [ProducesResponseType<Posts.PostWithCountDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

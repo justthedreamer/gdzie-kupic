@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 
 internal sealed class PostService(
     IPostStorage posts,
+    IResponseStorage responses,
     ICatalogueStorage catalogue,
     IOptions<MarketplaceSettings> settings,
     TimeProvider clock) : IPostService
@@ -71,9 +72,28 @@ internal sealed class PostService(
         if (post is null) return new PostResult<PostStatusView>(null, PostError.NotFound, PostNotFoundMessage);
 
         var notified = await NotifiedCountAsync(post.Id, ct);
+        var counts = await responses.CountByStateAsync(post.Id, ct);
+        var responded = counts.Values.Sum();
 
         return new PostResult<PostStatusView>(
-            new PostStatusView(post.NotificationDispatchStatus, notified, 0, 0, 0, 0, 0), PostError.None);
+            new PostStatusView(
+                post.NotificationDispatchStatus,
+                notified,
+                Math.Max(0, notified - responded),
+                counts.GetValueOrDefault(ResponseState.HaveIt),
+                counts.GetValueOrDefault(ResponseState.MayHaveIt),
+                counts.GetValueOrDefault(ResponseState.CanOrderIt),
+                counts.GetValueOrDefault(ResponseState.CantHelp)),
+            PostError.None);
+    }
+
+    public async Task<PostResult<IReadOnlyList<PostResponseInfo>>> GetResponsesAsync(
+        Guid buyerId, Guid postId, CancellationToken ct = default)
+    {
+        var post = await posts.FindBuyerPostAsync(postId, buyerId, ct);
+        if (post is null) return new PostResult<IReadOnlyList<PostResponseInfo>>(null, PostError.NotFound, PostNotFoundMessage);
+
+        return new PostResult<IReadOnlyList<PostResponseInfo>>(await responses.ListPositiveAsync(post.Id, buyerId, ct), PostError.None);
     }
 
     public async Task<PostResult<PostView>> MakeLongLivedAsync(Guid buyerId, Guid postId, CancellationToken ct = default)

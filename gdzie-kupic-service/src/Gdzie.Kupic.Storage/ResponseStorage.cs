@@ -8,6 +8,47 @@ internal sealed class ResponseStorage(AppDbContext db) : IResponseStorage
 {
     private const int MaxAttempts = 3;
 
+    public async Task<IReadOnlyDictionary<ResponseState, int>> CountByStateAsync(Guid postId, CancellationToken ct = default) =>
+        (await db.MerchantResponses.AsNoTracking()
+            .Where(r => r.PostId == postId)
+            .GroupBy(r => r.State)
+            .Select(g => new { State = g.Key, Count = g.Count() })
+            .ToListAsync(ct))
+        .ToDictionary(x => x.State, x => x.Count);
+
+    public async Task<IReadOnlyList<PostResponseInfo>> ListPositiveAsync(Guid postId, Guid buyerId, CancellationToken ct = default)
+    {
+        var responses = await db.MerchantResponses.AsNoTracking()
+            .Where(r => r.PostId == postId && r.State != ResponseState.CantHelp)
+            .Select(r => new
+            {
+                r.MerchantId,
+                r.State,
+                r.UpdatedAt,
+                ShopName = db.Merchants.Where(m => m.Id == r.MerchantId).Select(m => m.Name).FirstOrDefault(),
+            })
+            .ToListAsync(ct);
+
+        var threads = await db.ChatThreads.AsNoTracking()
+            .Where(t => t.PostId == postId)
+            .Select(t => new
+            {
+                t.Id,
+                t.MerchantId,
+                Unread = t.Messages.Count(m => m.SenderId != buyerId && (t.BuyerLastReadAt == null || m.CreatedAt > t.BuyerLastReadAt)),
+            })
+            .ToListAsync(ct);
+        var byMerchant = threads.ToDictionary(t => t.MerchantId);
+
+        return responses
+            .OrderByDescending(r => r.UpdatedAt)
+            .Select(r =>
+            {
+                byMerchant.TryGetValue(r.MerchantId, out var thread);
+                return new PostResponseInfo(r.MerchantId, r.ShopName ?? string.Empty, r.State, thread?.Id, thread?.Unread ?? 0, r.UpdatedAt);
+            })
+            .ToList();
+    }
     public async Task<ResponseSaveResult> SaveAsync(
         Guid postId, Guid merchantId, ResponseState state, DateTimeOffset now, CancellationToken ct = default)
     {
