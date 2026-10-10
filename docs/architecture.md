@@ -67,7 +67,7 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 - `Storage` → no module dependencies
 - `Hangfire` → no module dependencies
 - `Auth` → no module dependencies
-- No module may depend on `API`, `API.Contracts`, or `Realtime` (dependency flows inward only)
+- No module may depend on `API` or `Realtime` (dependency flows inward only). Exception: `Realtime` references `API.Contract` for event names and payload types
 
 ---
 
@@ -104,37 +104,45 @@ It defines service boundaries, responsibilities, communication patterns, data ow
 
 ## 6. Real-Time Communication
 
-- Transport: SignalR — single persistent connection per client, shared for all real-time events
-- **Status panel** (buyers): client joins a channel scoped to their post; server pushes response state count updates
-- **Merchant feed** (merchants): server pushes new matching post events and post removal events (closed / fulfilled / expired) to connected merchants in range
-- **Chat**: server pushes new message events to both parties on a per-thread channel
-- All SignalR updates are derived from persisted state — the database is the source of truth; SignalR is delivery only
+- Transport: SignalR - a single persistent connection per client to one hub (`AppHub`, `/hubs/app`), shared for all real-time events
+- **Authentication**: any authenticated role. The JWT is sent in the `access_token` query string (browsers cannot set headers on WebSockets) and validated exactly like REST, including the ban check; account status is checked only on connect. Only paths under `/hubs` accept the query-string token. CORS is configured without credentials (the token is not a cookie)
+- **Groups**: on connect the connection joins the group `user:{userId}`; there are no per-post or per-thread groups. The hub has no client-callable methods - the server only pushes
+- **Events are thin** (camelCase, identifiers only); the client refetches the data over REST, so authorization stays in one place:
+
+| Event | Payload |
+|-------|---------|
+| `postAdded` | `{ postId }` |
+| `postRemoved` | `{ postId }` |
+| `postStatusChanged` | `{ postId }` |
+| `messageReceived` | `{ threadId, messageId }` |
+| `threadUpdated` | `{ threadId }` |
+| `notificationRaised` | `{ kind: merchantResponded \| newMessage, postId \| null, threadId \| null }` |
+
+- `resync` is a client-local concept (refetch after reconnect); the server never sends it
+- Events are sent after the database transaction commits. A failed push is caught and logged and never fails the request or job; there is no outbox. All updates are derived from persisted state - the database is the source of truth, SignalR is delivery only
 - MVP targets a single application instance; no distributed SignalR backplane (e.g. Redis) required
 
 **Per-module channel interfaces:**
-- Each module that needs to push real-time events defines its own channel interface as part of its public contract — no SignalR dependency
-- `Gdzie.Kupic.Marketplace` (`/Posts` subfolder) defines `IPostFeedChannel` — feed updates to merchants (`PostAdded`, `PostRemoved`)
-- `Gdzie.Kupic.Chat` defines `IChatChannel` — new message events to thread participants
-- `Gdzie.Kupic.Notifications` defines `INotificationChannel` — in-app notification events to buyers and merchants
-- `Gdzie.Kupic.Realtime` implements all three interfaces as SignalR hubs and is the only module with a SignalR reference
+- Each module that needs to push real-time events defines its own channel interface as part of its public contract - no SignalR dependency. Channel methods take plain parameters and recipient **user** ids (merchant ids are resolved to the user ids of all merchant accounts by the module)
+- `Gdzie.Kupic.Marketplace` defines `IPostFeedChannel` - `postAdded`, `postRemoved`, `postStatusChanged`
+- `Gdzie.Kupic.Chat` defines `IChatChannel` - `messageReceived`, `threadUpdated`
+- `Gdzie.Kupic.Notifications` defines `INotificationChannel` - `notificationRaised`
+- `Gdzie.Kupic.Realtime` implements all three interfaces on top of `IHubContext<AppHub>` and is the only module with a SignalR reference. Event names and payload types live in `Gdzie.Kupic.API.Contract/Realtime`
 
 **Module registration pattern:**
-- `Realtime` exposes a `RealtimeBuilder` with `AddHub<TInterface, THub>()` — the constraint `where THub : Hub, TInterface` enforces at compile time that the hub implements the channel interface
-- Each `AddHub` call produces exactly one DI registration (`TInterface → THub` as singleton)
-- The full hub manifest lives in `Program.cs` — explicit, readable, no implicit wiring:
+- `Realtime` exposes a `RealtimeBuilder` with `AddChannel<TInterface, TImpl>()` (`where TImpl : class, TInterface`); each call produces exactly one singleton DI registration
+- The full channel manifest lives in `Program.cs` - explicit, readable, no implicit wiring:
 
 ```csharp
-builder.Services
-    .AddRealtimeModule(realtime => realtime
-        .AddHub<IPostFeedChannel, PostFeedHub>()
-        .AddHub<IChatChannel, ChatHub>()
-        .AddHub<INotificationChannel, NotificationHub>())
-    .AddMarketplaceModule(config)
-    .AddChatModule(config)
-    .AddNotificationsModule(config);
+builder.Services.AddRealtimeModule(realtime => realtime
+    .AddChannel<IPostFeedChannel, PostFeedChannel>()
+    .AddChannel<IChatChannel, ChatChannel>()
+    .AddChannel<INotificationChannel, NotificationChannel>());
 
 app.MapRealtimeHubs();
 ```
+
+(The manifest grows as the channels are implemented; `MapRealtimeHubs()` maps `AppHub` at `/hubs/app`.)
 
 ---
 
@@ -225,7 +233,7 @@ app.MapRealtimeHubs();
 - MVP targets a single server deployment — no container orchestration required
 - Each service is deployed as a Docker container; a `docker-compose.yml` (production variant) defines the full stack
 - `gdzie-kupic-ui` is built with `vite build`; the output static files are served from an Nginx container
-- Nginx acts as a reverse proxy: routes `/api` and SignalR (`/hubs`) traffic to `gdzie-kupic-service`, serves `gdzie-kupic-ui` static assets
+- Nginx acts as a reverse proxy: routes `/api` and SignalR (`/hubs`, with `Upgrade`/`Connection` headers for WebSockets and a long read timeout) traffic to `gdzie-kupic-service`, serves `gdzie-kupic-ui` static assets
 - TLS termination at Nginx
 
 ---

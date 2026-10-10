@@ -5,6 +5,7 @@ using System.Text;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Catalogue;
 using Gdzie.Kupic.Chat;
+using Gdzie.Kupic.Realtime;
 using Gdzie.Kupic.Domain;
 using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location;
@@ -106,6 +107,7 @@ try
     builder.Services.InstallCatalogueModule();
     builder.Services.InstallMarketplaceModule(builder.Configuration);
     builder.Services.InstallChatModule(builder.Configuration);
+    builder.Services.AddRealtimeModule(realtime => { });
     builder.Services.AddHealthChecks().AddCheck<Gdzie.Kupic.Service.API.ObjectStorageHealthCheck>("object-storage");
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
@@ -138,6 +140,15 @@ try
             // account's access token must be rejected regardless of the token's remaining expiry.
             options.Events = new JwtBearerEvents
             {
+                // Browsers cannot set headers on a WebSocket, so SignalR passes the token in the query string.
+                OnMessageReceived = context =>
+                {
+                    var token = context.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        context.Token = token;
+
+                    return Task.CompletedTask;
+                },
                 OnTokenValidated = async context =>
                 {
                     var userIdClaim = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
@@ -217,6 +228,7 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+    app.MapRealtimeHubs();
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "GdzieKupicService" }));
     app.MapHealthChecks("/health/ready");
 
