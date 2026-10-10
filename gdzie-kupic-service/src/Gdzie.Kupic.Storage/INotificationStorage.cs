@@ -2,8 +2,16 @@ namespace Gdzie.Kupic.Storage;
 
 public sealed record PushSubscriptionInfo(Guid Id, Guid UserId, string Endpoint, string P256dhKey, string AuthKey);
 
+public sealed record EmailRecipient(Guid UserId, string Email, string? FirstName, Domain.Model.Role Role, bool EmailEnabled, bool Banned);
+
 public interface INotificationStorage
 {
+    Task<bool?> GetEmailEnabledAsync(Guid userId, CancellationToken ct = default);
+
+    Task<bool> SetEmailEnabledAsync(Guid userId, bool enabled, CancellationToken ct = default);
+
+    Task<EmailRecipient?> FindEmailRecipientAsync(Guid userId, CancellationToken ct = default);
+
     Task<IReadOnlyList<Guid>> FindPushSubscriptionIdsAsync(Guid userId, CancellationToken ct = default);
 
     Task<PushSubscriptionInfo?> FindPushSubscriptionAsync(Guid subscriptionId, CancellationToken ct = default);

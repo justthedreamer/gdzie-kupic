@@ -19,6 +19,10 @@ public static class ModuleInstaller
         services.TryAddSingleton<IWebPushSender, LibWebPushSender>();
         services.AddScoped<SendWebPushJob>();
         services.AddScoped<CleanPushSubscriptionsJob>();
+        services.Configure<AppLinksSettings>(configuration.GetSection(AppLinksSettings.SectionName));
+        services.TryAddSingleton<IEmailSender, LoggingEmailSender>();
+        services.AddScoped<SendEmailJob>();
+        services.AddScoped<INotificationSettingsService, NotificationSettingsService>();
         services.TryAddSingleton<INotificationChannel, NullNotificationChannel>();
 
         return services;

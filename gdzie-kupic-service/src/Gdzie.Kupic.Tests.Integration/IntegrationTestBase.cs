@@ -28,6 +28,7 @@ public abstract class IntegrationTestBase
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingJobScheduler>().Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingNotificationDispatcher>().Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingWebPushSender>().Reset();
+        IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingEmailSender>().Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingPostFeedChannel>().Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingChatChannel>().Reset();
         IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingNotificationChannel>().Reset();

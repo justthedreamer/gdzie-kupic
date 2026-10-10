@@ -38,6 +38,25 @@ internal sealed class NotificationStorage(AppDbContext db) : INotificationStorag
         }
     }
 
+    public async Task<bool?> GetEmailEnabledAsync(Guid userId, CancellationToken ct = default) =>
+        await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => (bool?)u.EmailNotificationsEnabled).SingleOrDefaultAsync(ct);
+
+    public async Task<bool> SetEmailEnabledAsync(Guid userId, bool enabled, CancellationToken ct = default)
+    {
+        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null) return false;
+
+        user.EmailNotificationsEnabled = enabled;
+        await db.SaveChangesAsync(ct);
+
+        return true;
+    }
+
+    public async Task<EmailRecipient?> FindEmailRecipientAsync(Guid userId, CancellationToken ct = default) =>
+        await db.Users.AsNoTracking().Where(u => u.Id == userId)
+            .Select(u => new EmailRecipient(u.Id, u.Email, u.FirstName, u.Role, u.EmailNotificationsEnabled, u.BanDetails != null))
+            .SingleOrDefaultAsync(ct);
+
     public async Task<IReadOnlyList<Guid>> FindPushSubscriptionIdsAsync(Guid userId, CancellationToken ct = default) =>
         await db.PushSubscriptions.AsNoTracking().Where(s => s.UserId == userId).Select(s => s.Id).ToListAsync(ct);
 

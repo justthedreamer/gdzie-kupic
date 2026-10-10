@@ -16,6 +16,7 @@ All tables live in a single PostgreSQL database used by `gdzie-kupic-service`.
 | `FirstName` | `varchar(50)` | Nullable; the only personal name other users see (a Merchant sees the Buyer's first name in the feed and chat, falling back to "Kupujący" when empty). Letters, spaces, hyphens and apostrophes only. Collected at sign-up (optional), prefilled from Google (`given_name`) when the account has none, editable via `PUT /api/account/profile`. No surname is stored |
 | `Role` | `text` | `Buyer`, `Merchant`, `Admin` |
 | `Status` | `text` | `Active`, `Banned` |
+| `EmailNotificationsEnabled` | `boolean` | Not null, default `false` (existing accounts too); e-mail opt-in, read/changed via `GET/PUT /api/account/notification-settings` |
 | `CreatedAt` | `timestamptz` | |
 | `BannedAt` | `timestamptz` | Nullable |
 
@@ -197,6 +198,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `GET` | `/api/push/vapid-public-key` | - | `200 { "publicKey" }`; `503` (`code = push_not_configured`) when VAPID is not configured |
 | `PUT` | `/api/push/subscription` | `{ endpoint, keys: { p256dh, auth } }` | `204`, idempotent upsert by endpoint; `400` for an empty, non-HTTPS or over-long (endpoint > 2048, key > 256) value or missing keys |
 | `DELETE` | `/api/push/subscription` | `{ endpoint }` | `204`, removes the caller's own subscription; idempotent |
+| `GET` | `/api/account/notification-settings` | - | `200 { "emailEnabled" }` (buyer, merchant; admin `403`) |
+| `PUT` | `/api/account/notification-settings` | `{ emailEnabled }` | `200 { "emailEnabled" }`; idempotent |
 
 ---
 

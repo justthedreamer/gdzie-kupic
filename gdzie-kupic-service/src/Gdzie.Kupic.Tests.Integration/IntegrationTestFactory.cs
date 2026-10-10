@@ -41,6 +41,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             ["Vapid:PublicKey"] = "test-public-key",
             ["Vapid:PrivateKey"] = "test-private-key",
             ["Vapid:Subject"] = "mailto:test@example.com",
+            ["App:BaseUrl"] = "https://app.example.com",
         }));
 
         builder.ConfigureTestServices(services =>
@@ -66,6 +67,8 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddScoped<NotificationDispatcher>();
             services.AddScoped<INotificationDispatcher>(sp => new RecordingDispatcherDecorator(
                 sp.GetRequiredService<NotificationDispatcher>(), sp.GetRequiredService<RecordingNotificationDispatcher>()));
+            services.AddSingleton<RecordingEmailSender>();
+            services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<RecordingEmailSender>());
             services.AddSingleton<RecordingWebPushSender>();
             services.AddSingleton<IWebPushSender>(sp => sp.GetRequiredService<RecordingWebPushSender>());
             services.AddSingleton<RecordingPostFeedChannel>();

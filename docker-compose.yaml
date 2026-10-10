@@ -87,6 +87,7 @@ services:
       Vapid__PublicKey: ${VAPID_PUBLIC_KEY:-}
       Vapid__PrivateKey: ${VAPID_PRIVATE_KEY:-}
       Vapid__Subject: ${VAPID_SUBJECT:-}
+      App__BaseUrl: ${APP_BASE_URL:-http://localhost:3000}
       GoogleMaps__ApiKey: ${GOOGLE_MAPS_API_KEY}
       Seeding__Admin__Email: ${ADMIN_EMAIL}
       Seeding__Admin__Password: ${ADMIN_PASSWORD}

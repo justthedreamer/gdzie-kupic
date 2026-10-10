@@ -38,11 +38,12 @@ internal sealed class ChatEvents(
             if (participants is null) return;
 
             IReadOnlyList<Guid> recipients = senderSide == ChatSide.Buyer ? participants.MerchantUserIds : [participants.BuyerId];
+            var startsSeries = senderSide == ChatSide.Merchant && await chat.StartsUnreadSeriesForBuyerAsync(threadId, messageId);
             foreach (var userId in recipients)
             {
                 await channel.MessageReceivedAsync(userId, threadId, messageId);
                 await notifications.NotificationRaisedAsync(userId, NotificationKind.NewMessage, null, threadId);
-                await dispatcher.DispatchAsync(new Notification(NotificationKind.NewMessage, userId, null, threadId));
+                await dispatcher.DispatchAsync(new Notification(NotificationKind.NewMessage, userId, null, threadId, startsSeries));
             }
         }
         catch (Exception ex)

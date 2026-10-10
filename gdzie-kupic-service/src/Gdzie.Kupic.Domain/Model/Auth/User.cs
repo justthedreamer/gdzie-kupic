@@ -15,6 +15,7 @@ public sealed class User(
     public string? FirstName { get; set; }
     public Role Role { get; init; } = role;
     public BanDetails? BanDetails { get; init; }
+    public bool EmailNotificationsEnabled { get; set; }
     public DateTimeOffset CreatedAt { get; init; } = createdAt;
 
     public ICollection<RefreshToken> RefreshTokens { get; init; } = [];

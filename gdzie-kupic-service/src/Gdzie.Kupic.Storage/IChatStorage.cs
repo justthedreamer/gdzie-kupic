@@ -69,5 +69,11 @@ public interface IChatStorage
     /// </summary>
     Task<IReadOnlyList<Guid>> SetLockForUserAsync(Guid userId, bool banned, CancellationToken ct = default);
 
+    /// <summary>
+    /// True when no other unread message from the merchant side precedes <paramref name="messageId"/> in the thread, i.e. the
+    /// message starts a new series of messages the buyer has not read.
+    /// </summary>
+    Task<bool> StartsUnreadSeriesForBuyerAsync(Guid threadId, Guid messageId, CancellationToken ct = default);
+
     Task<ChatThreadParticipants?> FindParticipantsAsync(Guid threadId, CancellationToken ct = default);
 }

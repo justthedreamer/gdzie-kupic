@@ -106,6 +106,22 @@ internal sealed class ChatStorage(AppDbContext db) : IChatStorage
         return changed;
     }
 
+    public async Task<bool> StartsUnreadSeriesForBuyerAsync(Guid threadId, Guid messageId, CancellationToken ct = default)
+    {
+        var thread = await db.ChatThreads.AsNoTracking()
+            .Where(t => t.Id == threadId)
+            .Select(t => new { t.Post.BuyerId, t.BuyerLastReadAt })
+            .SingleOrDefaultAsync(ct);
+        var message = await db.ChatMessages.AsNoTracking().SingleOrDefaultAsync(m => m.Id == messageId, ct);
+        if (thread is null || message is null) return false;
+
+        var readAt = thread.BuyerLastReadAt ?? DateTimeOffset.MinValue;
+
+        return !await db.ChatMessages.AsNoTracking().AnyAsync(m =>
+            m.ThreadId == threadId && m.SenderId != thread.BuyerId && m.Id != messageId
+            && m.CreatedAt > readAt && m.CreatedAt <= message.CreatedAt, ct);
+    }
+
     public async Task<ChatThreadParticipants?> FindParticipantsAsync(Guid threadId, CancellationToken ct = default)
     {
         var thread = await db.ChatThreads.AsNoTracking()
