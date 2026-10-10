@@ -5,6 +5,7 @@ using System.Text;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Catalogue;
 using Gdzie.Kupic.Domain;
+using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Marketplace;
 using Gdzie.Kupic.Storage;
@@ -96,6 +97,7 @@ try
     {
         builder.Services.InstallStorageModule(builder.Configuration);
     }
+    builder.Services.InstallHangfireModule(builder.Configuration);
     builder.Services.InstallLocationModule(builder.Configuration);
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();
@@ -191,6 +193,8 @@ try
         var traceId       = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
         var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault() ?? traceId;
 
+        JobCorrelation.Current = correlationId;
+
         using (LogContext.PushProperty("TraceId", traceId))
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
@@ -202,6 +206,7 @@ try
     app.UseSerilogRequestLogging();
 
     app.UseCors("Frontend");
+    app.UseHangfireModule(app.Environment);
 
     app.UseAuthentication();
     app.UseAuthorization();
