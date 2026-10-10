@@ -16,7 +16,7 @@ const authStore = useAuthStore()
 
 // The list is shown from the store at once and refreshed on entry.
 onMounted(() => chatStore.refreshThreads())
-usePolling(() => chatStore.refreshThreads(), INBOX_REFRESH_MS)
+usePolling(() => chatStore.refreshThreads(), INBOX_REFRESH_MS, { fallbackOnly: true })
 
 const isLoading = computed(() => chatStore.status === 'idle' || chatStore.status === 'pending')
 const hasError = computed(() => chatStore.status === 'error')

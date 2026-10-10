@@ -108,6 +108,12 @@
     "your_response": "Twoja odpowiedź",
     "no_response_yet": "Nie odpowiedziano jeszcze na to zapytanie."
   },
+  "notification": {
+    "merchant_responded": "Sprzedawca odpowiedział na Twoje zapytanie",
+    "new_message": "Masz nową wiadomość",
+    "open_request": "Zobacz zapytanie",
+    "open_chat": "Otwórz rozmowę"
+  },
   "chat": {
     "title": "Wiadomości",
     "inbox_label": "Twoje rozmowy",
