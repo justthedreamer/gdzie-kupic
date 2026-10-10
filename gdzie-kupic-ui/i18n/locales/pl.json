@@ -406,16 +406,13 @@
       "title": "Moja firma",
       "branch": "Oddział",
       "section_title": "Subskrypcje",
-      "description": "Otrzymujesz zapytania z tych kategorii i tagów.",
-      "empty": "Nie masz jeszcze żadnych subskrypcji.",
+      "description": "Kliknij kategorię lub tag, aby włączyć albo wyłączyć subskrypcję. Otrzymujesz zapytania tylko z włączonych pozycji.",
+      "no_categories": "Brak dostępnych kategorii.",
       "whole_category": "Cała kategoria",
-      "remove": "Usuń subskrypcję",
-      "add_title": "Dodaj subskrypcje",
-      "add_selected": "Dodaj wybrane",
       "load_error": "Nie udało się załadować subskrypcji.",
       "errors": {
         "not_found": "Nie znaleziono subskrypcji — mogła zostać już usunięta.",
-        "generic": "Nie udało się usunąć subskrypcji. Spróbuj ponownie.",
+        "generic": "Nie udało się zmienić subskrypcji. Spróbuj ponownie.",
         "unavailable": "Serwis jest w tej chwili niedostępny. Spróbuj ponownie później."
       }
     }

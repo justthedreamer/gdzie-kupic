@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+  findSubscription,
+  tagSubscriptionsOf,
   isCategorySelected,
   isTagSelected,
   subscriptionKey,
@@ -46,5 +48,24 @@ describe('subscription selection', () => {
 
   it('builds distinct keys for category and tag targets', () => {
     expect(subscriptionKey({ categoryId: 'c1', tagId: null })).not.toBe(subscriptionKey({ categoryId: 'c1', tagId: 't1' }))
+  })
+})
+
+describe('stored subscriptions', () => {
+  const stored = [
+    { id: 's1', categoryId: 'c1', tagId: null },
+    { id: 's2', categoryId: 'c2', tagId: 't1' },
+    { id: 's3', categoryId: 'c2', tagId: 't2' },
+  ]
+
+  it('finds a subscription by category or tag', () => {
+    expect(findSubscription(stored, 'c1', null)?.id).toBe('s1')
+    expect(findSubscription(stored, 'c2', 't2')?.id).toBe('s3')
+    expect(findSubscription(stored, 'c2', null)).toBeUndefined()
+  })
+
+  it('lists only tag-level subscriptions of a category', () => {
+    expect(tagSubscriptionsOf(stored, 'c2').map(s => s.id)).toEqual(['s2', 's3'])
+    expect(tagSubscriptionsOf(stored, 'c1')).toEqual([])
   })
 })

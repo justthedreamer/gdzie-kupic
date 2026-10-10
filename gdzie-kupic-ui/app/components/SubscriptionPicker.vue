@@ -41,7 +41,7 @@ function onToggleTag(categoryId: string, tagId: string) {
           @update:model-value="onToggleCategory(category.id)"
         />
         <UBadge v-if="category.isDisabled" color="neutral" variant="subtle" size="sm">
-          {{ $t('catalogue.disabled') }}
+          {{ $t('catalogue.category_disabled') }}
         </UBadge>
       </div>
 
@@ -54,7 +54,7 @@ function onToggleTag(categoryId: string, tagId: string) {
             @update:model-value="onToggleTag(category.id, tag.id)"
           />
           <UBadge v-if="tag.isDisabled" color="neutral" variant="subtle" size="sm">
-            {{ $t('catalogue.disabled') }}
+            {{ $t('catalogue.tag_disabled') }}
           </UBadge>
         </div>
       </div>
