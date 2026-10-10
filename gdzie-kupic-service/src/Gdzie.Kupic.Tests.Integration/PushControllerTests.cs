@@ -109,9 +109,18 @@ public class PushControllerTests : IntegrationTestBase
     [Test]
     public async Task VapidPublicKey_WithoutConfiguration_Returns503WithCode()
     {
+        using var factory = IntegrationTestSetup.Factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, config) =>
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Vapid:PublicKey"] = "",
+                ["Vapid:PrivateKey"] = "",
+                ["Vapid:Subject"] = "",
+            })));
+        using var client = factory.CreateClient();
         await AuthenticateAsync(Role.Buyer);
+        client.DefaultRequestHeaders.Authorization = Client.DefaultRequestHeaders.Authorization;
 
-        var response = await Client.GetAsync("/api/push/vapid-public-key");
+        var response = await client.GetAsync("/api/push/vapid-public-key");
 
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         (await response.Content.ReadAsStringAsync()).ShouldContain("push_not_configured");

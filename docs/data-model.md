@@ -173,8 +173,8 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `PostId` | `uuid` | FK → Posts |
 | `MerchantId` | `uuid` | FK → Merchants |
 | `CreatedAt` | `timestamptz` | When the match was recorded |
-| `Channel` | `text` | Nullable; `WebPush`, `Email` - empty until delivery (Phase 7) |
-| `SentAt` | `timestamptz` | Nullable; empty until delivery (Phase 7) |
+| `Channel` | `text` | Nullable; `WebPush` (set after the first real push of a `NewPost` notification), `Email` is not used for merchants |
+| `SentAt` | `timestamptz` | Nullable; empty until a push was actually delivered |
 
 **Unique constraint**: `(PostId, MerchantId)` — deduplication guard
 

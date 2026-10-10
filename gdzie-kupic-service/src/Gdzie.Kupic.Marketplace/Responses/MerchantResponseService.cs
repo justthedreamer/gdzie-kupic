@@ -13,6 +13,7 @@ internal sealed class MerchantResponseService(
     PostFeedEvents events,
     IChatThreadEvents chatEvents,
     INotificationChannel notifications,
+    INotificationDispatcher dispatcher,
     ILogger<MerchantResponseService> logger,
     TimeProvider clock) : IMerchantResponseService
 {
@@ -43,7 +44,10 @@ internal sealed class MerchantResponseService(
         try
         {
             var buyerId = await posts.FindOwnerIdAsync(postId);
-            if (buyerId is { } id) await notifications.NotificationRaisedAsync(id, NotificationKind.MerchantResponded, postId, threadId);
+            if (buyerId is not { } id) return;
+
+            await notifications.NotificationRaisedAsync(id, NotificationKind.MerchantResponded, postId, threadId);
+            await dispatcher.DispatchAsync(new Notification(NotificationKind.MerchantResponded, id, postId, threadId));
         }
         catch (Exception ex)
         {

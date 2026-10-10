@@ -22,6 +22,7 @@ internal sealed class ChatEvents(
     IChatStorage chat,
     IChatChannel channel,
     INotificationChannel notifications,
+    INotificationDispatcher dispatcher,
     ILogger<ChatEvents> logger) : IChatThreadEvents
 {
     public Task ThreadCreatedAsync(Guid threadId) => ThreadUpdatedAsync([threadId]);
@@ -41,6 +42,7 @@ internal sealed class ChatEvents(
             {
                 await channel.MessageReceivedAsync(userId, threadId, messageId);
                 await notifications.NotificationRaisedAsync(userId, NotificationKind.NewMessage, null, threadId);
+                await dispatcher.DispatchAsync(new Notification(NotificationKind.NewMessage, userId, null, threadId));
             }
         }
         catch (Exception ex)

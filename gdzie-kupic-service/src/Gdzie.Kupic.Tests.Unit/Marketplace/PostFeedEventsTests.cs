@@ -24,7 +24,7 @@ public class PostFeedEventsTests
         db.MerchantAccounts.Add(new Gdzie.Kupic.Domain.Model.Marketplace.MerchantAccount(
             Guid.NewGuid(), merchantId, Guid.NewGuid(), DateTimeOffset.UtcNow));
         await db.SaveChangesAsync();
-        var events = new PostFeedEvents(new PostStorage(db), new ThrowingChannel(), NullLogger<PostFeedEvents>.Instance);
+        var events = new PostFeedEvents(new PostStorage(db), new ThrowingChannel(), new Gdzie.Kupic.Notifications.NoOpNotificationDispatcher(), NullLogger<PostFeedEvents>.Instance);
 
         await Should.NotThrowAsync(() => events.PostAddedAsync(merchantId, Guid.NewGuid()));
         await Should.NotThrowAsync(() => events.PostRemovedAsync(Guid.NewGuid()));

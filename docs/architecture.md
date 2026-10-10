@@ -144,6 +144,10 @@ app.MapRealtimeHubs();
 
 (The manifest grows as the channels are implemented; `MapRealtimeHubs()` maps `AppHub` at `/hubs/app`.)
 
+### Out-of-app delivery (Web Push)
+
+Every notification goes through `INotificationDispatcher.DispatchAsync(Notification { Kind, RecipientUserId, PostId?, ThreadId? })`, called right after the in-app push (so after `SaveChangesAsync`) for `NewPost` (per user account of a newly notified merchant), `MerchantResponded` (buyer, positive states) and `NewMessage` (other participant). The dispatcher never throws. It does nothing when VAPID is not configured or when the recipient has an open `AppHub` connection (`IPresenceTracker`, an in-memory per-user connection set maintained by `AppHub`; single instance, like the hub itself). Otherwise it enqueues one `SendWebPushJob` per registered device. The job builds the Polish payload `{ kind, postId, threadId, title, body }` on the server (never message content), sends it with Lib.Net.Http.WebPush and, for `NewPost`, sets `PostNotifications.Channel/SentAt` only after a real delivery. A 404/410 from the push service enqueues `CleanPushSubscriptionsJob(endpoint)`; 5xx/429/network errors throw so Hangfire retries that one device.
+
 ---
 
 ## 7. Background Jobs

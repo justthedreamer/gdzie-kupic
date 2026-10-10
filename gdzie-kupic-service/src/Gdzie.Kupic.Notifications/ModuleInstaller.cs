@@ -14,7 +14,11 @@ public static class ModuleInstaller
         services.AddHostedService<VapidConfigurationCheck>();
         services.AddScoped<IPushSubscriptionService, PushSubscriptionService>();
 
-        services.AddScoped<INotificationDispatcher, NoOpNotificationDispatcher>();
+        services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
+        services.TryAddSingleton<IPresenceTracker, NullPresenceTracker>();
+        services.TryAddSingleton<IWebPushSender, LibWebPushSender>();
+        services.AddScoped<SendWebPushJob>();
+        services.AddScoped<CleanPushSubscriptionsJob>();
         services.TryAddSingleton<INotificationChannel, NullNotificationChannel>();
 
         return services;

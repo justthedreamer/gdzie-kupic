@@ -1,5 +1,6 @@
 namespace Gdzie.Kupic.Realtime;
 
+using Gdzie.Kupic.Notifications;
 using Gdzie.Kupic.Service.API.Contract.Realtime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -25,6 +26,8 @@ public static class ModuleInstaller
     {
         services.AddSignalR();
         services.AddSingleton<IRealtimeSender, HubRealtimeSender>();
+        services.AddSingleton<ConnectionPresenceTracker>();
+        services.AddSingleton<IPresenceTracker>(sp => sp.GetRequiredService<ConnectionPresenceTracker>());
 
         configure(new RealtimeBuilder(services));
 

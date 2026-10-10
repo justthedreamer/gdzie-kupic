@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Domain.Model.Catalogue;
@@ -30,7 +30,6 @@ public class MerchantMatchingTests : IntegrationTestBase
     private Guid _buyerId;
 
     private RecordingJobScheduler Scheduler => IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingJobScheduler>();
-    private RecordingNotificationDispatcher Dispatcher => IntegrationTestSetup.Factory.Services.GetRequiredService<RecordingNotificationDispatcher>();
 
     [SetUp]
     public async Task SeedCatalogue()
@@ -152,7 +151,6 @@ public class MerchantMatchingTests : IntegrationTestBase
 
         Scheduler.CountOf<NotifyMerchantsBatchJob>().ShouldBe(3);
         (await NotifiedMerchantsAsync(post.Id)).Count.ShouldBe(120);
-        Dispatcher.Dispatched.Count.ShouldBe(120);
     }
 
     [Test]
@@ -169,7 +167,6 @@ public class MerchantMatchingTests : IntegrationTestBase
         await Scheduler.RunPendingAsync();
 
         (await NotifiedMerchantsAsync(post.Id)).Count.ShouldBe(2);
-        Dispatcher.Dispatched.Count.ShouldBe(2);
     }
 
     [Test]

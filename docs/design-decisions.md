@@ -186,7 +186,9 @@ Serves as the basis for the formal FR/NFR technical specification.
   2. Web Push — sent to the device if SignalR is not connected
   3. Email — additional fallback; opt-in per user in account settings, disabled by default
 - Push notifications fire for: new post matching merchant subscriptions, new chat message, merchant response received by buyer
-- Expired or invalid push subscriptions are removed from the server when delivery fails
+- Expired or invalid push subscriptions (push service answers 404/410) are removed from the server by `CleanPushSubscriptionsJob`
+- Presence is an in-memory per-user count of `AppHub` connections (single instance); one open window means no Web Push, and the service worker also skips the notification when a window is focused
+- One Hangfire job is enqueued per registered device (not per notification), so a retry never re-sends to devices that already got the push
 - iOS requires the PWA to be added to the home screen for push notifications to work (iOS 16.4+)
 
 ---

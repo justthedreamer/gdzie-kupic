@@ -1,9 +1,11 @@
 namespace Gdzie.Kupic.Notifications;
 
+/// <summary><c>NewPost</c> exists for the delivery channels (Web Push); the in-app channel only raises the other two.</summary>
 public enum NotificationKind
 {
     MerchantResponded,
     NewMessage,
+    NewPost,
 }
 
 /// <summary>
