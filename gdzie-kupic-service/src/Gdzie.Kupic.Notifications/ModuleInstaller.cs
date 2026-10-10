@@ -22,6 +22,10 @@ public static class ModuleInstaller
         services.Configure<AppLinksSettings>(configuration.GetSection(AppLinksSettings.SectionName));
         services.TryAddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddScoped<SendEmailJob>();
+        services.Configure<DigestSettings>(configuration.GetSection(DigestSettings.SectionName));
+        services.AddScoped<MerchantDigestJob>();
+        if (configuration.GetSection(DigestSettings.SectionName).Get<DigestSettings>()?.Enabled ?? true)
+            services.AddHostedService<NotificationJobsRegistrar>();
         services.AddScoped<INotificationSettingsService, NotificationSettingsService>();
         services.TryAddSingleton<INotificationChannel, NullNotificationChannel>();
 

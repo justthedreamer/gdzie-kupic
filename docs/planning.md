@@ -91,6 +91,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 
 - Push subscription registration + storage (S1, #136, done); Web Push (VAPID) dispatch in notification flow and `CleanPushSubscriptionsJob` (S2, #137, done) — **L**
 - Email fallback (`IEmailSender`, logging implementation; SendGrid deferred); per-user email opt-in setting (S3, #138, done) — **M**
+- Merchant unprocessed-requests digest: recurring job, configurable cron and time zone (S4, #139, done) — **M**
 
 ---
 

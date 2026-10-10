@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Hangfire;
 
 namespace Gdzie.Kupic.Hangfire;
@@ -9,8 +9,9 @@ internal sealed class JobScheduler(IBackgroundJobClient client, IRecurringJobMan
 
     public string Schedule<TJob>(Expression<Func<TJob, Task>> job, TimeSpan delay) => client.Schedule(job, delay);
 
-    public void AddOrUpdateRecurring<TJob>(string recurringJobId, Expression<Func<TJob, Task>> job, string cronExpression) =>
-        recurringJobs.AddOrUpdate(recurringJobId, job, cronExpression);
+    public void AddOrUpdateRecurring<TJob>(
+        string recurringJobId, Expression<Func<TJob, Task>> job, string cronExpression, TimeZoneInfo? timeZone = null) =>
+        recurringJobs.AddOrUpdate(recurringJobId, job, cronExpression, new RecurringJobOptions { TimeZone = timeZone ?? TimeZoneInfo.Utc });
 
     public void RemoveRecurring(string recurringJobId) => recurringJobs.RemoveIfExists(recurringJobId);
 }
