@@ -110,6 +110,41 @@ Turn API failures into user-facing messages with `resolveApiError()` from [`app/
 
 ---
 
+## Real-time events
+
+The server pushes thin events over one SignalR connection (hub `${apiBase}/hubs/app`, contract in [`planning/phase-6-real-time.md`](../../planning/phase-6-real-time.md)). Events carry identifiers only (camelCase); the UI refetches the data through REST.
+
+| Event | Payload | Meaning |
+|---|---|---|
+| `postAdded` | `{ postId }` | Merchant: a new request matches the feed |
+| `postRemoved` | `{ postId }` | Merchant: a notified request was closed, fulfilled or expired |
+| `postStatusChanged` | `{ postId }` | Buyer: responses or status of own request changed |
+| `messageReceived` | `{ threadId, messageId }` | A new message from the other participant |
+| `threadUpdated` | `{ threadId }` | A thread was created or locked / unlocked |
+| `notificationRaised` | `{ kind: 'merchantResponded' \| 'newMessage', postId \| null, threadId \| null }` | A reason to notify the user |
+| `resync` | _(none)_ | Local, not from the server: emitted after every successful (re)connect, including the first. Refetch what the screen shows, events may have been missed |
+
+Building blocks (all client-only):
+
+- `plugins/realtime.client.ts` owns the connection: opened when a token exists (after sign-in), restarted when the token changes (Dev account switcher), closed on sign-out. The JWT goes in the `access_token` query string (`accessTokenFactory`); `@microsoft/signalr` is imported lazily. The wiring (events, reconnect, `resync`) is the framework-free `createRealtimeClient` in `utils/realtimeClient.ts`; reconnect backoff is 0 / 1 / 2 / 5 / 10 / 30 s, then 30 s for ever (`utils/realtime.ts`).
+- `useRealtimeStore` (`stores/realtime.ts`): `state` (`connected` \| `reconnecting` \| `disconnected`), `connected`, `on(name, handler)` and `emit`. Handler errors are logged and never stop the other subscribers.
+- `useRealtimeEvent(name, handler)` subscribes for the lifetime of the calling component or effect scope and unsubscribes on unmount. Use it, not the store, in screens.
+- Polling is the fallback, not a parallel channel: `usePolling(task, ms, { fallbackOnly: true })` skips ticks while `useRealtimeStore().connected` and resumes the moment the connection drops. A screen that adopts events subscribes with `useRealtimeEvent`, refetches on its events and on `resync`, and polls with `fallbackOnly`.
+
+### Mock mode (`realtimeMock`)
+
+With `runtimeConfig.public.realtimeMock` on (off by default; `NUXT_PUBLIC_REALTIME_MOCK` overrides; the mock Playwright config turns it on, the unit tests too) no connection is opened and the state stays `disconnected`, so existing polling specs keep working. A test plays the server through `window.__realtime`:
+
+```ts
+await page.evaluate(() => window.__realtime!.setState('connected'))              // also emits `resync`
+await page.evaluate(() => window.__realtime!.emit('postStatusChanged', { postId })) // as if pushed by the server
+await page.evaluate(() => window.__realtime!.setState('reconnecting'))
+```
+
+`getState()` and `on(name, handler)` are available too. See `tests/e2e/realtime.spec.ts`.
+
+---
+
 ## Error handling
 
 `$fetch` (used inside `useApi`) throws on non-2xx responses. Wrap in try/catch at the call site:
