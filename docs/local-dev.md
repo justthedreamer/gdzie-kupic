@@ -98,6 +98,7 @@ Copy to `.env` and fill in real values before starting the stack.
 | `MINIO_ROOT_USER` | `minioadmin` | MinIO admin username |
 | `MINIO_ROOT_PASSWORD` | *(required)* | MinIO admin password |
 | `MINIO_BUCKET_NAME` | `attachments` | S3 bucket for file uploads |
+| `MINIO_PUBLIC_URL` | `http://localhost:9000` | URL under which browsers reach MinIO; presigned attachment URLs are signed for it |
 | `SEQ_API_KEY` | *(empty)* | Seq ingestion API key; leave empty to accept all |
 | `JWT_SECRET` | *(required)* | Token signing secret, â‰¥ 32 characters |
 | `JWT_EXPIRY_DAYS` | `7` | Access token lifetime |
@@ -144,7 +145,20 @@ on whatever port `dotnet run` prints (see [launchSettings.json](../gdzie-kupic-s
 ### Access MinIO console
 
 Open [http://localhost:9001](http://localhost:9001) and log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`.
-The `attachments` bucket is created by the application on first startup.
+The `attachments` bucket is created by the application on first startup (`Storage:AutoCreateBucket`, enabled in Development).
+
+Attachment settings of the service (`appsettings*.json` or environment variables with `__`, e.g. `Storage__Endpoint`):
+
+| Setting | Default | Description |
+|---|---|---|
+| `Storage:Endpoint` | empty (AWS) | S3 endpoint used by the API, e.g. `http://minio:9000` |
+| `Storage:PublicEndpoint` | `Storage:Endpoint` | Endpoint that browsers use in presigned URLs |
+| `Storage:AccessKey` / `Storage:SecretKey` | empty | Credentials; empty uses the default AWS credential chain |
+| `Storage:BucketName` | `attachments` | Private bucket |
+| `Storage:Region` | `us-east-1` | Signing region |
+| `Storage:AutoCreateBucket` | `false` (`true` in Development) | Create the bucket on startup |
+| `Chat:MaxAttachmentBytes` | `5242880` | Largest accepted image (413 `attachment_too_large` above it) |
+| `Chat:AttachmentUrlLifetimeMinutes` | `15` | Lifetime of presigned attachment URLs |
 
 ### Connect to PostgreSQL
 

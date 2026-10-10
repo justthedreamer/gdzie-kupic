@@ -5,10 +5,13 @@ using System.Text.Json;
 using Gdzie.Kupic.Domain.Model;
 using Gdzie.Kupic.Domain.Model.Chat;
 using Gdzie.Kupic.Storage;
+using Microsoft.Extensions.Options;
 
 internal sealed class ChatService(
     IChatStorage chat,
     IMarketplaceStorage marketplace,
+    IObjectStorage objects,
+    IOptions<ChatSettings> settings,
     TimeProvider clock) : IChatService
 {
     public const int MaxBodyLength = 2000;
@@ -70,7 +73,7 @@ internal sealed class ChatService(
     }
 
     public async Task<ChatResult<ChatMessageView>> SendAsync(
-        Guid userId, Role role, Guid threadId, string? body, CancellationToken ct = default)
+        Guid userId, Role role, Guid threadId, string? body, ChatAttachmentInput? image, CancellationToken ct = default)
     {
         var actor = await ResolveActorAsync(userId, role, ct);
         var thread = actor is null ? null : await chat.FindThreadAsync(actor, threadId, ct);
@@ -80,15 +83,53 @@ internal sealed class ChatService(
             return new ChatResult<ChatMessageView>(null, ChatError.ThreadLocked, "The conversation is locked.");
 
         var text = body?.Trim();
-        if (string.IsNullOrEmpty(text)) return Invalid<ChatMessageView>("Message must not be empty.");
-        if (text.Length > MaxBodyLength) return Invalid<ChatMessageView>($"Message must not exceed {MaxBodyLength} characters.");
+        if (string.IsNullOrEmpty(text)) text = null;
+        if (text is null && image is null) return Invalid<ChatMessageView>("Message must not be empty.");
+        if (text?.Length > MaxBodyLength) return Invalid<ChatMessageView>($"Message must not exceed {MaxBodyLength} characters.");
 
-        var message = new ChatMessage(Guid.NewGuid(), threadId, userId, text, null, clock.GetUtcNow());
-        await chat.AddMessageAsync(message, ct);
+        var messageId = Guid.NewGuid();
+        string? attachmentKey = null;
+        ImageType? type = null;
+        MemoryStream? data = null;
+
+        if (image is not null)
+        {
+            var max = settings.Value.MaxAttachmentBytes;
+            if (image.Length > max) return AttachmentTooLarge(max);
+
+            data = await ReadLimitedAsync(image.Content, max, ct);
+            if (data is null) return AttachmentTooLarge(max);
+
+            type = ImageType.Detect(data.GetBuffer().AsSpan(0, (int)Math.Min(data.Length, ImageType.HeaderLength)));
+            if (type is null || !DeclaredTypeMatches(image.ContentType, type))
+            {
+                return new ChatResult<ChatMessageView>(null, ChatError.UnsupportedAttachmentType,
+                    "Only JPEG, PNG and WebP images are supported.");
+            }
+
+            attachmentKey = $"chat/{threadId}/{messageId}.{type.Extension}";
+        }
+
+        // The object is stored first so a message never points to a missing object.
+        if (data is not null && type is not null && attachmentKey is not null)
+        {
+            data.Position = 0;
+            await objects.PutAsync(attachmentKey, data, type.ContentType, ct);
+        }
+
+        var message = new ChatMessage(messageId, threadId, userId, text, attachmentKey, clock.GetUtcNow());
+        try
+        {
+            await chat.AddMessageAsync(message, ct);
+        }
+        catch when (attachmentKey is not null)
+        {
+            await TryDeleteAsync(attachmentKey);
+            throw;
+        }
 
         return new ChatResult<ChatMessageView>(ToView(message, thread.BuyerId, actor.Side), ChatError.None);
     }
-
     public async Task<ChatResult<bool>> MarkReadAsync(Guid userId, Role role, Guid threadId, CancellationToken ct = default)
     {
         var actor = await ResolveActorAsync(userId, role, ct);
@@ -134,8 +175,52 @@ internal sealed class ChatService(
             t.LastSenderId is { } sender && IsMine(sender, t.BuyerId, actor.Side));
     }
 
-    private static ChatMessageView ToView(ChatMessage m, Guid buyerId, ChatSide side) =>
-        new(m, IsMine(m.SenderId, buyerId, side));
+    private ChatMessageView ToView(ChatMessage m, Guid buyerId, ChatSide side) =>
+        new(m, IsMine(m.SenderId, buyerId, side), AttachmentUrl(m));
+
+    private string? AttachmentUrl(ChatMessage m) =>
+        m.AttachmentKey is null
+            ? null
+            : objects.GetPresignedUrl(m.AttachmentKey, TimeSpan.FromMinutes(settings.Value.AttachmentUrlLifetimeMinutes));
+
+    private static bool DeclaredTypeMatches(string? declared, ImageType detected)
+    {
+        var normalized = declared?.Split(';')[0].Trim().ToLowerInvariant();
+        if (normalized == "image/jpg") normalized = ImageType.Jpeg.ContentType;
+
+        return normalized == detected.ContentType;
+    }
+
+    /// <summary>Reads the whole stream, or returns null when it holds more than <paramref name="max"/> bytes.</summary>
+    private static async Task<MemoryStream?> ReadLimitedAsync(Stream source, long max, CancellationToken ct)
+    {
+        var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while ((read = await source.ReadAsync(chunk, ct)) > 0)
+        {
+            if (buffer.Length + read > max) return null;
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        return buffer;
+    }
+
+    private async Task TryDeleteAsync(string key)
+    {
+        try
+        {
+            await objects.DeleteAsync(key);
+        }
+        catch
+        {
+            // Best effort: an orphaned object is harmless, hiding the original failure is not.
+        }
+    }
+
+    private ChatResult<ChatMessageView> AttachmentTooLarge(long max) =>
+        new(null, ChatError.AttachmentTooLarge, $"The image must not exceed {max} bytes.");
 
     // A merchant's colleagues share the shop side of the conversation.
     private static bool IsMine(Guid senderId, Guid buyerId, ChatSide side) =>

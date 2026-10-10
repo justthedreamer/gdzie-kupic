@@ -57,9 +57,14 @@ public class ChatController(IChatService chatService) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Send(Guid id, [FromForm] string? body, CancellationToken ct)
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<IActionResult> Send(Guid id, [FromForm] string? body, IFormFile? image, CancellationToken ct)
     {
-        var result = await chatService.SendAsync(User.GetUserId(), CallerRole, id, body, ct);
+        await using var content = image is { Length: > 0 } ? image.OpenReadStream() : null;
+        var attachment = content is null ? null : new ChatAttachmentInput(content, image!.ContentType, image.Length);
+
+        var result = await chatService.SendAsync(User.GetUserId(), CallerRole, id, body, attachment, ct);
 
         return result.IsSuccess
             ? Created($"/api/chat/threads/{id}/messages", ToDto(result.Value!))
@@ -102,10 +107,18 @@ public class ChatController(IChatService chatService) : ControllerBase
     }
 
     private static Chat.Message ToDto(ChatMessageView v) =>
-        new(v.Message.Id, v.Message.ThreadId, v.Message.SenderId, v.IsMine, v.Message.Body, null, v.Message.CreatedAt);
+        new(v.Message.Id, v.Message.ThreadId, v.Message.SenderId, v.IsMine, v.Message.Body, v.AttachmentUrl, v.Message.CreatedAt);
 
     private static string Preview(string? body) =>
         body is null ? string.Empty : body.Length <= PreviewLength ? body : body[..PreviewLength];
+
+    private static ObjectResult CodedProblem(int status, string title, string? detail, string code)
+    {
+        var problem = new ProblemDetails { Status = status, Title = title, Detail = detail };
+        problem.Extensions["code"] = code;
+
+        return new ObjectResult(problem) { StatusCode = status };
+    }
 
     private IActionResult ToProblem<T>(ChatResult<T> result)
     {
@@ -114,15 +127,11 @@ public class ChatController(IChatService chatService) : ControllerBase
             case ChatError.NotFound:
                 return Problem(statusCode: StatusCodes.Status404NotFound, title: "Conversation not found");
             case ChatError.ThreadLocked:
-                var problem = new ProblemDetails
-                {
-                    Status = StatusCodes.Status403Forbidden,
-                    Title = "Forbidden",
-                    Detail = result.Message,
-                };
-                problem.Extensions["code"] = "thread_locked";
-
-                return new ObjectResult(problem) { StatusCode = StatusCodes.Status403Forbidden };
+                return CodedProblem(StatusCodes.Status403Forbidden, "Forbidden", result.Message, "thread_locked");
+            case ChatError.AttachmentTooLarge:
+                return CodedProblem(StatusCodes.Status413PayloadTooLarge, "Attachment too large", result.Message, "attachment_too_large");
+            case ChatError.UnsupportedAttachmentType:
+                return CodedProblem(StatusCodes.Status415UnsupportedMediaType, "Unsupported attachment type", result.Message, "unsupported_attachment_type");
             default:
                 return Problem(statusCode: StatusCodes.Status400BadRequest, title: "Validation error", detail: result.Message);
         }
