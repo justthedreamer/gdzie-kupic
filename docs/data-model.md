@@ -171,8 +171,9 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `Id` | `uuid` | PK |
 | `PostId` | `uuid` | FK → Posts |
 | `MerchantId` | `uuid` | FK → Merchants |
-| `Channel` | `text` | `WebPush`, `Email` |
-| `SentAt` | `timestamptz` | |
+| `CreatedAt` | `timestamptz` | When the merchant was matched and the record written |
+| `Channel` | `text` | Nullable; `WebPush`, `Email`; set when the notification is actually dispatched (Phase 7) |
+| `SentAt` | `timestamptz` | Nullable; set when the notification is actually dispatched (Phase 7) |
 
 **Unique constraint**: `(PostId, MerchantId)` — deduplication guard
 
@@ -244,3 +245,4 @@ Unique constraint on (`Provider`, `ProviderKey`) - one external identity links t
 | `ChatThreads` | `(PostId, MerchantId)` | Unique B-tree | One thread per merchant per post |
 | `RefreshTokens` | `UserId` | B-tree | Token lookup on refresh |
 | `MerchantSubscriptions` | `MerchantId` | B-tree | Subscription lookup during matching |
+| `MerchantSubscriptions` | `(CategoryId, TagId)` | B-tree | Subscription lookup by post category / tag during matching |

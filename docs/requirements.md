@@ -55,12 +55,12 @@ Derived from `design-decisions.md`, `data-model.md`, and `architecture.md`.
 - **FR-MATCH-1** — On post creation, the outbox relay (a hosted background service polling every ~5 seconds, not a Hangfire recurring job) picks up the `Outbox` entry and enqueues `NotifyMerchantsJob`
 - **FR-MATCH-2** — `NotifyMerchantsJob` queries `MerchantBranches` via PostGIS: matches branches whose `Coordinates` fall within the post's radius + 3 km tolerance buffer AND whose `Merchant` is subscribed to the post's category or tag; a post with unlimited radius (null) applies no spatial predicate and matches every merchant with a matching subscription
 - **FR-MATCH-3** — A category-level `MerchantSubscription` (null `TagId`) matches all posts in that category regardless of tag; a tag-level subscription matches only the exact tag
-- **FR-MATCH-4** — For each matched merchant: write a `PostNotification` record, then dispatch Web Push or email fallback
+- **FR-MATCH-4** — For each matched merchant: write a `PostNotification` record, then hand it to the notification dispatcher (Web Push or email fallback); until dispatch is implemented (Phase 7) the dispatcher is a no-op and `Channel` / `SentAt` stay empty. Merchants that are banned or are the post's author are never matched
 - **FR-MATCH-5** — `PostNotification` has a unique constraint on `(PostId, MerchantId)`; all dispatch jobs use `INSERT … ON CONFLICT DO NOTHING` — a merchant can never receive two notifications for the same post
 - **FR-MATCH-6** — Fan-out is batched (50 merchants per batch); each batch is an independently retried child job
-- **FR-MATCH-7** — On completion, `NotifyMerchantsJob` sets `Post.NotificationDispatchStatus = Dispatched`
+- **FR-MATCH-7** — `NotifyMerchantsJob` sets `Post.NotificationDispatchStatus = Dispatched` after it has enqueued all batch jobs (the notified count is derived live from `PostNotification`)
 - **FR-MATCH-8** — Zero-match result: `NotificationDispatchStatus` transitions to `Dispatched` with a count of 0; buyer is shown the zero-match popup and can opt in to a long-lived post
-- **FR-MATCH-9** — `NotifyNewMerchantJob` is enqueued on merchant registration completion; it scans active posts matching the new merchant's branch location and subscriptions and dispatches notifications for any matches not already recorded in `PostNotification`
+- **FR-MATCH-9** — `NotifyNewMerchantJob` is enqueued (via an `Outbox` entry written in the same transaction) when merchant onboarding completes and whenever a subscription is added; it scans `Active`, non-expired posts matching the new merchant's branch location and subscriptions and dispatches notifications for any matches not already recorded in `PostNotification`
 
 ---
 

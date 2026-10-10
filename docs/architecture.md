@@ -158,8 +158,8 @@ app.MapRealtimeHubs();
 | Job | Trigger | Description |
 |---|---|---|
 | Outbox relay (hosted service, not a Hangfire job) | Polling (~5s interval) | Picks up unprocessed outbox entries and enqueues downstream jobs |
-| `NotifyMerchantsJob` | Enqueued by outbox relay on post creation | Queries matched merchants via PostGIS, writes `PostNotification` records, dispatches Web Push / email, updates post `NotificationDispatchStatus` to `Dispatched` |
-| `NotifyNewMerchantJob` | Enqueued on merchant registration completion | Scans active posts matching the new merchant's location and subscriptions; dispatches notifications for matches not already in `PostNotification` |
+| `NotifyMerchantsJob` | Enqueued by outbox relay on post creation | Queries matched merchants via PostGIS (shared matching query), enqueues batch jobs (50 merchants each) that write `PostNotification` records and hand them to the notification dispatcher, then updates post `NotificationDispatchStatus` to `Dispatched` |
+| `NotifyNewMerchantJob` | Enqueued via outbox on merchant onboarding completion and on subscription added | Scans `Active`, non-expired posts matching the merchant's location and subscriptions (regardless of dispatch status); writes notifications for matches not already in `PostNotification` |
 | `ExpirePostsJob` | Scheduled (periodic, ~1 min, configurable) | Transitions posts past their expiry deadline to `Expired` state |
 | `CleanPushSubscriptionsJob` | Triggered on delivery failure | Removes invalid or expired push subscription endpoints |
 
@@ -171,7 +171,8 @@ app.MapRealtimeHubs();
 **Post notification dispatch status:**
 - `Post` carries a `NotificationDispatchStatus` field: `Pending → Dispatched`
 - The buyer status panel shows "Looking for merchants in your area..." while status is `Pending`
-- Once `NotifyMerchantsJob` completes, status transitions to `Dispatched` and the panel switches to "Notified X merchants" (or zero-match popup if count is 0)
+- Once `NotifyMerchantsJob` has enqueued all batches, status transitions to `Dispatched` and the panel switches to "Notified X merchants" (or zero-match popup if count is 0); the count is derived live and may still grow for a few seconds
+- Until real-time delivery (Phase 6) the UI polls the status endpoint while status is `Pending`
 
 **Status panel counts (derived, never cached in memory):**
 
