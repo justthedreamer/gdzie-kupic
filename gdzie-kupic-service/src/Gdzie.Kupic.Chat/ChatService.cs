@@ -20,7 +20,7 @@ internal sealed class ChatService(
     public const int DefaultMessagesLimit = 30;
     public const int MaxMessagesLimit = 100;
 
-    // The user model has no first name yet (see the first-name follow-up); shown to merchants until it does.
+    // Shown to merchants when the buyer has not set a first name.
     public const string BuyerNamePlaceholder = "Kupuj\u0105cy";
 
     public async Task<ChatResult<ChatThreadsResult>> ListThreadsAsync(
@@ -171,7 +171,7 @@ internal sealed class ChatService(
             t,
             actor.Side,
             isBuyer ? t.MerchantId : t.BuyerId,
-            isBuyer ? t.MerchantName : BuyerNamePlaceholder,
+            isBuyer ? t.MerchantName : t.BuyerFirstName ?? BuyerNamePlaceholder,
             t.LastSenderId is { } sender && IsMine(sender, t.BuyerId, actor.Side));
     }
 

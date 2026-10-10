@@ -11,6 +11,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u => u.Email).IsRequired();
+        builder.Property(u => u.FirstName).HasMaxLength(FirstName.MaxLength);
         builder.Property(u => u.Role).HasConversion<string>().IsRequired();
         builder.OwnsOne(u => u.BanDetails, b => { b.Property(bi => bi.BannedAt).HasColumnName("BannedAt"); });
     }

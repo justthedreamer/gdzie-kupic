@@ -216,7 +216,21 @@
     "logout": "Wyloguj się",
     "email": "E-mail",
     "password": "Hasło",
+    "first_name": "Imię",
     "forgot_password": "Nie pamiętasz hasła?"
+  },
+  "account": {
+    "title": "Moje konto",
+    "email": "E-mail",
+    "email_hint": "Widoczny tylko dla Ciebie.",
+    "first_name": "Imię",
+    "first_name_placeholder": "np. Anna",
+    "first_name_hint": "Widoczne dla sprzedawców, np. na liście zapytań i w czacie. Nigdy nie pokazujemy nazwiska ani adresu e-mail. Bez imienia widzą „Kupujący”.",
+    "first_name_too_long": "Imię może mieć najwyżej {max} znaków.",
+    "first_name_invalid": "Imię może zawierać tylko litery, spacje, myślniki i apostrofy.",
+    "saved": "Zapisano.",
+    "load_error": "Nie udało się wczytać konta.",
+    "save_error": "Nie udało się zapisać zmian. Spróbuj ponownie."
   },
   "request": {
     "new": "Nowe zapytanie",

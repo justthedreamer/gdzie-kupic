@@ -63,7 +63,7 @@ public class AuthController(
                 statusCode: (int)HttpStatusCode.BadRequest);
         }
 
-        var result = await authService.SignUpAsync(request.Email, request.Password, role);
+        var result = await authService.SignUpAsync(request.Email, request.Password, role, request.FirstName);
 
         if (result.ValidationError is not null)
         {
@@ -145,6 +145,7 @@ public class AuthController(
 
         var providerKey = authenticateResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = authenticateResult.Principal.FindFirstValue(ClaimTypes.Email);
+        var firstName = authenticateResult.Principal.FindFirstValue(ClaimTypes.GivenName);
 
         if (providerKey is null || email is null)
         {
@@ -153,7 +154,7 @@ public class AuthController(
                 statusCode: (int)HttpStatusCode.BadRequest);
         }
 
-        var result = await authService.GoogleSignInAsync(providerKey, email, role);
+        var result = await authService.GoogleSignInAsync(providerKey, email, role, firstName);
 
         if (result.AccountBannedError is not null)
         {

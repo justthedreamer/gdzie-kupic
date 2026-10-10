@@ -12,6 +12,7 @@ public sealed class User(
     public Guid Id { get; init; } = id;
     public string Email { get; init; } = email;
     public string? PasswordHash { get; init; } = passwordHash;
+    public string? FirstName { get; set; }
     public Role Role { get; init; } = role;
     public BanDetails? BanDetails { get; init; }
     public DateTimeOffset CreatedAt { get; init; } = createdAt;

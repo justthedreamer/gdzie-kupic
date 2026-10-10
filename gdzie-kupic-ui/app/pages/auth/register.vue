@@ -2,16 +2,26 @@
 definePageMeta({ layout: 'auth' })
 useSeoMeta({ title: 'Rejestracja | Gdzie Kupić' })
 
-const form = reactive({ email: '', password: '' })
+const { t } = useI18n()
+const form = reactive({ email: '', password: '', firstName: '' })
 const error = ref('')
+
+const firstNameError = computed(() => {
+  const problem = firstNameProblem(form.firstName)
+  if (problem === 'too_long') return t('account.first_name_too_long', { max: FIRST_NAME_MAX_LENGTH })
+  if (problem === 'invalid') return t('account.first_name_invalid')
+  return undefined
+})
 
 async function submit() {
   error.value = ''
+  if (firstNameError.value) return
+
   try {
     const api = useApi()
     const res = await api.post<{ token: string; user: { id: string; email: string; role: 'Buyer' | 'Merchant' | 'Admin' } }>(
       '/api/auth/register',
-      form,
+      { email: form.email, password: form.password, firstName: normalizeFirstName(form.firstName) || null },
     )
     useAuthStore().setAuth(res.token, res.user)
     await navigateTo(homePathFor(res.user.role))
@@ -32,6 +42,10 @@ async function submit() {
 
       <UCard>
         <UForm :state="form" class="space-y-4" @submit="submit">
+          <UFormField :label="`${$t('auth.first_name')} (${$t('common.optional')})`" name="firstName" :error="firstNameError">
+            <UInput v-model="form.firstName" autocomplete="given-name" class="w-full" data-testid="register-first-name" />
+          </UFormField>
+
           <UFormField :label="$t('auth.email')" name="email">
             <UInput v-model="form.email" type="email" autocomplete="email" class="w-full" />
           </UFormField>

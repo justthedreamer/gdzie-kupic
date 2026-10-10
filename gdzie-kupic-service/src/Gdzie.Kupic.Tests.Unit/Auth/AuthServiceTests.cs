@@ -266,6 +266,146 @@ public class AuthServiceTests
         secondRefreshAttempt.InvalidRefreshTokenError.ShouldNotBeNull();
     }
 
+    [Test]
+    public async Task SignUpAsync_StoresTheNormalizedFirstName()
+    {
+        var sut = new Fixture();
+
+        var result = await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer, "  Anna ");
+
+        result.ValidationError.ShouldBeNull();
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBe("Anna");
+    }
+
+    [Test]
+    public async Task SignUpAsync_LeavesTheFirstNameEmpty_WhenNoneIsGiven()
+    {
+        var sut = new Fixture();
+
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task SignUpAsync_ReturnsValidationError_WhenFirstNameIsInvalid()
+    {
+        var sut = new Fixture();
+
+        var result = await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer, "Anna123");
+
+        result.ValidationError.ShouldNotBeNull();
+        result.AccessToken.ShouldBeNullOrEmpty();
+        (await sut.Db.Users.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_PrefillsFirstName_ForANewAccount()
+    {
+        var sut = new Fixture();
+
+        await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer, "Anna");
+
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBe("Anna");
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_FillsAMissingFirstName_OnAnExistingAccount()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+
+        await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer, "Anna");
+
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBe("Anna");
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_DoesNotOverwriteAnExistingFirstName()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer, "Ania");
+
+        await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer, "Anna");
+
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBe("Ania");
+    }
+
+    [Test]
+    public async Task GoogleSignInAsync_IgnoresAnInvalidGoogleName_AndStillSignsIn()
+    {
+        var sut = new Fixture();
+
+        var result = await sut.Service.GoogleSignInAsync("google-subject-1", "buyer@example.com", Role.Buyer, "Anna <3");
+
+        result.AccessToken.ShouldNotBeNullOrEmpty();
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetProfileAsync_ReturnsEmailFirstNameAndRole()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer, "Anna");
+        var id = (await sut.Db.Users.SingleAsync()).Id;
+
+        var profile = await sut.Service.GetProfileAsync(id);
+
+        profile.ShouldNotBeNull();
+        profile.Email.ShouldBe("buyer@example.com");
+        profile.FirstName.ShouldBe("Anna");
+        profile.Role.ShouldBe(Role.Buyer);
+    }
+
+    [Test]
+    public async Task GetProfileAsync_ReturnsNull_ForAnUnknownUser()
+    {
+        var sut = new Fixture();
+
+        (await sut.Service.GetProfileAsync(Guid.NewGuid())).ShouldBeNull();
+    }
+
+    [Test]
+    public async Task UpdateFirstNameAsync_ChangesAndClearsTheName()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer);
+        var id = (await sut.Db.Users.SingleAsync()).Id;
+
+        var changed = await sut.Service.UpdateFirstNameAsync(id, " Anna  Maria ");
+        changed.ValidationError.ShouldBeNull();
+        changed.Profile!.FirstName.ShouldBe("Anna Maria");
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBe("Anna Maria");
+
+        var cleared = await sut.Service.UpdateFirstNameAsync(id, "  ");
+        cleared.Profile!.FirstName.ShouldBeNull();
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task UpdateFirstNameAsync_KeepsTheOldName_WhenTheNewOneIsInvalid()
+    {
+        var sut = new Fixture();
+        await sut.Service.SignUpAsync("buyer@example.com", "password123", Role.Buyer, "Anna");
+        var id = (await sut.Db.Users.SingleAsync()).Id;
+
+        var result = await sut.Service.UpdateFirstNameAsync(id, "Anna99");
+
+        result.ValidationError.ShouldNotBeNull();
+        result.Profile.ShouldBeNull();
+        (await sut.Db.Users.SingleAsync()).FirstName.ShouldBe("Anna");
+    }
+
+    [Test]
+    public async Task UpdateFirstNameAsync_ReportsNotFound_ForAnUnknownUser()
+    {
+        var sut = new Fixture();
+
+        var result = await sut.Service.UpdateFirstNameAsync(Guid.NewGuid(), "Anna");
+
+        result.NotFound.ShouldBeTrue();
+    }
+
     private class Fixture
     {
         public readonly AppDbContext Db;

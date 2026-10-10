@@ -29,7 +29,7 @@ public sealed record FeedQuery(
     DateTimeOffset Now);
 
 /// <summary>A post (with category and tag loaded) as seen by one merchant.</summary>
-public sealed record FeedEntry(Post Post, double DistanceKm, ResponseState? MyResponse, Guid? ThreadId);
+public sealed record FeedEntry(Post Post, double DistanceKm, ResponseState? MyResponse, Guid? ThreadId, string? BuyerFirstName = null);
 
 public sealed record FeedPage(IReadOnlyList<FeedEntry> Items, bool HasMore);
 

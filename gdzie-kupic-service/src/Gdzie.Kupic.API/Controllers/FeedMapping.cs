@@ -6,7 +6,7 @@ using Gdzie.Kupic.Storage;
 
 internal static class FeedMapping
 {
-    // The user model has no first name yet; shown until it does.
+    // Shown when the buyer has not set a first name.
     public const string BuyerNamePlaceholder = "Kupuj\u0105cy";
 
     public static Feed.FeedItem ToItem(FeedEntry e)
@@ -19,7 +19,7 @@ internal static class FeedMapping
             new Posts.NamedRef(p.TagId, p.Tag.Name),
             Math.Round(e.DistanceKm, 2),
             p.RadiusKm,
-            BuyerNamePlaceholder,
+            e.BuyerFirstName ?? BuyerNamePlaceholder,
             p.IsUrgent, p.UrgentDeadline, p.ExpiresAt, p.Status.ToString(), p.CreatedAt,
             e.MyResponse?.ToString());
     }

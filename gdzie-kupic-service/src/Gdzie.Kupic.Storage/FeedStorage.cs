@@ -193,12 +193,19 @@ internal sealed class FeedStorage(AppDbContext db) : IFeedStorage
             .Where(t => t.MerchantId == merchantId && ids.Contains(t.PostId))
             .ToDictionaryAsync(t => t.PostId, t => t.Id, ct);
 
+        // Only the first name is read from the users table (never the e-mail address).
+        var buyerIds = posts.Values.Select(p => p.BuyerId).Distinct().ToList();
+        var names = await db.Users.AsNoTracking()
+            .Where(u => buyerIds.Contains(u.Id) && u.FirstName != null)
+            .ToDictionaryAsync(u => u.Id, u => u.FirstName, ct);
+
         return rows
             .Select(r => new FeedEntry(
                 posts[r.PostId],
                 r.DistanceKm,
                 r.MyResponse is null ? null : Enum.Parse<ResponseState>(r.MyResponse),
-                threads.TryGetValue(r.PostId, out var threadId) ? threadId : null))
+                threads.TryGetValue(r.PostId, out var threadId) ? threadId : null,
+                names.TryGetValue(posts[r.PostId].BuyerId, out var name) ? name : null))
             .ToList();
     }
 }

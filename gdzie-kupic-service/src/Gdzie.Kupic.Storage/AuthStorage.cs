@@ -17,6 +17,14 @@ internal sealed class AuthStorage(AppDbContext db) : IAuthStorage
         await db.SaveChangesAsync(ct);
     }
 
+    public Task<User?> FindUserByIdAsync(Guid userId, CancellationToken ct = default) =>
+        db.Users.SingleOrDefaultAsync(u => u.Id == userId, ct);
+
+    public async Task UpdateUserAsync(User user, CancellationToken ct = default)
+    {
+        await db.SaveChangesAsync(ct);
+    }
+
     public Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default) =>
         db.RefreshTokens
             .Include(t => t.User)

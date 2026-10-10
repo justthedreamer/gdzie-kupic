@@ -216,7 +216,21 @@
     "logout": "Log out",
     "email": "E-mail",
     "password": "Password",
+    "first_name": "First name",
     "forgot_password": "Forgot your password?"
+  },
+  "account": {
+    "title": "My account",
+    "email": "E-mail",
+    "email_hint": "Visible only to you.",
+    "first_name": "First name",
+    "first_name_placeholder": "e.g. Anna",
+    "first_name_hint": "Visible to merchants, e.g. in the requests feed and in chat. We never show your surname or e-mail address. Without a name they see \"Buyer\".",
+    "first_name_too_long": "The name can have at most {max} characters.",
+    "first_name_invalid": "The name may contain only letters, spaces, hyphens and apostrophes.",
+    "saved": "Saved.",
+    "load_error": "Could not load the account.",
+    "save_error": "Could not save the changes. Try again."
   },
   "request": {
     "new": "New request",

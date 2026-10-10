@@ -136,6 +136,7 @@ internal sealed class ChatStorage(AppDbContext db) : IChatStorage
         public Guid BuyerId { get; init; }
         public Guid MerchantId { get; init; }
         public string? MerchantName { get; init; }
+        public string? BuyerFirstName { get; init; }
         public string? LastBody { get; init; }
         public Guid? LastSenderId { get; init; }
         public DateTimeOffset? LastMessageAt { get; init; }
@@ -145,7 +146,7 @@ internal sealed class ChatStorage(AppDbContext db) : IChatStorage
         public DateTimeOffset LastActivityAt { get; init; }
 
         public ChatThreadInfo ToInfo() => new(Id, PostId, PostTitle, PostStatus, BuyerId, MerchantId, MerchantName,
-            LastBody, LastSenderId, LastMessageAt, UnreadCount, IsLocked, CreatedAt, LastActivityAt);
+            LastBody, LastSenderId, LastMessageAt, UnreadCount, IsLocked, CreatedAt, LastActivityAt, BuyerFirstName);
     }
 
     private IQueryable<Row> Project(IQueryable<ChatThread> threads, ChatActor actor)
@@ -161,6 +162,7 @@ internal sealed class ChatStorage(AppDbContext db) : IChatStorage
             BuyerId = t.Post.BuyerId,
             MerchantId = t.MerchantId,
             MerchantName = db.Merchants.Where(m => m.Id == t.MerchantId).Select(m => m.Name).FirstOrDefault(),
+            BuyerFirstName = db.Users.Where(u => u.Id == t.Post.BuyerId).Select(u => u.FirstName).FirstOrDefault(),
             LastBody = t.Messages.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id).Select(m => m.Body).FirstOrDefault(),
             LastSenderId = t.Messages.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id).Select(m => (Guid?)m.SenderId).FirstOrDefault(),
             LastMessageAt = t.Messages.Max(m => (DateTimeOffset?)m.CreatedAt),

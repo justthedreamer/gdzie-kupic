@@ -181,6 +181,30 @@ public class ChatTests : IntegrationTestBase
     }
 
     [Test]
+    public async Task Inbox_ShowsTheMerchantTheBuyersFirstName_NeverTheEmail()
+    {
+        await AddMessageAsync(_threadId, _buyerId, "Do you have it?", DateTimeOffset.UtcNow.AddMinutes(-5));
+        As(_merchantToken);
+        (await GetAsync<ChatDto.ThreadPage>("/threads")).Items.Single().Counterpart.DisplayName.ShouldBe("Kupuj\u0105cy");
+
+        await WithDbAsync(async db =>
+        {
+            (await db.Users.SingleAsync(u => u.Id == _buyerId)).FirstName = "Anna";
+            await db.SaveChangesAsync();
+        });
+
+        var thread = (await GetAsync<ChatDto.ThreadPage>("/threads")).Items.Single();
+        thread.Counterpart.DisplayName.ShouldBe("Anna");
+
+        var single = await GetAsync<ChatDto.ThreadSummary>($"/threads/{_threadId}");
+        single.Counterpart.DisplayName.ShouldBe("Anna");
+
+        // The buyer still sees the shop's name.
+        As(_buyerToken);
+        (await GetAsync<ChatDto.ThreadPage>("/threads")).Items.Single().Counterpart.DisplayName.ShouldBe("Music Shop");
+    }
+
+    [Test]
     public async Task Inbox_OnlyContainsTheCallersThreads_NewestActivityFirst()
     {
         var now = DateTimeOffset.UtcNow;

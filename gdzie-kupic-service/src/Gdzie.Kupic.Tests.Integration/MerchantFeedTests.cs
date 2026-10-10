@@ -173,6 +173,27 @@ public class MerchantFeedTests : IntegrationTestBase
     }
 
     [Test]
+    public async Task Feed_ShowsTheBuyersFirstName_OrAPlaceholderWhenNoneIsSet()
+    {
+        var id = await AddPostAsync();
+
+        (await GetFeedAsync("?tab=all")).Items.Single().BuyerName.ShouldBe("Kupuj\u0105cy");
+
+        await WithDbAsync(async db =>
+        {
+            (await db.Users.SingleAsync(u => u.Id == _buyerId)).FirstName = "Anna";
+            await db.SaveChangesAsync();
+        });
+
+        var item = (await GetFeedAsync("?tab=all")).Items.Single();
+        item.BuyerName.ShouldBe("Anna");
+
+        var detail = await Client.GetAsync($"{Url}/{id}");
+        detail.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await detail.Content.ReadAsStringAsync()).ShouldNotContain("@example.com");
+    }
+
+    [Test]
     public async Task Feed_DistanceIsMeasuredToTheNearestBranch()
     {
         await WithDbAsync(async db =>
