@@ -105,7 +105,8 @@ try
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();
     builder.Services.InstallMarketplaceModule(builder.Configuration);
-    builder.Services.InstallChatModule();
+    builder.Services.InstallChatModule(builder.Configuration);
+    builder.Services.AddHealthChecks().AddCheck<Gdzie.Kupic.Service.API.ObjectStorageHealthCheck>("object-storage");
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");
@@ -217,6 +218,7 @@ try
 
     app.MapControllers();
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "GdzieKupicService" }));
+    app.MapHealthChecks("/health/ready");
 
     await app.RunAsync();
 }

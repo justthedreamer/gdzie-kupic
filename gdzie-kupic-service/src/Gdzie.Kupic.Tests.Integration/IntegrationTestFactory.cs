@@ -49,6 +49,8 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.AddScoped<IFeedStorage, FeedStorage>();
             services.AddScoped<IMatchingStorage, MatchingStorage>();
             services.AddScoped<IOutboxStorage, OutboxStorage>();
+            services.AddSingleton<FakeObjectStorage>();
+            services.AddSingleton<Gdzie.Kupic.Chat.IObjectStorage>(sp => sp.GetRequiredService<FakeObjectStorage>());
             services.AddSingleton<RecordingJobScheduler>();
             services.AddSingleton<IJobScheduler>(sp => sp.GetRequiredService<RecordingJobScheduler>());
             services.AddSingleton<RecordingNotificationDispatcher>();

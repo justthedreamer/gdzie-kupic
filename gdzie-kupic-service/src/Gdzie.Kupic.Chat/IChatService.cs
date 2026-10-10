@@ -10,6 +10,8 @@ public enum ChatError
     Validation,
     NotFound,
     ThreadLocked,
+    AttachmentTooLarge,
+    UnsupportedAttachmentType,
 }
 
 public sealed record ChatResult<T>(T? Value, ChatError Error, string? Message = null)
@@ -22,7 +24,10 @@ public sealed record ChatThreadView(ChatThreadInfo Thread, ChatSide Side, Guid C
 
 public sealed record ChatThreadsResult(IReadOnlyList<ChatThreadView> Items, string? NextCursor);
 
-public sealed record ChatMessageView(ChatMessage Message, bool IsMine);
+/// <summary>An uploaded image; <see cref="ContentType"/> is what the client declared.</summary>
+public sealed record ChatAttachmentInput(Stream Content, string? ContentType, long Length);
+
+public sealed record ChatMessageView(ChatMessage Message, bool IsMine, string? AttachmentUrl = null);
 
 public sealed record ChatMessagesResult(IReadOnlyList<ChatMessageView> Items, bool HasMore);
 
@@ -37,7 +42,7 @@ public interface IChatService
         Guid userId, Role role, Guid threadId, Guid? before, Guid? after, int? limit, CancellationToken ct = default);
 
     Task<ChatResult<ChatMessageView>> SendAsync(
-        Guid userId, Role role, Guid threadId, string? body, CancellationToken ct = default);
+        Guid userId, Role role, Guid threadId, string? body, ChatAttachmentInput? image, CancellationToken ct = default);
 
     Task<ChatResult<bool>> MarkReadAsync(Guid userId, Role role, Guid threadId, CancellationToken ct = default);
 

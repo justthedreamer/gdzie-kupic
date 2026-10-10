@@ -132,7 +132,9 @@ Each service exposes `GET /health` returning `200 OK` with a JSON body:
 
 Docker Compose polls this endpoint (see `healthcheck:` in `docker-compose.yaml`) and marks the container unhealthy if it fails, preventing dependent services from starting against an unhealthy backend.
 
-> Extended health checks (database connectivity, MinIO reachability) will be added using `Microsoft.Extensions.Diagnostics.HealthChecks` in a later phase.
+The service also exposes `GET /health/ready`, built on `Microsoft.Extensions.Diagnostics.HealthChecks`. It reports `Healthy` (200) or `Unhealthy` (503) depending on whether the attachment bucket is reachable (`object-storage` check).
+
+> Database connectivity will be added to the readiness check in a later phase.
 
 ---
 
