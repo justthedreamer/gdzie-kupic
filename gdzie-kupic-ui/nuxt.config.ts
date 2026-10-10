@@ -6,12 +6,6 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  $development: {
-    runtimeConfig: {
-      public: { buyerHomeMock: true, merchantFeedMock: true, chatMock: true },
-    },
-  },
-
   // Nuxt only scans top-level composables; also auto-import the per-controller
   // API composables (see docs/api.md § Domain composables).
   imports: {
@@ -81,17 +75,19 @@ export default defineNuxtConfig({
     public: {
       apiBase: 'http://localhost:5211',
 
-      // Buyer home page shows sample data until the post/response/chat
-      // endpoints exist (Phases 4–5). On in dev, off in production builds;
-      // override with NUXT_PUBLIC_BUYER_HOME_MOCK. See docs/api.md.
+      // Sample data instead of the real endpoints, for the three flags below.
+      // Off everywhere by default (dev talks to the real service); the mock
+      // Playwright run turns them on (playwright.config.ts). Override with
+      // NUXT_PUBLIC_BUYER_HOME_MOCK / _MERCHANT_FEED_MOCK / _CHAT_MOCK.
+      // See docs/api.md.
+      //
+      // Buyer home: only the activity feed has no backend yet.
       buyerHomeMock: false,
 
-      // Same for the Merchant Requests Feed (and request details). Override
-      // with NUXT_PUBLIC_MERCHANT_FEED_MOCK. See docs/api.md.
+      // Merchant Requests Feed (and request details).
       merchantFeedMock: false,
 
-      // Same for the chat (inbox, threads, unread badge). Override with
-      // NUXT_PUBLIC_CHAT_MOCK. See docs/api.md.
+      // Chat (inbox, threads, unread badge).
       chatMock: false,
 
       // Pre-generated, non-expiring JWTs for the seeded test accounts — see

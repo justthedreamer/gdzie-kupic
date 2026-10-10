@@ -1,7 +1,19 @@
 import { test, expect } from '@playwright/test'
-import { waitForHydration } from './support/api-mock'
+import { mockApi, waitForHydration } from './support/api-mock'
+
+// The Merchant guard asks for the merchant profile before opening the feed; without
+// a mock that call goes to an API nobody serves and the navigation can stall.
+const merchant = {
+  merchantId: 'm1',
+  name: 'Sklep Testowy',
+  description: null,
+  branch: { id: 'b1', displayName: 'Oddział Rynek', latitude: 50.06, longitude: 19.94, addressDisplayName: null, phone: null, website: null },
+}
 
 test('dev account switcher logs in as each test account with no logout required between switches', async ({ page, isMobile }) => {
+  await mockApi(page, [
+    { method: 'GET', path: '/api/merchant/me', respond: () => ({ json: merchant }) },
+  ])
   await page.goto('/')
   await waitForHydration(page)
 
