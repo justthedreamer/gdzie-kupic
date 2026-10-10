@@ -95,7 +95,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 ### Phase 7 — Push Notifications & Email
 
 - Push subscription registration + storage; Web Push (VAPID) dispatch in notification flow; `CleanPushSubscriptionsJob` — **L**
-- SendGrid email fallback; per-user email opt-in setting — **M**
+- Email fallback (`IEmailSender`, logging implementation; SendGrid deferred); per-user email opt-in setting — **M**
 
 ---
 
@@ -163,7 +163,7 @@ Tickets are minimum **M** size — S-size work is merged into the nearest logica
 ### Phase 7 — Push Notifications & PWA
 
 - PWA manifest + service worker; push notification permission request + subscription registration — **M**
-- In-app notification display (`INotificationChannel` events) — **M**
+- ~~In-app notification display (`INotificationChannel` events)~~ — delivered in Phase 6 (#126); Phase 7 adds only the notification settings screen
 
 ---
 
