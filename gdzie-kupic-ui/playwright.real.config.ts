@@ -30,6 +30,7 @@ export default defineConfig({
       NUXT_PUBLIC_BUYER_HOME_MOCK: 'false',
       NUXT_PUBLIC_MERCHANT_FEED_MOCK: 'false',
       NUXT_PUBLIC_CHAT_MOCK: 'false',
+      NUXT_PUBLIC_REALTIME_MOCK: 'false',
     },
   },
 })

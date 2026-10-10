@@ -2,8 +2,9 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
 import { usePolling } from '~/composables/usePolling'
+import { useRealtimeStore } from '~/stores/realtime'
 
-function mountPolling(task: () => unknown, intervalMs = 1000, options: { immediate?: boolean } = {}) {
+function mountPolling(task: () => unknown, intervalMs = 1000, options: { immediate?: boolean, fallbackOnly?: boolean } = {}) {
   return mountSuspended(defineComponent({
     setup() {
       usePolling(task, intervalMs, options)
@@ -89,6 +90,32 @@ describe('usePolling', () => {
     setVisibility('visible')
     await vi.advanceTimersByTimeAsync(0)
     expect(task).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('with `fallbackOnly` skips ticks while the real-time connection is up and resumes when it drops', async () => {
+    vi.useFakeTimers()
+    const task = vi.fn()
+    let realtime!: ReturnType<typeof useRealtimeStore>
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        realtime = useRealtimeStore()
+        usePolling(task, 1000, { fallbackOnly: true })
+        return () => h('div')
+      },
+    }))
+
+    realtime.setState('disconnected')
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(task).toHaveBeenCalledTimes(1)
+
+    realtime.setState('connected')
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(task).toHaveBeenCalledTimes(1)
+
+    realtime.setState('reconnecting')
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(task).toHaveBeenCalledTimes(2)
     wrapper.unmount()
   })
 })

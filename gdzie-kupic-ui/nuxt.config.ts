@@ -90,6 +90,11 @@ export default defineNuxtConfig({
       // Chat (inbox, threads, unread badge).
       chatMock: false,
 
+      // Real-time (SignalR): no connection; e2e tests play the server through
+      // `window.__realtime` (state and events). Override with
+      // NUXT_PUBLIC_REALTIME_MOCK. See docs/api.md § Real-time events.
+      realtimeMock: false,
+
       // Pre-generated, non-expiring JWTs for the seeded test accounts — see
       // docs/local-dev.md § Mock Accounts & Pre-Generated Tokens. Used by the
       // dev account switcher (app/components/DevAccountSwitcher.vue) to log
