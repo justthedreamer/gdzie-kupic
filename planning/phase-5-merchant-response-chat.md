@@ -25,22 +25,22 @@ Status legend: `Open` · `Discussing` · `Decided` · `Drafted` (full ticket bod
 
 ---
 
-## Epic - [Epic]: Phase 5: Merchant Response & Chat - (GitHub issue not created yet)
+## Epic - [Epic]: Phase 5: Merchant Response & Chat - [#94](https://github.com/justthedreamer/gdzie-kupic/issues/94)
 
 **Sub-issues:**
 
 | # | Ticket | Size | Depends on | Status |
 |---|---|---|---|---|
-| S1 | [Service]: Merchant Response & Thread Creation | L | — | Drafted |
-| S2 | [Service]: Merchant Feed | L | S1 | Drafted |
-| S3 | [Service]: Buyer Responses & Status Counts | M | S1, S4 | Drafted |
-| S4 | [Service]: Chat Threads & Messages | L | S1 | Drafted |
-| S5 | [Service]: Chat Image Attachments | M | S4 | Drafted |
-| U1 | [UI]: Merchant Feed on Real API | M | contract S2 | Drafted |
-| U2 | [UI]: Merchant Post Detail & Response | M | contract S1, S2 | Drafted |
-| U3 | [UI]: Buyer Responses & Recent Chats | M | contract S3, S4 | Drafted |
-| U4 | [UI]: Chat Inbox & Thread View | L | contract S4 | Drafted |
-| U5 | [UI]: Chat Image Attachments | S | contract S5 | Drafted |
+| S1 | [Service]: Merchant Response & Thread Creation | L | — | [#95](https://github.com/justthedreamer/gdzie-kupic/issues/95) |
+| S2 | [Service]: Merchant Feed | L | S1 | [#96](https://github.com/justthedreamer/gdzie-kupic/issues/96) |
+| S3 | [Service]: Buyer Responses & Status Counts | M | S1, S4 | [#97](https://github.com/justthedreamer/gdzie-kupic/issues/97) |
+| S4 | [Service]: Chat Threads & Messages | L | S1 | [#98](https://github.com/justthedreamer/gdzie-kupic/issues/98) |
+| S5 | [Service]: Chat Image Attachments | M | S4 | [#99](https://github.com/justthedreamer/gdzie-kupic/issues/99) |
+| U1 | [UI]: Merchant Feed on Real API | M | contract S2 | [#100](https://github.com/justthedreamer/gdzie-kupic/issues/100) |
+| U2 | [UI]: Merchant Post Detail & Response | M | contract S1, S2 | [#101](https://github.com/justthedreamer/gdzie-kupic/issues/101) |
+| U3 | [UI]: Buyer Responses & Recent Chats | M | contract S3, S4 | [#102](https://github.com/justthedreamer/gdzie-kupic/issues/102) |
+| U4 | [UI]: Chat Inbox & Thread View | L | contract S4 | [#103](https://github.com/justthedreamer/gdzie-kupic/issues/103) |
+| U5 | [UI]: Chat Image Attachments | S | contract S5 | [#104](https://github.com/justthedreamer/gdzie-kupic/issues/104) |
 
 Implementation order: S1 → (S2, S4 in parallel) → (S3, S5). UI tickets start in parallel on mocks and switch to the real API when the matching Service ticket has landed.
 
@@ -166,7 +166,7 @@ Implementation order: S1 → (S2, S4 in parallel) → (S3, S5). UI tickets start
 
 ---
 
-## Drafted — `[Service]`: Merchant Response & Thread Creation
+## Created — `[Service]`: Merchant Response & Thread Creation
 
 **Size:** L
 
@@ -194,7 +194,7 @@ Introduces the `MerchantResponse` entity (one row per post and merchant, state p
 
 ---
 
-## Drafted — `[Service]`: Merchant Feed
+## Created — `[Service]`: Merchant Feed
 
 **Size:** L
 
@@ -222,7 +222,7 @@ Implements `GET /api/merchant/feed`, `GET /api/merchant/feed/summary` and `GET /
 
 ---
 
-## Drafted — `[Service]`: Buyer Responses & Status Counts
+## Created — `[Service]`: Buyer Responses & Status Counts
 
 **Size:** M
 
@@ -248,7 +248,7 @@ Makes the existing `GET /api/posts/{id}/status` return real counts: `haveItCount
 
 ---
 
-## Drafted — `[Service]`: Chat Threads & Messages
+## Created — `[Service]`: Chat Threads & Messages
 
 **Size:** L
 
@@ -277,7 +277,7 @@ Implements the chat endpoints from the [API contract](#api-contract-shared-betwe
 
 ---
 
-## Drafted — `[Service]`: Chat Image Attachments
+## Created — `[Service]`: Chat Image Attachments
 
 **Size:** M
 
@@ -305,7 +305,7 @@ Extends `POST /api/chat/threads/{id}/messages` to accept `multipart/form-data` w
 
 ---
 
-## Drafted — `[UI]`: Merchant Feed on Real API
+## Created — `[UI]`: Merchant Feed on Real API
 
 **Size:** M
 
@@ -332,7 +332,7 @@ Replaces the mock data behind `/feed` with the feed endpoints from the [API cont
 
 ---
 
-## Drafted — `[UI]`: Merchant Post Detail & Response
+## Created — `[UI]`: Merchant Post Detail & Response
 
 **Size:** M
 
@@ -359,7 +359,7 @@ Rebuilds `/feed/[id]` and `ResponseButtons` on the detail and response endpoints
 
 ---
 
-## Drafted — `[UI]`: Buyer Responses & Recent Chats
+## Created — `[UI]`: Buyer Responses & Recent Chats
 
 **Size:** M
 
@@ -386,7 +386,7 @@ Completes the buyer side against the status and responses endpoints from the [AP
 
 ---
 
-## Drafted — `[UI]`: Chat Inbox & Thread View
+## Created — `[UI]`: Chat Inbox & Thread View
 
 **Size:** L
 
@@ -414,7 +414,7 @@ Adds the chat views against the chat endpoints from the [API contract](#api-cont
 
 ---
 
-## Drafted — `[UI]`: Chat Image Attachments
+## Created — `[UI]`: Chat Image Attachments
 
 **Size:** S
 
