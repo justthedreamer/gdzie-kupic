@@ -131,6 +131,17 @@ any endpoint to send a real request directly from the browser â€” no separa
 When running a service locally with `dotnet run` instead of Docker, the same paths are available
 on whatever port `dotnet run` prints (see [launchSettings.json](../gdzie-kupic-service/src/Gdzie.Kupic.API/Properties/launchSettings.json), e.g. `http://localhost:5211/swagger`).
 
+### Background jobs (Hangfire dashboard)
+
+Background jobs run in-process (Hangfire) and are stored in the same PostgreSQL database, in a
+separate `hangfire` schema (created automatically on startup; it is not managed by EF migrations).
+In the `Development` environment the dashboard is available at `http://localhost:5000/hangfire`
+(no authentication, local use only). It is never exposed in other environments.
+
+Settings live in the `Hangfire` section of `appsettings.json` (`SchemaName`, `ServerEnabled`,
+`WorkerCount`, `PollingIntervalSeconds`). In the `Testing` environment Hangfire uses in-memory
+storage and starts no job server.
+
 ### Access MinIO console
 
 Open [http://localhost:9001](http://localhost:9001) and log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`.

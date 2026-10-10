@@ -5,6 +5,7 @@ using System.Text;
 using Gdzie.Kupic.Auth;
 using Gdzie.Kupic.Catalogue;
 using Gdzie.Kupic.Domain;
+using Gdzie.Kupic.Hangfire;
 using Gdzie.Kupic.Location;
 using Gdzie.Kupic.Marketplace;
 using Gdzie.Kupic.Storage;
@@ -100,6 +101,7 @@ try
     builder.Services.InstallAuthModule(builder.Configuration);
     builder.Services.InstallCatalogueModule();
     builder.Services.InstallMarketplaceModule();
+    builder.Services.InstallHangfireModule(builder.Configuration, builder.Environment);
 
     var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException($"Missing '{JwtSettings.SectionName}' configuration section.");
@@ -205,6 +207,8 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseHangfireModule(app.Environment);
 
     app.MapControllers();
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "GdzieKupicService" }));
