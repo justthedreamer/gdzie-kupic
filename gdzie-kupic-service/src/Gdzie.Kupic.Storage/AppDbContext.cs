@@ -4,6 +4,7 @@ namespace Gdzie.Kupic.Storage;
 
 using Gdzie.Kupic.Domain.Model.Auth;
 using Gdzie.Kupic.Domain.Model.Catalogue;
+using Gdzie.Kupic.Domain.Model.Chat;
 using Gdzie.Kupic.Domain.Model.Infrastructure;
 using Gdzie.Kupic.Domain.Model.Location;
 using Gdzie.Kupic.Domain.Model.Marketplace;
@@ -31,9 +32,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<MerchantBranch> MerchantBranches => Set<MerchantBranch>();
     public DbSet<MerchantSubscription> MerchantSubscriptions => Set<MerchantSubscription>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<MerchantResponse> MerchantResponses => Set<MerchantResponse>();
 
     // Notifications
     public DbSet<PostNotification> PostNotifications => Set<PostNotification>();
+
+    // Chat
+    public DbSet<ChatThread> ChatThreads => Set<ChatThread>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     // Infrastructure
     public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();
