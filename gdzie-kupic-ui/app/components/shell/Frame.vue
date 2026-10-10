@@ -33,6 +33,14 @@ onMounted(loadBadges)
 watch(() => authStore.user?.id, loadBadges)
 usePolling(loadBadges, INBOX_REFRESH_MS)
 
+// A merchant's feed and its counters follow the server's events on every page of the shell
+// (the navigation badge counts the new requests); the feed and details pages only show the store.
+if (props.role === 'Merchant') {
+  useRealtimeEvent('postAdded', () => void feedStore.refresh())
+  useRealtimeEvent('postRemoved', event => void feedStore.postRemoved(event.postId))
+  useRealtimeEvent('resync', () => void feedStore.refresh())
+}
+
 // The user's own first name, for the user card (and the buyer greeting).
 onMounted(() => profileStore.load())
 watch(() => authStore.user?.id, () => profileStore.load())

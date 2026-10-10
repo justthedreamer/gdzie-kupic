@@ -26,12 +26,16 @@ const mockThreads = new Map<string, string>([['feed-4', 'thread-feed-4'], ['feed
 
 /**
  * Lets a test close posts while the page is open (a race with the buyer):
- * `sessionStorage['gk:mock-closed-posts'] = JSON.stringify(['feed-1'])`.
+ * `sessionStorage['gk:mock-closed-posts'] = JSON.stringify(['feed-1'])`. A closed post stays
+ * on the list, locked. Two more hooks play the server's real-time side:
+ * - `gk:mock-ended-posts`: closed like above, but also gone from the list and the counters
+ *   (what the server does), still readable by id;
+ * - `gk:mock-hidden-posts`: not notified yet - absent everywhere until the test removes the id.
  */
-function mockClosedPosts(): string[] {
+function mockPostIds(key: string): string[] {
   if (!import.meta.client) return []
   try {
-    return JSON.parse(sessionStorage.getItem('gk:mock-closed-posts') ?? '[]') as string[]
+    return JSON.parse(sessionStorage.getItem(key) ?? '[]') as string[]
   }
   catch {
     return []
@@ -51,15 +55,20 @@ export const useMerchantFeedApi = () => {
   const api = useApi()
   const useMock = useRuntimeConfig().public.merchantFeedMock
 
-  async function mockFeed(): Promise<MerchantFeedDetail[]> {
+  /** The sample feed; `listed` leaves out what the server no longer lists (ended posts). */
+  async function mockFeed(listed = false): Promise<MerchantFeedDetail[]> {
     const { buildMockMerchantFeed } = await import('~/mocks/merchantFeed')
-    const closed = mockClosedPosts()
-    return buildMockMerchantFeed().map(request => ({
-      ...request,
-      status: closed.includes(request.id) ? 'Closed' as const : request.status,
-      myResponse: mockResponses.get(request.id) ?? request.myResponse,
-      threadId: mockThreads.get(request.id) ?? null,
-    }))
+    const hidden = mockPostIds('gk:mock-hidden-posts')
+    const ended = mockPostIds('gk:mock-ended-posts')
+    const closed = [...mockPostIds('gk:mock-closed-posts'), ...ended]
+    return buildMockMerchantFeed()
+      .filter(request => !hidden.includes(request.id) && !(listed && ended.includes(request.id)))
+      .map(request => ({
+        ...request,
+        status: closed.includes(request.id) ? 'Closed' as const : request.status,
+        myResponse: mockResponses.get(request.id) ?? request.myResponse,
+        threadId: mockThreads.get(request.id) ?? null,
+      }))
   }
 
   return {
@@ -69,7 +78,7 @@ export const useMerchantFeedApi = () => {
         return api.get<FeedPage>('/api/merchant/feed', { query: feedQuery(filters, cursor, limit) })
       }
 
-      const matching = filterFeed(await mockFeed(), filters)
+      const matching = filterFeed(await mockFeed(true), filters)
       const start = cursor === null ? 0 : Number(cursor)
       const end = start + Math.min(limit, MOCK_PAGE_SIZE)
       return { items: matching.slice(start, end), nextCursor: end < matching.length ? String(end) : null }
@@ -78,7 +87,7 @@ export const useMerchantFeedApi = () => {
     summary: async (): Promise<FeedSummary> => {
       if (!useMock) return api.get<FeedSummary>('/api/merchant/feed/summary')
 
-      const all = await mockFeed()
+      const all = await mockFeed(true)
       const newCount = unansweredCount(all)
       return { newCount, respondedCount: all.length - newCount }
     },

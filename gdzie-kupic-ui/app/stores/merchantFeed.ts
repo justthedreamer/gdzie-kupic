@@ -204,6 +204,51 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
     }
     void loadSummary(true)
   }
+
+  /**
+   * Brings the feed and the counters up to date after a real-time event (`postAdded`, `resync`),
+   * keeping the tab and the filters. The first page is fetched in the background and replaces
+   * the list when it arrives, so nothing flickers; a failure keeps what is shown. Before the
+   * first load only the counters (the navigation badge) are refreshed: the feed page loads
+   * itself.
+   */
+  async function refresh(): Promise<void> {
+    const list = status.value === 'success'
+      ? refreshFirstPage()
+      : status.value === 'error' ? fetchFirstPage() : Promise.resolve()
+
+    await Promise.all([list, loadSummary(true)])
+  }
+
+  async function refreshFirstPage(): Promise<void> {
+    const current = ++generation
+    loadingMore.value = false
+    loadMoreFailed.value = false
+
+    try {
+      const page = await useMerchantFeedApi().list(filters.value, null)
+      if (current !== generation) return
+
+      requests.value = page.items
+      nextCursor.value = page.nextCursor
+    }
+    catch {
+      // Keep the list; the next event or poll tries again.
+    }
+  }
+
+  /**
+   * The post was closed, fulfilled or expired (`postRemoved`). The server no longer lists it,
+   * so a copy that is on screen is kept by id (the details page that shows it stays
+   * usable) and refreshed to its real, no longer active status before the list is reloaded.
+   */
+  async function postRemoved(id: string): Promise<void> {
+    const shown = requests.value.find(request => request.id === id)
+    if (shown && !opened.value.some(request => request.id === id)) opened.value = [...opened.value, shown]
+
+    if (byId(id)) await fetchOne(id).catch(() => undefined)
+    await refresh()
+  }
   function reset() {
     generation++
     requests.value = []
@@ -239,6 +284,8 @@ export const useMerchantFeedStore = defineStore('merchantFeed', () => {
     threadIdOf,
     isResponding,
     respond,
+    refresh,
+    postRemoved,
     reset,
   }
 })
