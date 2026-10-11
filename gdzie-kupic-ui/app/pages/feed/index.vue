@@ -121,6 +121,8 @@ useInfiniteScroll(sentinel, () => feedStore.loadMore(), { refresh: () => request
       </div>
     </div>
 
+    <PushBanner />
+
     <UCard v-if="hasNothing && !hasError">
       <div class="space-y-3 py-8 text-center">
         <UIcon name="i-heroicons-inbox" class="size-10 text-muted" />
