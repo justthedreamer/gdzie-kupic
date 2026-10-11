@@ -28,10 +28,6 @@ const emailEnabled = async () =>
   ((await (await buyer.get('/api/account/notification-settings')).json()) as { emailEnabled: boolean }).emailEnabled
 
 test('a buyer saves the e-mail notification setting', async ({ page }) => {
-  // The endpoint arrives with the service ticket "E-mail Settings & Buyer E-mail Notifications" (#138).
-  const available = (await buyer.get('/api/account/notification-settings')).ok()
-  test.fixme(!available, 'GET /api/account/notification-settings is not served yet (service ticket #138)')
-
   await buyer.put('/api/account/notification-settings', { data: { emailEnabled: false } })
 
   try {
