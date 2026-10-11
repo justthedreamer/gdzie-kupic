@@ -39,6 +39,8 @@ export default defineConfig({
     env: {
       // Another `nuxt dev` (on 3000) may hold the project lock.
       NUXT_IGNORE_LOCK: '1',
+      // Must match what mockApi intercepts; a local .env pointing at the real service would break every spec.
+      NUXT_PUBLIC_API_BASE: process.env.NUXT_PUBLIC_API_BASE ?? 'http://localhost:5211',
       NUXT_PUBLIC_BUYER_HOME_MOCK: 'true',
       NUXT_PUBLIC_MERCHANT_FEED_MOCK: 'true',
       NUXT_PUBLIC_CHAT_MOCK: 'true',
