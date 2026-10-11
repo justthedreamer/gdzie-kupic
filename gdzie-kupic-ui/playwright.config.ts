@@ -43,6 +43,7 @@ export default defineConfig({
       NUXT_PUBLIC_MERCHANT_FEED_MOCK: 'true',
       NUXT_PUBLIC_CHAT_MOCK: 'true',
       NUXT_PUBLIC_REALTIME_MOCK: 'true',
+      NUXT_PUBLIC_PUSH_MOCK: 'true',
     },
   },
 })

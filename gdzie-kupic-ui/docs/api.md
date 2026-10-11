@@ -146,6 +146,40 @@ await page.evaluate(() => window.__realtime!.setState('reconnecting'))
 
 ---
 
+## Web Push
+
+Notifications reach a device that has the app closed through Web Push (contract in [`planning/phase-7-push-notifications.md`](../../planning/phase-7-push-notifications.md)). The service worker (`service-worker/sw.ts`, built with `@vite-pwa/nuxt` in `injectManifest` mode) also precaches the app shell.
+
+| Endpoint | Meaning |
+|---|---|
+| `GET /api/push/vapid-public-key` | The server's VAPID public key (URL-safe base64). The UI accepts a plain string or `{ publicKey }`. 404 / 501 / 503 mean "not configured": the settings switch is disabled |
+| `PUT /api/push/subscription` | `{ endpoint, keys: { p256dh, auth } }`: registers (or re-assigns to the caller) this device. Idempotent |
+| `DELETE /api/push/subscription` | `{ endpoint }`: removes the caller's registration of that device. Idempotent |
+
+Push payload (built by the server in Polish): `{ kind: 'newPost' \| 'merchantResponded' \| 'newMessage', postId \| null, threadId \| null, title, body }`. A tap opens `/feed/{postId}` (`newPost`), `/requests/{postId}` (`merchantResponded`) or `/chat/{threadId}` (`newMessage`); a payload that cannot be read is ignored. While a window of the app is focused the notification is not shown (the in-app toast covers it). A tap on an open window focuses it and sends it `notification-click` (`navigateTo`, so the in-memory session survives); with no window it opens one, and the user lands on the sign-in page because the session lives in memory only.
+
+Building blocks (client-only):
+
+- `utils/push.ts`: pure and service-worker safe (payload parsing, notification text and target, VAPID key conversion). `utils/pushBrowser.ts`: the browser's push API behind the `PushBrowser` interface (`createBrowserPush()`), plus the test fake.
+- `composables/api/usePushApi.ts`: `vapidPublicKey()`, `register(subscription)`, `remove(endpoint)`.
+- `usePushStore` (`stores/push.ts`): `state` (`unknown` \| `unsupported` \| `blocked` \| `notConfigured` \| `off` \| `on`), `permission`, `busy`, `error`; `refresh()`, `enable()` and `disable()` (call them from a user action, the permission prompt needs one), `syncAfterSignIn()`, `removeOnSignOut()`.
+- `plugins/push.client.ts`: after every sign-in (and account switch) of a Buyer or Merchant with the permission granted, the device is registered again for that user. `useSignOut()` calls `removeOnSignOut()` before the session ends: the registration is removed at the service (never longer than 3 s, failures are ignored); the browser keeps its subscription.
+
+### Mock mode (`pushMock`)
+
+With `runtimeConfig.public.pushMock` on (off by default; `NUXT_PUBLIC_PUSH_MOCK` overrides; the mock Playwright config turns it on, the unit tests too) the browser's push API is a fake. A test presets the device before the app starts and reads what the app did through `window.__push`:
+
+```ts
+await page.addInitScript(() => {
+  window.__pushInit = { permission: 'granted', subscription: { endpoint: 'https://push.example.test/1', keys: { p256dh: 'p', auth: 'a' } } }
+})
+await page.evaluate(() => window.__push!.state.prompts) // also subscribes, unsubscribes, lastKey
+```
+
+`FakePushState` lists the fields (`supported`, `permission`, `promptResult`, `subscription`, `subscribeFails`). See `tests/e2e/push.spec.ts`.
+
+---
+
 ## Error handling
 
 `$fetch` (used inside `useApi`) throws on non-2xx responses. Wrap in try/catch at the call site:

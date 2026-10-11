@@ -27,6 +27,11 @@ export default defineNuxtConfig({
 
   // ─── PWA ──────────────────────────────────────────────────────────────────
   pwa: {
+    // Own service worker (service-worker/sw.ts): precache plus Web Push.
+    strategies: 'injectManifest',
+    // Relative to the app directory (app/).
+    srcDir: '../service-worker',
+    filename: 'sw.ts',
     registerType: 'autoUpdate',
     manifest: {
       name: 'Gdzie Kupić',
@@ -42,7 +47,7 @@ export default defineNuxtConfig({
         { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
       ],
     },
-    workbox: {
+    injectManifest: {
       globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
     },
     devOptions: {
@@ -94,6 +99,11 @@ export default defineNuxtConfig({
       // `window.__realtime` (state and events). Override with
       // NUXT_PUBLIC_REALTIME_MOCK. See docs/api.md § Real-time events.
       realtimeMock: false,
+
+      // Web Push: the browser's push API is replaced by a fake that e2e tests control through
+      // `window.__push` (Playwright cannot receive real pushes). Override with
+      // NUXT_PUBLIC_PUSH_MOCK. See docs/api.md § Web Push.
+      pushMock: false,
 
       // Pre-generated, non-expiring JWTs for the seeded test accounts — see
       // docs/local-dev.md § Mock Accounts & Pre-Generated Tokens. Used by the

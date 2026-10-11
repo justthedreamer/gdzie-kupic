@@ -10,7 +10,7 @@ const props = defineProps<{
   badges?: Record<string, number>
 }>()
 
-const authStore = useAuthStore()
+const signOut = useSignOut()
 const { t } = useI18n()
 </script>
 
@@ -96,7 +96,7 @@ const { t } = useI18n()
           variant="ghost"
           size="sm"
           icon="i-heroicons-arrow-right-start-on-rectangle"
-          @click="authStore.clearAuth()"
+          @click="signOut()"
         >
           {{ $t('auth.logout') }}
         </UButton>
