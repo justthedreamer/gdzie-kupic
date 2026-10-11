@@ -142,6 +142,10 @@ test('a closed request cannot be ended again (409 is explained)', async ({ page 
   expect(created.status()).toBe(201)
   const post = await created.json() as { id: string }
 
+  // With the real-time hub up the page learns about the closing at once and hides the buttons,
+  // so this test keeps the page stale (hub unreachable, polling is only the slow fallback).
+  await page.route('**/hubs/**', route => route.abort())
+
   await loginAs(page, 'Buyer')
   await page.getByRole('link', { name: 'Zapytania' }).first().dispatchEvent('click')
   await page.getByRole('link', { name: new RegExp(title) }).click()
